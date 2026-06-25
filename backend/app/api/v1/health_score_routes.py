@@ -5,7 +5,8 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
 
-from app.core.dependencies import get_analytics_service, get_current_active_user
+from app.core.dependencies import (get_analytics_service,
+                                   get_current_active_user)
 from app.schemas.base_schema import APIResponse
 from app.schemas.health_score_schema import HealthScoreResponse
 from app.services.analytics_service import AnalyticsService

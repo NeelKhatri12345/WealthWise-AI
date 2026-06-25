@@ -5,7 +5,8 @@ Table: roles
 Pre-seeded rows: admin, user, analyst
 """
 
-from sqlalchemy import Enum as SAEnum, String, Text
+from sqlalchemy import Enum as SAEnum
+from sqlalchemy import String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base, UUIDMixin

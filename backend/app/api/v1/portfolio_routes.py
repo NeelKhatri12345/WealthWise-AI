@@ -2,7 +2,8 @@
 
 from fastapi import APIRouter, Depends
 
-from app.core.dependencies import get_current_active_user, get_portfolio_service
+from app.core.dependencies import (get_current_active_user,
+                                   get_portfolio_service)
 from app.schemas.base_schema import APIResponse
 from app.schemas.portfolio_schema import PortfolioRecommendationResponse
 from app.services.portfolio_service import PortfolioService

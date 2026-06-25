@@ -3,7 +3,8 @@
 from uuid import UUID
 
 from app.core.security import hash_password, verify_password
-from app.exceptions.custom_exceptions import NotFoundException, UnauthorizedException
+from app.exceptions.custom_exceptions import (NotFoundException,
+                                              UnauthorizedException)
 from app.repositories.user_repository import UserRepository
 from app.schemas.user_schema import UserResponse, UserUpdate
 

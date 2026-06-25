@@ -3,15 +3,13 @@
 from uuid import UUID, uuid4
 
 from app.clients.gemini_client import GeminiClient
-from app.core.constants import AI_COACH_MAX_HISTORY_MESSAGES, AI_COACH_SYSTEM_PROMPT
+from app.core.constants import (AI_COACH_MAX_HISTORY_MESSAGES,
+                                AI_COACH_SYSTEM_PROMPT)
 from app.core.logger import logger
 from app.repositories.analytics_repository import AnalyticsRepository
-from app.schemas.ai_schema import (
-    AIChatRequest,
-    AIChatResponse,
-    ConversationHistoryResponse,
-    ConversationMessageSchema,
-)
+from app.schemas.ai_schema import (AIChatRequest, AIChatResponse,
+                                   ConversationHistoryResponse,
+                                   ConversationMessageSchema)
 
 
 class AICoachService:

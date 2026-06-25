@@ -20,17 +20,13 @@ from app.core.config import get_settings
 from app.core.constants import PDF_MAGIC_BYTES, SUPPORTED_EXTENSIONS
 from app.core.logger import logger
 from app.enums.statement_status_enum import StatementStatusEnum
-from app.exceptions.custom_exceptions import (
-    FileTooLargeException,
-    NotFoundException,
-    UnsupportedFileTypeException,
-)
+from app.exceptions.custom_exceptions import (FileTooLargeException,
+                                              NotFoundException,
+                                              UnsupportedFileTypeException)
 from app.repositories.statement_repository import StatementRepository
 from app.repositories.transaction_repository import TransactionRepository
-from app.schemas.statement_schema import (
-    StatementStatusResponse,
-    StatementUploadResponse,
-)
+from app.schemas.statement_schema import (StatementStatusResponse,
+                                          StatementUploadResponse)
 
 settings = get_settings()
 
@@ -120,8 +116,10 @@ class StatementService:
 
         async with AsyncSessionLocal() as db:
             # Fresh repo instances for background context
-            from app.repositories.statement_repository import StatementRepository
-            from app.repositories.transaction_repository import TransactionRepository
+            from app.repositories.statement_repository import \
+                StatementRepository
+            from app.repositories.transaction_repository import \
+                TransactionRepository
 
             stmt_repo = StatementRepository(db)
             txn_repo = TransactionRepository(db)

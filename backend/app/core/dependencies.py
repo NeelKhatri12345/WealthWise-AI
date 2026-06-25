@@ -24,7 +24,8 @@ from app.core.config import get_settings
 from app.core.logger import logger
 from app.database.session import AsyncSessionLocal
 from app.enums.role_enum import RoleEnum
-from app.exceptions.custom_exceptions import ForbiddenException, UnauthorizedException
+from app.exceptions.custom_exceptions import (ForbiddenException,
+                                              UnauthorizedException)
 
 settings = get_settings()
 http_bearer = HTTPBearer(auto_error=False)
@@ -139,25 +140,25 @@ def get_analytics_repository(db: AsyncSession = Depends(get_db)):
 
 
 def get_auth_service(db: AsyncSession = Depends(get_db)):
-    from app.services.auth_service import AuthService
     from app.repositories.user_repository import UserRepository
+    from app.services.auth_service import AuthService
 
     return AuthService(user_repo=UserRepository(db))
 
 
 def get_user_service(db: AsyncSession = Depends(get_db)):
-    from app.services.user_service import UserService
     from app.repositories.user_repository import UserRepository
+    from app.services.user_service import UserService
 
     return UserService(user_repo=UserRepository(db))
 
 
 def get_statement_service(db: AsyncSession = Depends(get_db)):
-    from app.services.statement_service import StatementService
+    from app.clients.ocr_client import OCRClient
+    from app.clients.s3_client import S3Client
     from app.repositories.statement_repository import StatementRepository
     from app.repositories.transaction_repository import TransactionRepository
-    from app.clients.s3_client import S3Client
-    from app.clients.ocr_client import OCRClient
+    from app.services.statement_service import StatementService
 
     return StatementService(
         statement_repo=StatementRepository(db),
@@ -168,16 +169,16 @@ def get_statement_service(db: AsyncSession = Depends(get_db)):
 
 
 def get_analytics_service(db: AsyncSession = Depends(get_db)):
-    from app.services.analytics_service import AnalyticsService
     from app.repositories.analytics_repository import AnalyticsRepository
+    from app.services.analytics_service import AnalyticsService
 
     return AnalyticsService(analytics_repo=AnalyticsRepository(db))
 
 
 def get_portfolio_service(db: AsyncSession = Depends(get_db)):
-    from app.services.portfolio_service import PortfolioService
-    from app.repositories.analytics_repository import AnalyticsRepository
     from app.clients.gemini_client import GeminiClient
+    from app.repositories.analytics_repository import AnalyticsRepository
+    from app.services.portfolio_service import PortfolioService
 
     return PortfolioService(
         analytics_repo=AnalyticsRepository(db),
@@ -186,9 +187,9 @@ def get_portfolio_service(db: AsyncSession = Depends(get_db)):
 
 
 def get_ai_coach_service(db: AsyncSession = Depends(get_db)):
-    from app.services.ai_coach_service import AICoachService
-    from app.repositories.analytics_repository import AnalyticsRepository
     from app.clients.gemini_client import GeminiClient
+    from app.repositories.analytics_repository import AnalyticsRepository
+    from app.services.ai_coach_service import AICoachService
 
     return AICoachService(
         analytics_repo=AnalyticsRepository(db),
@@ -197,9 +198,9 @@ def get_ai_coach_service(db: AsyncSession = Depends(get_db)):
 
 
 def get_admin_service(db: AsyncSession = Depends(get_db)):
-    from app.services.admin_service import AdminService
-    from app.repositories.user_repository import UserRepository
     from app.repositories.statement_repository import StatementRepository
+    from app.repositories.user_repository import UserRepository
+    from app.services.admin_service import AdminService
 
     return AdminService(
         user_repo=UserRepository(db),
