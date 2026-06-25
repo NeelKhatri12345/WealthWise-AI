@@ -14,6 +14,11 @@ psycopg2-binary==2.9.10
 # ── Authentication & Security ─────────────────────────────────────────────────
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
+# Pin bcrypt to the last 4.0.x: passlib 1.7.4's backend probe (detect_wrap_bug)
+# hashes a >72-byte password, which bcrypt>=4.1 rejects with a ValueError
+# ("password cannot be longer than 72 bytes"). 4.0.1 preserves the old
+# truncating behaviour the probe relies on. Remove once passlib > 1.7.4 ships.
+bcrypt==4.0.1
 python-multipart==0.0.20
 
 # ── Redis ─────────────────────────────────────────────────────────────────────
