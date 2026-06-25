@@ -1,0 +1,71 @@
+# WealthWise AI - Data Configuration
+# Data paths and processing settings
+
+data:
+  raw_data_dir: data/raw
+  cleaned_data_dir: data/cleaned
+  processed_data_dir: data/processed
+  exports_dir: data/exports
+
+  supported_formats:
+    - csv
+    - xlsx
+    - xls
+
+  # Column mapping for standardizing bank statements
+  column_mapping:
+    date_columns:
+      - date
+      - transaction_date
+      - txn_date
+      - value_date
+    amount_columns:
+      - amount
+      - transaction_amount
+      - debit
+      - credit
+    description_columns:
+      - description
+      - narration
+      - particulars
+      - details
+
+  cleaning:
+    remove_duplicates: true
+    handle_missing: interpolate  # drop, fill_zero, interpolate, forward_fill
+    outlier_method: iqr  # iqr, zscore, isolation_forest
+    outlier_threshold: 3.0
+    min_transaction_amount: 1.0
+    date_format: "%Y-%m-%d"
+
+  feature_engineering:
+    temporal_features:
+      - day_of_week
+      - day_of_month
+      - month
+      - quarter
+      - is_weekend
+      - is_month_end
+    aggregate_windows:
+      - 7    # 1 week
+      - 30   # 1 month
+      - 90   # 3 months
+    spending_categories:
+      - food_dining
+      - transportation
+      - shopping
+      - utilities
+      - entertainment
+      - healthcare
+      - education
+      - rent_housing
+      - investments
+      - other
+
+  validation:
+    min_transactions: 30
+    max_date_gap_days: 90
+    required_columns:
+      - date
+      - amount
+      - description

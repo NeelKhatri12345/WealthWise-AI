@@ -1,0 +1,80 @@
+# WealthWise AI - Model Configuration
+# Hyperparameters and training settings for all ML models
+
+models:
+  risk_profile:
+    algorithm: xgboost
+    params:
+      n_estimators: 200
+      max_depth: 6
+      learning_rate: 0.1
+      subsample: 0.8
+      colsample_bytree: 0.8
+      min_child_weight: 3
+      gamma: 0.1
+      reg_alpha: 0.1
+      reg_lambda: 1.0
+    cross_validation:
+      folds: 5
+      stratified: true
+      scoring: f1_weighted
+    test_size: 0.2
+    random_state: 42
+
+  health_score:
+    algorithm: gradient_boosting
+    params:
+      n_estimators: 150
+      max_depth: 5
+      learning_rate: 0.1
+      subsample: 0.9
+      min_samples_split: 10
+      min_samples_leaf: 5
+    cross_validation:
+      folds: 5
+      scoring: neg_root_mean_squared_error
+    test_size: 0.2
+    random_state: 42
+    score_range:
+      min: 0
+      max: 100
+
+  portfolio:
+    optimization:
+      method: mean_variance  # mean_variance, black_litterman, risk_parity
+      risk_free_rate: 0.06
+      constraints:
+        min_allocation: 0.05
+        max_allocation: 0.40
+        max_asset_classes: 8
+    risk_profiles:
+      conservative:
+        max_equity: 0.30
+        min_debt: 0.50
+      moderate:
+        max_equity: 0.50
+        min_debt: 0.30
+      aggressive:
+        max_equity: 0.70
+        min_debt: 0.15
+
+  ai_coach:
+    model_type: llm
+    temperature: 0.7
+    max_tokens: 500
+    domains:
+      - budgeting
+      - savings
+      - debt_management
+      - investing
+      - tax_planning
+      - insurance
+    response_style: empathetic_professional
+
+# Global training settings
+training:
+  seed: 42
+  verbose: true
+  save_best_only: true
+  early_stopping_rounds: 10
+  log_dir: logs/training

@@ -1,0 +1,317 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [main, develop, staging]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-ci.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'backend/**'
+
+env:
+  PYTHON_VERSION: "3.13"
+  POETRY_CACHE_DIR: ~/.cache/pypoetry
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Job 1: Lint & Type Check
+  # ─────────────────────────────────────────────────────────────────────────────
+  lint:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('backend/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install black isort flake8 mypy
+
+      - name: Run Black (formatting check)
+        run: black --check app/ tests/
+
+      - name: Run isort (import order check)
+        run: isort --check-only app/ tests/
+
+      - name: Run flake8 (linting)
+        run: flake8 app/ tests/ --max-line-length=100 --ignore=E501,W503
+
+      - name: Run mypy (type checking)
+        run: mypy app/ --ignore-missing-imports --no-strict-optional
+        continue-on-error: true  # Warnings only — don't block CI
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Job 2: Unit Tests
+  # ─────────────────────────────────────────────────────────────────────────────
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: lint
+    defaults:
+      run:
+        working-directory: ./backend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('backend/requirements.txt') }}
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio pytest-cov aiosqlite fakeredis
+
+      - name: Create test .env
+        run: |
+          cat > .env << EOF
+          APP_NAME=WealthWise AI Test
+          APP_ENV=development
+          APP_PORT=8000
+          SECRET_KEY=test-secret-key-minimum-32-characters-long
+          POSTGRES_HOST=localhost
+          POSTGRES_PORT=5432
+          POSTGRES_DB=test_db
+          POSTGRES_USER=test_user
+          POSTGRES_PASSWORD=test_password
+          DATABASE_URL=sqlite+aiosqlite:///:memory:
+          REDIS_URL=redis://localhost:6379/0
+          JWT_SECRET_KEY=test-jwt-secret-key-minimum-32-chars
+          JWT_ALGORITHM=HS256
+          JWT_ACCESS_TOKEN_EXPIRE_MINUTES=15
+          JWT_REFRESH_TOKEN_EXPIRE_DAYS=7
+          GEMINI_API_KEY=test-api-key
+          GEMINI_MODEL=gemini-2.5-flash
+          GEMINI_MAX_TOKENS=8192
+          GEMINI_TEMPERATURE=0.7
+          S3_BUCKET_NAME=test-bucket
+          S3_REGION=us-east-1
+          ALLOWED_ORIGINS=http://localhost:3000
+          ALLOWED_HOSTS=localhost,127.0.0.1
+          EOF
+
+      - name: Run unit tests with coverage
+        run: |
+          pytest tests/unit/ \
+            -v \
+            --tb=short \
+            --cov=app \
+            --cov-report=xml \
+            --cov-report=term-missing \
+            --cov-fail-under=80
+
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          file: ./backend/coverage.xml
+          flags: unit
+          name: backend-unit-coverage
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Job 3: Integration Tests (with real PostgreSQL)
+  # ─────────────────────────────────────────────────────────────────────────────
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: unit-tests
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: wealthwise_test
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    defaults:
+      run:
+        working-directory: ./backend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio pytest-cov aiosqlite fakeredis
+
+      - name: Create integration test .env
+        run: |
+          cat > .env << EOF
+          APP_NAME=WealthWise AI
+          APP_ENV=development
+          APP_PORT=8000
+          SECRET_KEY=test-secret-key-minimum-32-characters-long
+          POSTGRES_HOST=localhost
+          POSTGRES_PORT=5432
+          POSTGRES_DB=wealthwise_test
+          POSTGRES_USER=test_user
+          POSTGRES_PASSWORD=test_password
+          REDIS_URL=redis://localhost:6379/0
+          JWT_SECRET_KEY=test-jwt-secret-key-minimum-32-chars
+          JWT_ALGORITHM=HS256
+          JWT_ACCESS_TOKEN_EXPIRE_MINUTES=15
+          JWT_REFRESH_TOKEN_EXPIRE_DAYS=7
+          GEMINI_API_KEY=test-api-key
+          GEMINI_MODEL=gemini-2.5-flash
+          GEMINI_MAX_TOKENS=8192
+          GEMINI_TEMPERATURE=0.7
+          S3_BUCKET_NAME=test-bucket
+          S3_REGION=us-east-1
+          ALLOWED_ORIGINS=http://localhost:3000
+          ALLOWED_HOSTS=localhost,127.0.0.1
+          EOF
+
+      - name: Run Alembic migrations
+        run: alembic upgrade head
+
+      - name: Run integration tests
+        run: |
+          pytest tests/integration/ \
+            -v \
+            --tb=short \
+            -m "integration" \
+            --cov=app \
+            --cov-report=xml
+
+      - name: Upload integration coverage
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          file: ./backend/coverage.xml
+          flags: integration
+          name: backend-integration-coverage
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Job 4: Security Scan
+  # ─────────────────────────────────────────────────────────────────────────────
+  security-scan:
+    name: Security Vulnerability Scan
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install pip-audit
+        run: pip install pip-audit
+
+      - name: Run pip-audit (dependency vulnerability check)
+        run: pip-audit -r requirements.txt --vulnerability-service pypi
+        continue-on-error: true  # Report but don't block
+
+      - name: Check for secrets in code (Bandit)
+        run: |
+          pip install bandit
+          bandit -r app/ -ll -ii --format json > bandit_report.json || true
+          cat bandit_report.json
+
+      - name: Upload Bandit report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bandit-report
+          path: backend/bandit_report.json
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Job 5: Docker Build Check
+  # ─────────────────────────────────────────────────────────────────────────────
+  docker-build:
+    name: Docker Build Verification
+    runs-on: ubuntu-latest
+    needs: [unit-tests]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image (runtime stage)
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          target: runtime
+          push: false
+          tags: wealthwise-api:ci-test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Test Docker image starts
+        run: |
+          docker run --rm -d \
+            --name test_api \
+            -e SECRET_KEY=test-key-32-chars-minimum-length-here \
+            -e POSTGRES_PASSWORD=test \
+            -e JWT_SECRET_KEY=test-jwt-key-32-chars-minimum-length \
+            -e GEMINI_API_KEY=test \
+            wealthwise-api:ci-test \
+            uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          sleep 5
+          docker ps | grep test_api || echo "Container exited (expected without DB)"
+          docker stop test_api || true

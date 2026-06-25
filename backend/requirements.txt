@@ -1,0 +1,49 @@
+# ── Core Framework ────────────────────────────────────────────────────────────
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+pydantic==2.10.3
+pydantic-settings==2.7.0
+
+# ── Database ──────────────────────────────────────────────────────────────────
+sqlalchemy==2.0.36
+alembic==1.14.0
+asyncpg==0.30.0
+psycopg2-binary==2.9.10
+
+# ── Authentication & Security ─────────────────────────────────────────────────
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.20
+
+# ── Redis ─────────────────────────────────────────────────────────────────────
+redis==5.2.1
+
+# ── HTTP Client ───────────────────────────────────────────────────────────────
+httpx==0.28.1
+
+# ── AI ────────────────────────────────────────────────────────────────────────
+google-genai==1.12.1
+
+# ── OCR / File Processing ─────────────────────────────────────────────────────
+pdfplumber==0.11.4
+pillow==11.1.0
+python-dateutil==2.9.0
+python-magic-bin==0.4.14   # Windows-compatible; use python-magic on Linux
+
+# ── AWS / MinIO ───────────────────────────────────────────────────────────────
+boto3==1.35.99
+aioboto3==13.4.0
+
+# ── Data Science (for ML model inference) ────────────────────────────────────
+pandas==2.2.3
+scikit-learn==1.6.0
+numpy==2.2.0
+
+# ── Utilities ─────────────────────────────────────────────────────────────────
+python-dotenv==1.0.1
+
+# ── Testing ───────────────────────────────────────────────────────────────────
+pytest==8.3.4
+pytest-asyncio==0.25.0
+httpx==0.28.1
+factory-boy==3.3.1
