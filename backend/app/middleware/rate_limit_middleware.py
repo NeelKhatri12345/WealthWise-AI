@@ -31,6 +31,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
         try:
             import redis.asyncio as aioredis
+
             redis_client = aioredis.from_url(settings.REDIS_URL, decode_responses=True)
 
             # Determine rate limit key and limit value

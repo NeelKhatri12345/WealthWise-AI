@@ -23,9 +23,7 @@ class UserService:
         user = await self._user_repo.get_by_id(user_id)
         if not user:
             raise NotFoundException("User not found")
-        updated = await self._user_repo.update(
-            user, data.model_dump(exclude_none=True)
-        )
+        updated = await self._user_repo.update(user, data.model_dump(exclude_none=True))
         return UserResponse.from_orm_with_role(updated)
 
     async def change_password(

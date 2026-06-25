@@ -63,11 +63,32 @@ class JSONFormatter(logging.Formatter):
             if key in self.SENSITIVE_FIELDS:
                 log_entry[key] = "***REDACTED***"
             elif key not in {
-                "name", "msg", "args", "levelname", "levelno", "pathname",
-                "filename", "module", "exc_info", "exc_text", "stack_info",
-                "lineno", "funcName", "created", "msecs", "relativeCreated",
-                "thread", "threadName", "processName", "process", "message",
-                "request_id", "user_id", "method", "path", "status_code",
+                "name",
+                "msg",
+                "args",
+                "levelname",
+                "levelno",
+                "pathname",
+                "filename",
+                "module",
+                "exc_info",
+                "exc_text",
+                "stack_info",
+                "lineno",
+                "funcName",
+                "created",
+                "msecs",
+                "relativeCreated",
+                "thread",
+                "threadName",
+                "processName",
+                "process",
+                "message",
+                "request_id",
+                "user_id",
+                "method",
+                "path",
+                "status_code",
                 "duration_ms",
             }:
                 pass  # Only log explicitly added extras to avoid noise
@@ -83,10 +104,10 @@ class ColorConsoleFormatter(logging.Formatter):
     """ANSI-colored formatter for development console output."""
 
     COLORS = {
-        "DEBUG": "\033[36m",     # Cyan
-        "INFO": "\033[32m",      # Green
-        "WARNING": "\033[33m",   # Yellow
-        "ERROR": "\033[31m",     # Red
+        "DEBUG": "\033[36m",  # Cyan
+        "INFO": "\033[32m",  # Green
+        "WARNING": "\033[33m",  # Yellow
+        "ERROR": "\033[31m",  # Red
         "CRITICAL": "\033[35m",  # Magenta
     }
     RESET = "\033[0m"
@@ -106,9 +127,9 @@ def _build_rotating_handler(
     """Creates an hourly-rotating file handler with JSON formatting."""
     handler = TimedRotatingFileHandler(
         filename=str(LOG_DIR / filename),
-        when="h",           # Rotate every hour
+        when="h",  # Rotate every hour
         interval=1,
-        backupCount=720,    # 30 days × 24 hours/day
+        backupCount=720,  # 30 days × 24 hours/day
         encoding="utf-8",
         delay=False,
     )

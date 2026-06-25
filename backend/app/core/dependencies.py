@@ -32,6 +32,7 @@ http_bearer = HTTPBearer(auto_error=False)
 
 # ── Database Session ──────────────────────────────────────────────────────────
 
+
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """
     Yields an async database session.
@@ -53,6 +54,7 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 
 # ── Authentication Dependencies ───────────────────────────────────────────────
+
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(http_bearer),
@@ -108,37 +110,45 @@ async def get_admin_user(
 
 # ── Repository Dependencies ───────────────────────────────────────────────────
 
+
 def get_user_repository(db: AsyncSession = Depends(get_db)):
     from app.repositories.user_repository import UserRepository
+
     return UserRepository(db)
 
 
 def get_statement_repository(db: AsyncSession = Depends(get_db)):
     from app.repositories.statement_repository import StatementRepository
+
     return StatementRepository(db)
 
 
 def get_transaction_repository(db: AsyncSession = Depends(get_db)):
     from app.repositories.transaction_repository import TransactionRepository
+
     return TransactionRepository(db)
 
 
 def get_analytics_repository(db: AsyncSession = Depends(get_db)):
     from app.repositories.analytics_repository import AnalyticsRepository
+
     return AnalyticsRepository(db)
 
 
 # ── Service Dependencies ──────────────────────────────────────────────────────
 
+
 def get_auth_service(db: AsyncSession = Depends(get_db)):
     from app.services.auth_service import AuthService
     from app.repositories.user_repository import UserRepository
+
     return AuthService(user_repo=UserRepository(db))
 
 
 def get_user_service(db: AsyncSession = Depends(get_db)):
     from app.services.user_service import UserService
     from app.repositories.user_repository import UserRepository
+
     return UserService(user_repo=UserRepository(db))
 
 
@@ -148,6 +158,7 @@ def get_statement_service(db: AsyncSession = Depends(get_db)):
     from app.repositories.transaction_repository import TransactionRepository
     from app.clients.s3_client import S3Client
     from app.clients.ocr_client import OCRClient
+
     return StatementService(
         statement_repo=StatementRepository(db),
         transaction_repo=TransactionRepository(db),
@@ -159,6 +170,7 @@ def get_statement_service(db: AsyncSession = Depends(get_db)):
 def get_analytics_service(db: AsyncSession = Depends(get_db)):
     from app.services.analytics_service import AnalyticsService
     from app.repositories.analytics_repository import AnalyticsRepository
+
     return AnalyticsService(analytics_repo=AnalyticsRepository(db))
 
 
@@ -166,6 +178,7 @@ def get_portfolio_service(db: AsyncSession = Depends(get_db)):
     from app.services.portfolio_service import PortfolioService
     from app.repositories.analytics_repository import AnalyticsRepository
     from app.clients.gemini_client import GeminiClient
+
     return PortfolioService(
         analytics_repo=AnalyticsRepository(db),
         gemini_client=GeminiClient(settings),
@@ -176,6 +189,7 @@ def get_ai_coach_service(db: AsyncSession = Depends(get_db)):
     from app.services.ai_coach_service import AICoachService
     from app.repositories.analytics_repository import AnalyticsRepository
     from app.clients.gemini_client import GeminiClient
+
     return AICoachService(
         analytics_repo=AnalyticsRepository(db),
         gemini_client=GeminiClient(settings),
@@ -186,6 +200,7 @@ def get_admin_service(db: AsyncSession = Depends(get_db)):
     from app.services.admin_service import AdminService
     from app.repositories.user_repository import UserRepository
     from app.repositories.statement_repository import StatementRepository
+
     return AdminService(
         user_repo=UserRepository(db),
         statement_repo=StatementRepository(db),
@@ -194,6 +209,7 @@ def get_admin_service(db: AsyncSession = Depends(get_db)):
 
 # ── Internal Helpers ──────────────────────────────────────────────────────────
 
+
 async def _check_token_blacklist(jti: str) -> None:
     """
     Checks Redis for blacklisted JWT (logout / token revocation).
@@ -201,8 +217,10 @@ async def _check_token_blacklist(jti: str) -> None:
     """
     try:
         import redis.asyncio as aioredis
+
         client = aioredis.from_url(settings.REDIS_URL, decode_responses=True)
         from app.core.constants import REDIS_BLACKLIST_PREFIX
+
         is_blacklisted = await client.exists(f"{REDIS_BLACKLIST_PREFIX}{jti}")
         await client.aclose()
         if is_blacklisted:
@@ -210,4 +228,6 @@ async def _check_token_blacklist(jti: str) -> None:
     except UnauthorizedException:
         raise
     except Exception as exc:
-        logger.warning("Redis blacklist check failed (fail-open)", extra={"error": str(exc)})
+        logger.warning(
+            "Redis blacklist check failed (fail-open)", extra={"error": str(exc)}
+        )

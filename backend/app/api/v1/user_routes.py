@@ -11,7 +11,9 @@ from app.services.user_service import UserService
 router = APIRouter()
 
 
-@router.get("/me", response_model=APIResponse[UserResponse], summary="Get current user profile")
+@router.get(
+    "/me", response_model=APIResponse[UserResponse], summary="Get current user profile"
+)
 async def get_profile(
     current_user=Depends(get_current_active_user),
     service: UserService = Depends(get_user_service),
@@ -20,7 +22,11 @@ async def get_profile(
     return APIResponse(success=True, message="Profile retrieved", data=profile)
 
 
-@router.patch("/me", response_model=APIResponse[UserResponse], summary="Update current user profile")
+@router.patch(
+    "/me",
+    response_model=APIResponse[UserResponse],
+    summary="Update current user profile",
+)
 async def update_profile(
     data: UserUpdate,
     current_user=Depends(get_current_active_user),
@@ -30,11 +36,15 @@ async def update_profile(
     return APIResponse(success=True, message="Profile updated", data=updated)
 
 
-@router.post("/me/change-password", response_model=APIResponse[None], summary="Change password")
+@router.post(
+    "/me/change-password", response_model=APIResponse[None], summary="Change password"
+)
 async def change_password(
     data: ChangePasswordRequest,
     current_user=Depends(get_current_active_user),
     service: UserService = Depends(get_user_service),
 ):
-    await service.change_password(current_user.id, data.current_password, data.new_password)
+    await service.change_password(
+        current_user.id, data.current_password, data.new_password
+    )
     return APIResponse(success=True, message="Password changed successfully")

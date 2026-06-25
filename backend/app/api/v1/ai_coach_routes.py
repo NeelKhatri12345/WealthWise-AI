@@ -5,14 +5,22 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 
 from app.core.dependencies import get_ai_coach_service, get_current_active_user
-from app.schemas.ai_schema import AIChatRequest, AIChatResponse, ConversationHistoryResponse
+from app.schemas.ai_schema import (
+    AIChatRequest,
+    AIChatResponse,
+    ConversationHistoryResponse,
+)
 from app.schemas.base_schema import APIResponse
 from app.services.ai_coach_service import AICoachService
 
 router = APIRouter()
 
 
-@router.post("/chat", response_model=APIResponse[AIChatResponse], summary="Send a message to the AI financial coach")
+@router.post(
+    "/chat",
+    response_model=APIResponse[AIChatResponse],
+    summary="Send a message to the AI financial coach",
+)
 async def chat(
     request: AIChatRequest,
     current_user=Depends(get_current_active_user),
@@ -22,7 +30,11 @@ async def chat(
     return APIResponse(success=True, message="AI response received", data=response)
 
 
-@router.get("/history/{session_id}", response_model=APIResponse[ConversationHistoryResponse], summary="Get conversation history for a session")
+@router.get(
+    "/history/{session_id}",
+    response_model=APIResponse[ConversationHistoryResponse],
+    summary="Get conversation history for a session",
+)
 async def get_history(
     session_id: UUID,
     current_user=Depends(get_current_active_user),
@@ -32,7 +44,11 @@ async def get_history(
     return APIResponse(success=True, message="History retrieved", data=history)
 
 
-@router.delete("/session/{session_id}", response_model=APIResponse[None], summary="Delete an AI conversation session")
+@router.delete(
+    "/session/{session_id}",
+    response_model=APIResponse[None],
+    summary="Delete an AI conversation session",
+)
 async def delete_session(
     session_id: UUID,
     current_user=Depends(get_current_active_user),

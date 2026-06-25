@@ -14,12 +14,20 @@ from app.api.v1.admin_routes import router as admin_router
 
 api_v1_router = APIRouter()
 
-api_v1_router.include_router(auth_router,         prefix="/auth",         tags=["Authentication"])
-api_v1_router.include_router(user_router,         prefix="/users",        tags=["Users"])
-api_v1_router.include_router(statement_router,    prefix="/statements",   tags=["Statements"])
-api_v1_router.include_router(transaction_router,  prefix="/transactions", tags=["Transactions"])
-api_v1_router.include_router(health_score_router, prefix="/health-score", tags=["Health Score"])
-api_v1_router.include_router(risk_profile_router, prefix="/risk-profile", tags=["Risk Profile"])
-api_v1_router.include_router(portfolio_router,    prefix="/portfolio",    tags=["Portfolio"])
-api_v1_router.include_router(ai_coach_router,     prefix="/ai-coach",     tags=["AI Coach"])
-api_v1_router.include_router(admin_router,        prefix="/admin",        tags=["Admin"])
+api_v1_router.include_router(auth_router, prefix="/auth", tags=["Authentication"])
+api_v1_router.include_router(user_router, prefix="/users", tags=["Users"])
+api_v1_router.include_router(
+    statement_router, prefix="/statements", tags=["Statements"]
+)
+api_v1_router.include_router(
+    transaction_router, prefix="/transactions", tags=["Transactions"]
+)
+api_v1_router.include_router(
+    health_score_router, prefix="/health-score", tags=["Health Score"]
+)
+api_v1_router.include_router(
+    risk_profile_router, prefix="/risk-profile", tags=["Risk Profile"]
+)
+api_v1_router.include_router(portfolio_router, prefix="/portfolio", tags=["Portfolio"])
+api_v1_router.include_router(ai_coach_router, prefix="/ai-coach", tags=["AI Coach"])
+api_v1_router.include_router(admin_router, prefix="/admin", tags=["Admin"])

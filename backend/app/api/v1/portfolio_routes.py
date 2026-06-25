@@ -10,7 +10,11 @@ from app.services.portfolio_service import PortfolioService
 router = APIRouter()
 
 
-@router.get("/recommendations", response_model=APIResponse[PortfolioRecommendationResponse], summary="Get latest portfolio recommendations")
+@router.get(
+    "/recommendations",
+    response_model=APIResponse[PortfolioRecommendationResponse],
+    summary="Get latest portfolio recommendations",
+)
 async def get_recommendations(
     current_user=Depends(get_current_active_user),
     service: PortfolioService = Depends(get_portfolio_service),
@@ -19,10 +23,17 @@ async def get_recommendations(
     return APIResponse(success=True, message="Portfolio retrieved", data=portfolio)
 
 
-@router.post("/generate", response_model=APIResponse[PortfolioRecommendationResponse], status_code=201, summary="Generate new portfolio recommendations")
+@router.post(
+    "/generate",
+    response_model=APIResponse[PortfolioRecommendationResponse],
+    status_code=201,
+    summary="Generate new portfolio recommendations",
+)
 async def generate_recommendations(
     current_user=Depends(get_current_active_user),
     service: PortfolioService = Depends(get_portfolio_service),
 ):
     portfolio = await service.generate_recommendations(current_user.id)
-    return APIResponse(success=True, message="Portfolio generated successfully", data=portfolio)
+    return APIResponse(
+        success=True, message="Portfolio generated successfully", data=portfolio
+    )

@@ -36,7 +36,9 @@ class RiskProfile(UUIDMixin, Base):
 
     # Relationships
     user: Mapped["User"] = relationship("User", back_populates="risk_profiles")
-    statement: Mapped["Statement"] = relationship("Statement", back_populates="risk_profiles")
+    statement: Mapped["Statement"] = relationship(
+        "Statement", back_populates="risk_profiles"
+    )
     portfolios: Mapped[list["Portfolio"]] = relationship(
         "Portfolio", back_populates="risk_profile"
     )

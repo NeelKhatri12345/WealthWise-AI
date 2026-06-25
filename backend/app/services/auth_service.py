@@ -54,6 +54,7 @@ class AuthService:
         from sqlalchemy import select
         from app.models.role import Role
         from app.enums.role_enum import RoleEnum
+
         role_result = await self._user_repo.db.execute(
             select(Role).where(Role.name == RoleEnum.USER)
         )
@@ -61,13 +62,15 @@ class AuthService:
         if not role:
             raise RuntimeError("Default USER role not seeded in database")
 
-        user = await self._user_repo.create({
-            "email": data.email.lower(),
-            "hashed_password": hash_password(data.password),
-            "full_name": data.full_name,
-            "phone": data.phone,
-            "role_id": role.id,
-        })
+        user = await self._user_repo.create(
+            {
+                "email": data.email.lower(),
+                "hashed_password": hash_password(data.password),
+                "full_name": data.full_name,
+                "phone": data.phone,
+                "role_id": role.id,
+            }
+        )
 
         logger.info("New user registered", extra={"user_id": str(user.id)})
         return self._generate_tokens(user)
@@ -132,6 +135,7 @@ class AuthService:
 
         # Store refresh JTI in Redis for validation
         import asyncio
+
         asyncio.create_task(self._store_refresh_jti(jti))
 
         return TokenResponse(
@@ -150,4 +154,5 @@ class AuthService:
     @staticmethod
     async def _get_redis():
         import redis.asyncio as aioredis
+
         return aioredis.from_url(settings.REDIS_URL, decode_responses=True)

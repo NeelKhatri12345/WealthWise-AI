@@ -18,11 +18,7 @@ class UserRepository(BaseRepository[User]):
 
     async def get_by_id(self, user_id: UUID) -> Optional[User]:
         """Fetch user by ID with role eagerly loaded."""
-        stmt = (
-            select(User)
-            .options(selectinload(User.role))
-            .where(User.id == user_id)
-        )
+        stmt = select(User).options(selectinload(User.role)).where(User.id == user_id)
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 

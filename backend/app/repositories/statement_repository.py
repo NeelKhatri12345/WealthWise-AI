@@ -56,13 +56,12 @@ class StatementRepository(BaseRepository[Statement]):
             data["error_message"] = error_message
         if status == StatementStatusEnum.COMPLETED:
             from datetime import datetime, timezone
+
             data["processed_at"] = datetime.now(timezone.utc)
         return await self.update(statement, data)
 
     async def get_pending(self) -> Sequence[Statement]:
         """Background processor poll — returns all unprocessed statements."""
-        stmt = select(Statement).where(
-            Statement.status == StatementStatusEnum.PENDING
-        )
+        stmt = select(Statement).where(Statement.status == StatementStatusEnum.PENDING)
         result = await self.db.execute(stmt)
         return result.scalars().all()

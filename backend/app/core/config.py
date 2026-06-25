@@ -28,7 +28,9 @@ class Settings(BaseSettings):
 
     # ── Application ────────────────────────────────────────────────
     APP_NAME: str = "WealthWise AI"
-    APP_ENV: str = Field(default="development", pattern="^(development|staging|production)$")
+    APP_ENV: str = Field(
+        default="development", pattern="^(development|staging|production)$"
+    )
     APP_PORT: int = 8000
     APP_DEBUG: bool = False
     SECRET_KEY: str  # Required — no default

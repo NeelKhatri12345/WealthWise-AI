@@ -78,7 +78,9 @@ class UnsupportedFileTypeException(WealthWiseException):
 class RateLimitException(WealthWiseException):
     """Too many requests (429)."""
 
-    def __init__(self, message: str = "Rate limit exceeded. Please try again later.") -> None:
+    def __init__(
+        self, message: str = "Rate limit exceeded. Please try again later."
+    ) -> None:
         super().__init__(message, status_code=429)
 
 

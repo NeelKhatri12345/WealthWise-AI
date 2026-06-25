@@ -42,4 +42,5 @@ class UserUpdate(BaseModel):
 
 class AdminUserUpdate(UserUpdate):
     """Extended update schema for admin — can change active status."""
+
     is_active: Optional[bool] = None

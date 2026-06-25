@@ -41,6 +41,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # Verify database connectivity
     try:
         from sqlalchemy import text
+
         async with engine.begin() as conn:
             await conn.execute(text("SELECT 1"))
         logger.info("Database connection verified")
@@ -68,7 +69,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
                     logger.info(f"Loaded ML model: {model_key}")
         else:
             app.state.ml_models = {}
-            logger.warning("ML models directory not found — analytics will be unavailable")
+            logger.warning(
+                "ML models directory not found — analytics will be unavailable"
+            )
     except Exception as exc:
         logger.error("Failed to load ML models", exc_info=exc)
         app.state.ml_models = {}

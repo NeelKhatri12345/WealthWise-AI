@@ -21,6 +21,7 @@ class GeminiClient:
         try:
             from google import genai
             from google.genai import types
+
             self._client = genai.Client(api_key=cfg.GEMINI_API_KEY)
             self._model = cfg.GEMINI_MODEL
             self._max_tokens = cfg.GEMINI_MAX_TOKENS
@@ -58,7 +59,10 @@ class GeminiClient:
                 contents.append(
                     self._types.Content(
                         role=turn["role"],
-                        parts=[self._types.Part.from_text(text=p["text"]) for p in turn["parts"]],
+                        parts=[
+                            self._types.Part.from_text(text=p["text"])
+                            for p in turn["parts"]
+                        ],
                     )
                 )
             contents.append(
@@ -83,7 +87,8 @@ class GeminiClient:
             text = response.text or ""
             tokens_used = (
                 response.usage_metadata.total_token_count
-                if response.usage_metadata else 0
+                if response.usage_metadata
+                else 0
             )
 
             logger.info(

@@ -17,9 +17,7 @@ class TransactionRepository(BaseRepository[Transaction]):
     def __init__(self, db: AsyncSession) -> None:
         super().__init__(Transaction, db)
 
-    async def get_by_statement(
-        self, statement_id: UUID
-    ) -> Sequence[Transaction]:
+    async def get_by_statement(self, statement_id: UUID) -> Sequence[Transaction]:
         stmt = (
             select(Transaction)
             .where(Transaction.statement_id == statement_id)
@@ -86,9 +84,7 @@ class TransactionRepository(BaseRepository[Transaction]):
         rows = result.all()
         return {"year": year, "month": month, "rows": [dict(r._mapping) for r in rows]}
 
-    async def bulk_create(
-        self, records: list[dict]
-    ) -> None:
+    async def bulk_create(self, records: list[dict]) -> None:
         """Efficient bulk insert of extracted transactions."""
         self.db.add_all([Transaction(**r) for r in records])
         await self.db.flush()

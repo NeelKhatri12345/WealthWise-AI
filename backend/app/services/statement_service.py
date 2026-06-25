@@ -27,7 +27,10 @@ from app.exceptions.custom_exceptions import (
 )
 from app.repositories.statement_repository import StatementRepository
 from app.repositories.transaction_repository import TransactionRepository
-from app.schemas.statement_schema import StatementStatusResponse, StatementUploadResponse
+from app.schemas.statement_schema import (
+    StatementStatusResponse,
+    StatementUploadResponse,
+)
 
 settings = get_settings()
 
@@ -82,14 +85,16 @@ class StatementService:
         )
 
         # 5. Create DB record
-        statement = await self._statement_repo.create({
-            "user_id": user_id,
-            "file_name": file.filename,
-            "file_path": s3_key,
-            "file_type": file_ext.lstrip("."),
-            "file_size_bytes": len(content),
-            "status": StatementStatusEnum.PENDING,
-        })
+        statement = await self._statement_repo.create(
+            {
+                "user_id": user_id,
+                "file_name": file.filename,
+                "file_path": s3_key,
+                "file_type": file_ext.lstrip("."),
+                "file_size_bytes": len(content),
+                "status": StatementStatusEnum.PENDING,
+            }
+        )
 
         logger.info(
             "Statement uploaded",
@@ -99,6 +104,7 @@ class StatementService:
         # 6. Enqueue background processing
         # TODO: Replace with Celery/ARQ task when queue is configured
         import asyncio
+
         asyncio.create_task(self._process_statement(statement.id, content, file_ext))
 
         return StatementUploadResponse.model_validate(statement)
@@ -111,10 +117,12 @@ class StatementService:
         Runs after upload returns to client — non-blocking.
         """
         from app.database.session import AsyncSessionLocal
+
         async with AsyncSessionLocal() as db:
             # Fresh repo instances for background context
             from app.repositories.statement_repository import StatementRepository
             from app.repositories.transaction_repository import TransactionRepository
+
             stmt_repo = StatementRepository(db)
             txn_repo = TransactionRepository(db)
 
@@ -171,17 +179,13 @@ class StatementService:
     async def get_statement_detail(
         self, statement_id: UUID, user_id: UUID
     ) -> StatementStatusResponse:
-        statement = await self._statement_repo.get_by_id_and_user(
-            statement_id, user_id
-        )
+        statement = await self._statement_repo.get_by_id_and_user(statement_id, user_id)
         if not statement:
             raise NotFoundException("Statement not found")
         return StatementStatusResponse.model_validate(statement)
 
     async def delete_statement(self, statement_id: UUID, user_id: UUID) -> None:
-        statement = await self._statement_repo.get_by_id_and_user(
-            statement_id, user_id
-        )
+        statement = await self._statement_repo.get_by_id_and_user(statement_id, user_id)
         if not statement:
             raise NotFoundException("Statement not found")
         # Delete from S3
@@ -192,4 +196,5 @@ class StatementService:
     @staticmethod
     def _get_extension(filename: str) -> str:
         from pathlib import PurePosixPath
+
         return PurePosixPath(filename).suffix.lower()

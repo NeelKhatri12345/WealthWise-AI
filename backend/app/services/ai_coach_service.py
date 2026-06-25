@@ -6,7 +6,12 @@ from app.clients.gemini_client import GeminiClient
 from app.core.constants import AI_COACH_MAX_HISTORY_MESSAGES, AI_COACH_SYSTEM_PROMPT
 from app.core.logger import logger
 from app.repositories.analytics_repository import AnalyticsRepository
-from app.schemas.ai_schema import AIChatRequest, AIChatResponse, ConversationHistoryResponse, ConversationMessageSchema
+from app.schemas.ai_schema import (
+    AIChatRequest,
+    AIChatResponse,
+    ConversationHistoryResponse,
+    ConversationMessageSchema,
+)
 
 
 class AICoachService:
@@ -41,8 +46,7 @@ class AICoachService:
 
         # Build Gemini history format
         gemini_history = [
-            {"role": msg.role, "parts": [{"text": msg.message}]}
-            for msg in history
+            {"role": msg.role, "parts": [{"text": msg.message}]} for msg in history
         ]
 
         # Enrich system prompt with financial context
@@ -56,26 +60,34 @@ class AICoachService:
         )
 
         # Persist user message
-        await self._repo.save_ai_message({
-            "user_id": user_id,
-            "session_id": session_id,
-            "role": "user",
-            "message": request.message,
-        })
+        await self._repo.save_ai_message(
+            {
+                "user_id": user_id,
+                "session_id": session_id,
+                "role": "user",
+                "message": request.message,
+            }
+        )
 
         # Persist assistant reply
-        await self._repo.save_ai_message({
-            "user_id": user_id,
-            "session_id": session_id,
-            "role": "assistant",
-            "message": reply,
-            "tokens_used": tokens_used,
-            "model_version": "gemini-2.5-flash",
-        })
+        await self._repo.save_ai_message(
+            {
+                "user_id": user_id,
+                "session_id": session_id,
+                "role": "assistant",
+                "message": reply,
+                "tokens_used": tokens_used,
+                "model_version": "gemini-2.5-flash",
+            }
+        )
 
         logger.info(
             "AI coach interaction",
-            extra={"user_id": str(user_id), "session_id": str(session_id), "tokens": tokens_used},
+            extra={
+                "user_id": str(user_id),
+                "session_id": str(session_id),
+                "tokens": tokens_used,
+            },
         )
 
         return AIChatResponse(
@@ -127,6 +139,8 @@ class AICoachService:
                     f"(confidence: {risk.confidence})."
                 )
         except Exception as exc:
-            logger.warning("Failed to load financial context for AI prompt", exc_info=exc)
+            logger.warning(
+                "Failed to load financial context for AI prompt", exc_info=exc
+            )
 
         return "\n".join(context_lines)

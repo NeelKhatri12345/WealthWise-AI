@@ -34,6 +34,7 @@ class HealthScoreResponse(BaseModel):
     @classmethod
     def from_orm_with_label(cls, record) -> "HealthScoreResponse":
         from app.core.constants import HEALTH_SCORE_LABELS
+
         score = float(record.overall_score)
         label = "critical"
         for lbl, (low, high) in HEALTH_SCORE_LABELS.items():

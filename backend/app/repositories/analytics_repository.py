@@ -63,9 +63,7 @@ class AnalyticsRepository:
     async def get_health_score_by_statement(
         self, statement_id: UUID
     ) -> Optional[HealthScore]:
-        stmt = select(HealthScore).where(
-            HealthScore.statement_id == statement_id
-        )
+        stmt = select(HealthScore).where(HealthScore.statement_id == statement_id)
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -149,6 +147,7 @@ class AnalyticsRepository:
     async def delete_session(self, user_id: UUID, session_id: UUID) -> int:
         """Returns number of messages deleted."""
         from sqlalchemy import delete
+
         stmt = delete(AIConversation).where(
             AIConversation.user_id == user_id,
             AIConversation.session_id == session_id,

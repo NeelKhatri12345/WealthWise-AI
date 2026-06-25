@@ -25,7 +25,9 @@ class HealthScore(UUIDMixin, Base):
     savings_rate: Mapped[Decimal | None] = mapped_column(Numeric(5, 2), nullable=True)
     expense_ratio: Mapped[Decimal | None] = mapped_column(Numeric(5, 2), nullable=True)
     debt_ratio: Mapped[Decimal | None] = mapped_column(Numeric(5, 2), nullable=True)
-    investment_score: Mapped[Decimal | None] = mapped_column(Numeric(5, 2), nullable=True)
+    investment_score: Mapped[Decimal | None] = mapped_column(
+        Numeric(5, 2), nullable=True
+    )
     score_breakdown: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
 
     calculated_at: Mapped[datetime] = mapped_column(
@@ -34,4 +36,6 @@ class HealthScore(UUIDMixin, Base):
 
     # Relationships
     user: Mapped["User"] = relationship("User", back_populates="health_scores")
-    statement: Mapped["Statement"] = relationship("Statement", back_populates="health_scores")
+    statement: Mapped["Statement"] = relationship(
+        "Statement", back_populates="health_scores"
+    )

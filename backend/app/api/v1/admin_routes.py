@@ -13,7 +13,11 @@ from app.services.admin_service import AdminService
 router = APIRouter()
 
 
-@router.get("/users", response_model=APIResponse[List[UserResponse]], summary="Admin: List all users")
+@router.get(
+    "/users",
+    response_model=APIResponse[List[UserResponse]],
+    summary="Admin: List all users",
+)
 async def list_all_users(
     skip: int = Query(default=0, ge=0),
     limit: int = Query(default=20, ge=1, le=100),
@@ -26,7 +30,11 @@ async def list_all_users(
     return APIResponse(success=True, message="Users retrieved", data=users)
 
 
-@router.get("/users/{user_id}", response_model=APIResponse[UserResponse], summary="Admin: Get user detail")
+@router.get(
+    "/users/{user_id}",
+    response_model=APIResponse[UserResponse],
+    summary="Admin: Get user detail",
+)
 async def get_user_detail(
     user_id: UUID,
     _=Depends(get_admin_user),
@@ -36,7 +44,11 @@ async def get_user_detail(
     return APIResponse(success=True, message="User retrieved", data=user)
 
 
-@router.patch("/users/{user_id}/status", response_model=APIResponse[UserResponse], summary="Admin: Toggle user active status")
+@router.patch(
+    "/users/{user_id}/status",
+    response_model=APIResponse[UserResponse],
+    summary="Admin: Toggle user active status",
+)
 async def toggle_user_status(
     user_id: UUID,
     _=Depends(get_admin_user),
@@ -47,7 +59,9 @@ async def toggle_user_status(
     return APIResponse(success=True, message=f"User {status}", data=user)
 
 
-@router.get("/stats", response_model=APIResponse[dict], summary="Admin: System statistics")
+@router.get(
+    "/stats", response_model=APIResponse[dict], summary="Admin: System statistics"
+)
 async def get_stats(
     _=Depends(get_admin_user),
     service: AdminService = Depends(get_admin_service),

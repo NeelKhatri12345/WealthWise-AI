@@ -24,6 +24,7 @@ class APIResponse(BaseModel, Generic[T]):
             meta={"request_id": "abc123"}
         )
     """
+
     success: bool
     message: str
     data: Optional[T] = None
@@ -33,6 +34,7 @@ class APIResponse(BaseModel, Generic[T]):
 
 class PaginationMeta(BaseModel):
     """Pagination metadata included in list responses."""
+
     total: int
     page: int
     page_size: int
@@ -41,6 +43,7 @@ class PaginationMeta(BaseModel):
 
 class PaginatedResponse(BaseModel, Generic[T]):
     """Paginated list response wrapper."""
+
     success: bool = True
     message: str = "Data retrieved successfully"
     data: List[T]

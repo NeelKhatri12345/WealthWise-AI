@@ -29,6 +29,7 @@ target_metadata = Base.metadata
 def get_url() -> str:
     """Load database URL from app settings (reads .env file)."""
     from app.core.config import get_settings
+
     return get_settings().DATABASE_URL
 
 

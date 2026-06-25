@@ -23,7 +23,7 @@ class Statement(UUIDMixin, TimestampMixin, Base):
     )
     file_name: Mapped[str] = mapped_column(String(255), nullable=False)
     file_path: Mapped[str] = mapped_column(String(512), nullable=False)  # S3 object key
-    file_type: Mapped[str] = mapped_column(String(10), nullable=False)   # 'pdf' | 'csv'
+    file_type: Mapped[str] = mapped_column(String(10), nullable=False)  # 'pdf' | 'csv'
     file_size_bytes: Mapped[int | None] = mapped_column(nullable=True)
 
     status: Mapped[StatementStatusEnum] = mapped_column(

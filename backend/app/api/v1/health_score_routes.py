@@ -13,7 +13,11 @@ from app.services.analytics_service import AnalyticsService
 router = APIRouter()
 
 
-@router.get("/latest", response_model=APIResponse[HealthScoreResponse], summary="Get latest health score")
+@router.get(
+    "/latest",
+    response_model=APIResponse[HealthScoreResponse],
+    summary="Get latest health score",
+)
 async def get_latest_health_score(
     current_user=Depends(get_current_active_user),
     service: AnalyticsService = Depends(get_analytics_service),
@@ -22,17 +26,27 @@ async def get_latest_health_score(
     return APIResponse(success=True, message="Health score retrieved", data=score)
 
 
-@router.get("/history", response_model=APIResponse[List[HealthScoreResponse]], summary="Get health score history")
+@router.get(
+    "/history",
+    response_model=APIResponse[List[HealthScoreResponse]],
+    summary="Get health score history",
+)
 async def get_health_score_history(
     limit: int = Query(default=10, ge=1, le=50),
     current_user=Depends(get_current_active_user),
     service: AnalyticsService = Depends(get_analytics_service),
 ):
     history = await service.get_health_score_history(current_user.id, limit)
-    return APIResponse(success=True, message="Health score history retrieved", data=history)
+    return APIResponse(
+        success=True, message="Health score history retrieved", data=history
+    )
 
 
-@router.get("/{statement_id}", response_model=APIResponse[HealthScoreResponse], summary="Get health score for a statement")
+@router.get(
+    "/{statement_id}",
+    response_model=APIResponse[HealthScoreResponse],
+    summary="Get health score for a statement",
+)
 async def get_health_score_by_statement(
     statement_id: UUID,
     current_user=Depends(get_current_active_user),

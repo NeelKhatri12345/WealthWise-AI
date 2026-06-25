@@ -44,11 +44,12 @@ class RefreshTokenRequest(BaseModel):
 
 class TokenPayload(BaseModel):
     """Internal token payload — decoded from JWT claims."""
-    sub: str          # User UUID
-    role: str = ""    # User role
+
+    sub: str  # User UUID
+    role: str = ""  # User role
     exp: datetime
     iat: datetime
-    jti: str          # Unique token ID for blacklisting
+    jti: str  # Unique token ID for blacklisting
     type: str = "access"
 
 

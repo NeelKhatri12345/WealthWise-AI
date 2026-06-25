@@ -10,7 +10,10 @@ from uuid import UUID
 from fastapi import Request
 
 from app.core.logger import logger
-from app.exceptions.custom_exceptions import NotFoundException, ServiceUnavailableException
+from app.exceptions.custom_exceptions import (
+    NotFoundException,
+    ServiceUnavailableException,
+)
 from app.models.transaction import Transaction
 from app.repositories.analytics_repository import AnalyticsRepository
 from app.schemas.health_score_schema import HealthScoreResponse
@@ -77,21 +80,27 @@ class AnalyticsService:
         total_debits = sum(
             float(t.amount) for t in transactions if t.transaction_type == "debit"
         )
-        savings_rate = ((total_credits - total_debits) / total_credits * 100) if total_credits else 0
+        savings_rate = (
+            ((total_credits - total_debits) / total_credits * 100)
+            if total_credits
+            else 0
+        )
         expense_ratio = (total_debits / total_credits * 100) if total_credits else 100
         overall_score = max(0.0, min(100.0, savings_rate))
 
-        record = await self._repo.save_health_score({
-            "user_id": user_id,
-            "statement_id": statement_id,
-            "overall_score": round(overall_score, 2),
-            "savings_rate": round(savings_rate, 2),
-            "expense_ratio": round(expense_ratio, 2),
-            "score_breakdown": {
-                "total_credits": total_credits,
-                "total_debits": total_debits,
-            },
-        })
+        record = await self._repo.save_health_score(
+            {
+                "user_id": user_id,
+                "statement_id": statement_id,
+                "overall_score": round(overall_score, 2),
+                "savings_rate": round(savings_rate, 2),
+                "expense_ratio": round(expense_ratio, 2),
+                "score_breakdown": {
+                    "total_credits": total_credits,
+                    "total_debits": total_debits,
+                },
+            }
+        )
 
         logger.info(
             "Health score computed",
@@ -122,6 +131,7 @@ class AnalyticsService:
 
         if model and encoder:
             import pandas as pd
+
             df = pd.DataFrame([feature_vector])
             prediction = model.predict(df)[0]
             probabilities = model.predict_proba(df)[0]
@@ -130,14 +140,16 @@ class AnalyticsService:
             confidence = float(max(probabilities))
             risk_score = confidence * 100
 
-        record = await self._repo.save_risk_profile({
-            "user_id": user_id,
-            "statement_id": statement_id,
-            "risk_level": risk_level,
-            "risk_score": round(risk_score, 2),
-            "confidence": round(confidence, 4),
-            "feature_inputs": feature_vector,
-        })
+        record = await self._repo.save_risk_profile(
+            {
+                "user_id": user_id,
+                "statement_id": statement_id,
+                "risk_level": risk_level,
+                "risk_score": round(risk_score, 2),
+                "confidence": round(confidence, 4),
+                "feature_inputs": feature_vector,
+            }
+        )
 
         logger.info(
             "Risk profile computed",

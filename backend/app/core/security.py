@@ -44,6 +44,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 # ── JWT Token Creation ────────────────────────────────────────────────────────
 
+
 def create_access_token(
     subject: str,
     role: str,
@@ -71,7 +72,9 @@ def create_access_token(
         "jti": str(uuid4()),  # Unique token ID for blacklisting
         "type": "access",
     }
-    return jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+    return jwt.encode(
+        payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM
+    )
 
 
 def create_refresh_token(subject: str) -> tuple[str, str]:
@@ -82,7 +85,9 @@ def create_refresh_token(subject: str) -> tuple[str, str]:
         Tuple of (encoded_token, jti) — jti stored in Redis for revocation
     """
     jti = str(uuid4())
-    expire = datetime.now(timezone.utc) + timedelta(days=settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS)
+    expire = datetime.now(timezone.utc) + timedelta(
+        days=settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS
+    )
     payload = {
         "sub": subject,
         "exp": expire,
@@ -90,7 +95,9 @@ def create_refresh_token(subject: str) -> tuple[str, str]:
         "jti": jti,
         "type": "refresh",
     }
-    token = jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+    token = jwt.encode(
+        payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM
+    )
     return token, jti
 
 
@@ -115,6 +122,7 @@ def decode_token(token: str) -> TokenPayload:
 
 # ── RBAC Dependency Factory ───────────────────────────────────────────────────
 
+
 def require_roles(*allowed_roles: RoleEnum) -> Callable:
     """
     FastAPI dependency factory for role-based access control.
@@ -130,6 +138,7 @@ def require_roles(*allowed_roles: RoleEnum) -> Callable:
     Returns:
         FastAPI dependency that returns the authenticated user or raises 403
     """
+
     async def _role_checker(
         current_user=Depends(_get_current_active_user),
     ):
@@ -152,6 +161,7 @@ def require_roles(*allowed_roles: RoleEnum) -> Callable:
 
 # ── Internal Auth Dependency (imported by dependencies.py) ────────────────────
 
+
 async def _get_current_active_user(
     credentials: HTTPAuthorizationCredentials = Depends(http_bearer),
 ):
@@ -161,4 +171,5 @@ async def _get_current_active_user(
     """
     # Import here to avoid circular imports
     from app.core.dependencies import get_current_active_user
+
     return await get_current_active_user(credentials)

@@ -36,7 +36,9 @@ class Transaction(UUIDMixin, TimestampMixin, Base):
     balance: Mapped[Decimal | None] = mapped_column(Numeric(15, 2), nullable=True)
 
     # Relationships
-    statement: Mapped["Statement"] = relationship("Statement", back_populates="transactions")
+    statement: Mapped["Statement"] = relationship(
+        "Statement", back_populates="transactions"
+    )
 
     # Composite index for efficient user+date range queries
     __table_args__ = (

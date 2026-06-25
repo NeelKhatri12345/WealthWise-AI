@@ -19,11 +19,27 @@ settings = get_settings()
 # Expected CSV column mappings (handles common bank export formats)
 CSV_COLUMN_MAPS = [
     # Format 1: Standard bank export
-    {"date": "Date", "description": "Description", "amount": "Amount", "balance": "Balance"},
+    {
+        "date": "Date",
+        "description": "Description",
+        "amount": "Amount",
+        "balance": "Balance",
+    },
     # Format 2: Debit/Credit split
-    {"date": "Date", "description": "Narration", "debit": "Debit", "credit": "Credit", "balance": "Balance"},
+    {
+        "date": "Date",
+        "description": "Narration",
+        "debit": "Debit",
+        "credit": "Credit",
+        "balance": "Balance",
+    },
     # Format 3: Indian bank format
-    {"date": "Txn Date", "description": "Description", "amount": "Amount (INR)", "balance": "Balance"},
+    {
+        "date": "Txn Date",
+        "description": "Description",
+        "amount": "Amount (INR)",
+        "balance": "Balance",
+    },
 ]
 
 
@@ -39,6 +55,7 @@ class OCRClient:
         """
         try:
             import pdfplumber
+
             transactions = []
 
             with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
@@ -100,7 +117,9 @@ class OCRClient:
         def safe_decimal(val: Any) -> Decimal:
             if val is None:
                 return Decimal("0")
-            cleaned = str(val).replace(",", "").replace("₹", "").replace("$", "").strip()
+            cleaned = (
+                str(val).replace(",", "").replace("₹", "").replace("$", "").strip()
+            )
             try:
                 return Decimal(cleaned)
             except InvalidOperation:
@@ -110,6 +129,7 @@ class OCRClient:
             if not val:
                 return None
             import dateutil.parser
+
             try:
                 return dateutil.parser.parse(str(val)).date()
             except Exception:
@@ -117,7 +137,13 @@ class OCRClient:
 
         # Try to find date, description, and amount in the row
         date_keys = ["Date", "Txn Date", "Transaction Date", "date"]
-        desc_keys = ["Description", "Narration", "Details", "Particulars", "description"]
+        desc_keys = [
+            "Description",
+            "Narration",
+            "Details",
+            "Particulars",
+            "description",
+        ]
         amount_keys = ["Amount", "Amount (INR)", "amount"]
         debit_keys = ["Debit", "Withdrawal", "debit"]
         credit_keys = ["Credit", "Deposit", "credit"]
