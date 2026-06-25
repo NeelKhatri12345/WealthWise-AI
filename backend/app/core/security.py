@@ -21,8 +21,7 @@ from passlib.context import CryptContext
 from app.core.config import get_settings
 from app.core.logger import logger
 from app.enums.role_enum import RoleEnum
-from app.exceptions.custom_exceptions import (ForbiddenException,
-                                              UnauthorizedException)
+from app.exceptions.custom_exceptions import ForbiddenException, UnauthorizedException
 from app.schemas.auth_schema import TokenPayload
 
 settings = get_settings()

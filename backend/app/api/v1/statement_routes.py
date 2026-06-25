@@ -5,11 +5,12 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, Query, UploadFile
 
-from app.core.dependencies import (get_current_active_user,
-                                   get_statement_service)
+from app.core.dependencies import get_current_active_user, get_statement_service
 from app.schemas.base_schema import APIResponse
-from app.schemas.statement_schema import (StatementStatusResponse,
-                                          StatementUploadResponse)
+from app.schemas.statement_schema import (
+    StatementStatusResponse,
+    StatementUploadResponse,
+)
 from app.services.statement_service import StatementService
 
 router = APIRouter()

@@ -9,8 +9,7 @@ The singleton is cached via @lru_cache for performance.
 from functools import lru_cache
 from typing import List
 
-from pydantic import (AnyHttpUrl, Field, PostgresDsn, field_validator,
-                      model_validator)
+from pydantic import AnyHttpUrl, Field, PostgresDsn, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 

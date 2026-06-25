@@ -4,9 +4,13 @@ from fastapi import APIRouter, Depends
 
 from app.core.dependencies import get_auth_service, get_current_active_user
 from app.core.security import decode_token
-from app.schemas.auth_schema import (ChangePasswordRequest, LoginRequest,
-                                     RefreshTokenRequest, RegisterRequest,
-                                     TokenResponse)
+from app.schemas.auth_schema import (
+    ChangePasswordRequest,
+    LoginRequest,
+    RefreshTokenRequest,
+    RegisterRequest,
+    TokenResponse,
+)
 from app.schemas.base_schema import APIResponse
 from app.services.auth_service import AuthService
 

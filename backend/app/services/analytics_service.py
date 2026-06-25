@@ -10,8 +10,10 @@ from uuid import UUID
 from fastapi import Request
 
 from app.core.logger import logger
-from app.exceptions.custom_exceptions import (NotFoundException,
-                                              ServiceUnavailableException)
+from app.exceptions.custom_exceptions import (
+    NotFoundException,
+    ServiceUnavailableException,
+)
 from app.models.transaction import Transaction
 from app.repositories.analytics_repository import AnalyticsRepository
 from app.schemas.health_score_schema import HealthScoreResponse
