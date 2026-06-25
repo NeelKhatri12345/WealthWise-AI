@@ -3,6 +3,11 @@
 from httpx import AsyncClient
 import pytest
 
+# Every test in tests/integration/ is, by definition, an integration test.
+# Applying the marker at module scope keeps each test truthfully classified so
+# the CI selector `-m "integration"` collects them (instead of deselecting all).
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.asyncio
 async def test_health_endpoint(client: AsyncClient):
@@ -29,7 +34,10 @@ async def test_register_user(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_login_invalid_credentials(client: AsyncClient):
     """Test login with wrong credentials returns 401."""
-    payload = {"email": "nobody@wealthwise.ai", "password": "wrong"}
+    # Password must satisfy the LoginRequest min_length=8 constraint so the
+    # request reaches the auth service (testing *credentials*, not input
+    # validation); an unknown user then yields 401, not a 422 validation error.
+    payload = {"email": "nobody@wealthwise.ai", "password": "WrongPass1!"}
     response = await client.post("/api/v1/auth/login", json=payload)
     assert response.status_code == 401
     assert response.json()["success"] is False
