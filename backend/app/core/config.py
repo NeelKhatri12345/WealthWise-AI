@@ -7,6 +7,8 @@ The singleton is cached via @lru_cache for performance.
 """
 
 from functools import lru_cache
+import os
+from pathlib import Path
 from typing import List
 
 from pydantic import Field, field_validator, model_validator
@@ -20,7 +22,6 @@ class Settings(BaseSettings):
     """
 
     model_config = SettingsConfigDict(
-        env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
@@ -109,10 +110,33 @@ class Settings(BaseSettings):
         return self.MAX_FILE_SIZE_MB * 1024 * 1024
 
 
+def _resolve_env_file() -> str | None:
+    """Determine which .env file to load.
+
+    Resolution order:
+    1. ENV_FILE env-var (explicit override for CI / custom setups)
+    2. .env.test  — if it exists in the backend root (test runs)
+    3. .env       — default production / local development file
+    4. None       — rely solely on real environment variables
+    """
+    override = os.environ.get("ENV_FILE")
+    if override:
+        return override
+
+    backend_root = Path(__file__).resolve().parent.parent.parent
+    for candidate in (".env", ".env.test"):
+        path = backend_root / candidate
+        if path.is_file():
+            return str(path)
+
+    return None
+
+
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
     """
     Returns the cached Settings singleton.
     Called once at startup; subsequent calls return cached instance.
     """
-    return Settings()
+    env_file = _resolve_env_file()
+    return Settings(_env_file=env_file)

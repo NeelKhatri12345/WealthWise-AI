@@ -56,11 +56,23 @@ exclude = [
 
 # ── pytest ────────────────────────────────────────────────────────────────────
 [tool.pytest.ini_options]
+# pythonpath = ["."] adds backend/ (the pyproject.toml rootdir) to sys.path
+# so `from app.core...` resolves both locally and in CI without sys.path hacks
+# or `pip install -e .`. Native pytest 7+ feature.
+pythonpath = ["."]
 asyncio_mode = "auto"
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+addopts = [
+    "--strict-markers",
+    "-ra",
+]
+markers = [
+    "integration: marks tests requiring real services (database, redis)",
+    "unit: marks fast isolated unit tests",
+]
 
 # ── build-system ──────────────────────────────────────────────────────────────
 [build-system]

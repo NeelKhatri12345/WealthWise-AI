@@ -105,37 +105,9 @@ jobs:
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
 
-      - name: Create test .env
-        # NOTE: ALLOWED_ORIGINS / ALLOWED_HOSTS must be JSON arrays because
-        # pydantic-settings v2 JSON-decodes complex env vars before validators run.
-        run: |
-          cat > .env << 'EOF'
-          APP_NAME=WealthWise AI Test
-          APP_ENV=development
-          APP_PORT=8000
-          SECRET_KEY=test-secret-key-minimum-32-characters-long
-          POSTGRES_HOST=localhost
-          POSTGRES_PORT=5432
-          POSTGRES_DB=test_db
-          POSTGRES_USER=test_user
-          POSTGRES_PASSWORD=test_password
-          DATABASE_URL=sqlite+aiosqlite:///:memory:
-          REDIS_URL=redis://localhost:6379/0
-          JWT_SECRET_KEY=test-jwt-secret-key-minimum-32-chars
-          JWT_ALGORITHM=HS256
-          JWT_ACCESS_TOKEN_EXPIRE_MINUTES=15
-          JWT_REFRESH_TOKEN_EXPIRE_DAYS=7
-          GEMINI_API_KEY=test-api-key
-          GEMINI_MODEL=gemini-2.5-flash
-          GEMINI_MAX_TOKENS=8192
-          GEMINI_TEMPERATURE=0.7
-          S3_BUCKET_NAME=test-bucket
-          S3_REGION=us-east-1
-          ALLOWED_ORIGINS=["http://localhost:3000"]
-          ALLOWED_HOSTS=["localhost","127.0.0.1"]
-          EOF
-
       - name: Run unit tests with coverage
+        # .env.test is checked into the repo — no heredoc needed.
+        # Settings._resolve_env_file() falls back to it when .env is absent.
         # NOTE: --cov-fail-under is temporarily 0 while the test suite is
         # being bootstrapped. Raise this to 80 once real unit tests land.
         run: |

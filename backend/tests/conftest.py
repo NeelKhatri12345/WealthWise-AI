@@ -14,11 +14,10 @@ import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from app.core.dependencies import get_db
-from app.database.base import Base
-from app.main import create_app
-
-# Use SQLite for test isolation (no PostgreSQL required for unit tests)
+# NOTE: App imports are deferred into fixtures (instead of module-level) so that
+# pure unit tests which don't need the DB/app fixtures aren't forced to pay the
+# cost of loading the production engine config at collection time. This also
+# avoids tripping PostgreSQL-only engine options when the test DB is SQLite.
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
 
@@ -31,6 +30,8 @@ def event_loop():
 
 @pytest_asyncio.fixture(scope="function")
 async def test_engine():
+    from app.database.base import Base
+
     engine = create_async_engine(TEST_DATABASE_URL, echo=False)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
@@ -52,6 +53,9 @@ async def db_session(test_engine) -> AsyncGenerator[AsyncSession, None]:
 
 @pytest_asyncio.fixture(scope="function")
 async def app(db_session: AsyncSession) -> FastAPI:
+    from app.core.dependencies import get_db
+    from app.main import create_app
+
     application = create_app()
     application.dependency_overrides[get_db] = lambda: db_session
     return application
