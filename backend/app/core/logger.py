@@ -12,9 +12,9 @@ Architecture:
 
 import json
 import logging
-import sys
 from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
+import sys
 from typing import Any, MutableMapping
 
 # Ensure logs directory exists

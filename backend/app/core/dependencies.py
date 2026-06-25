@@ -24,8 +24,7 @@ from app.core.config import get_settings
 from app.core.logger import logger
 from app.database.session import AsyncSessionLocal
 from app.enums.role_enum import RoleEnum
-from app.exceptions.custom_exceptions import (ForbiddenException,
-                                              UnauthorizedException)
+from app.exceptions.custom_exceptions import ForbiddenException, UnauthorizedException
 
 settings = get_settings()
 http_bearer = HTTPBearer(auto_error=False)

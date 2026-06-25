@@ -1,0 +1,27 @@
+[flake8]
+# Aligned with Black (line-length=88) but flake8 reports at 100 for soft cap.
+# Black-compatible ignore set: E203 (whitespace before ':'), W503 (line break before operator),
+# E501 (line too long — Black handles this), E704 (multiple statements on one line).
+max-line-length = 100
+extend-ignore = E203,E501,E704,W503
+exclude =
+    .git,
+    .venv,
+    venv,
+    env,
+    __pycache__,
+    .mypy_cache,
+    .pytest_cache,
+    .ruff_cache,
+    build,
+    dist,
+    alembic/versions
+per-file-ignores =
+    # __init__.py legitimately re-exports
+    __init__.py:F401
+    # SQLAlchemy Mapped["ForwardRef"] strings confuse pyflakes (F821)
+    app/models/*.py:F821
+    # Pre-existing dead local in client; not a formatting concern
+    app/clients/ocr_client.py:F841
+    # Tests freely use asserts and fixtures
+    tests/*:S101,F401,F811

@@ -4,8 +4,7 @@ from typing import List
 
 from fastapi import APIRouter, Depends, Query
 
-from app.core.dependencies import (get_analytics_service,
-                                   get_current_active_user)
+from app.core.dependencies import get_analytics_service, get_current_active_user
 from app.schemas.base_schema import APIResponse
 from app.schemas.risk_profile_schema import RiskProfileResponse
 from app.services.analytics_service import AnalyticsService

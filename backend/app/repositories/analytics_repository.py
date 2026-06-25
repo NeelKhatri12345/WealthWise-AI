@@ -17,7 +17,6 @@ from app.models.ai_conversation import AIConversation
 from app.models.health_score import HealthScore
 from app.models.portfolio import Portfolio
 from app.models.risk_profile import RiskProfile
-from app.repositories.base_repository import BaseRepository
 
 
 class AnalyticsRepository:

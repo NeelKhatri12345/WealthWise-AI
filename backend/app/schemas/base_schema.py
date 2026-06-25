@@ -6,7 +6,7 @@ Shared base response wrapper and common types.
 
 from typing import Generic, List, Optional, TypeVar
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 T = TypeVar("T")
 

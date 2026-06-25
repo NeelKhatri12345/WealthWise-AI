@@ -12,11 +12,11 @@ Responsibilities:
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
-import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.staticfiles import StaticFiles
+import uvicorn
 
 from app.api.v1.router import api_v1_router
 from app.core.config import get_settings
@@ -51,8 +51,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     # Load ML models into app state
     try:
-        import pickle
         from pathlib import Path
+        import pickle
 
         models_dir = Path("app/ml_models")
         if models_dir.exists():

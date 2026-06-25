@@ -3,12 +3,10 @@
 from datetime import date
 from decimal import Decimal
 from typing import List, Optional
-from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
 
-from app.core.dependencies import (get_current_active_user,
-                                   get_transaction_repository)
+from app.core.dependencies import get_current_active_user, get_transaction_repository
 from app.repositories.transaction_repository import TransactionRepository
 from app.schemas.base_schema import APIResponse
 from app.schemas.transaction_schema import MonthlySummary, TransactionResponse

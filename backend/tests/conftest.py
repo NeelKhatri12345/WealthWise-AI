@@ -8,12 +8,11 @@ Uses an in-memory SQLite database for fast isolated testing.
 import asyncio
 from typing import AsyncGenerator
 
-import pytest
-import pytest_asyncio
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy.ext.asyncio import (AsyncSession, async_sessionmaker,
-                                    create_async_engine)
+import pytest
+import pytest_asyncio
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.core.dependencies import get_db
 from app.database.base import Base

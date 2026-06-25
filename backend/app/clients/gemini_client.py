@@ -5,8 +5,6 @@ Wraps google-genai SDK with retry logic, token tracking,
 and structured prompt building.
 """
 
-from typing import Any
-
 from app.core.config import get_settings
 from app.core.logger import logger
 from app.exceptions.custom_exceptions import ServiceUnavailableException
