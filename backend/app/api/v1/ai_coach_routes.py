@@ -5,11 +5,8 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 
 from app.core.dependencies import get_ai_coach_service, get_current_active_user
-from app.schemas.ai_schema import (
-    AIChatRequest,
-    AIChatResponse,
-    ConversationHistoryResponse,
-)
+from app.schemas.ai_schema import (AIChatRequest, AIChatResponse,
+                                   ConversationHistoryResponse)
 from app.schemas.base_schema import APIResponse
 from app.services.ai_coach_service import AICoachService
 
