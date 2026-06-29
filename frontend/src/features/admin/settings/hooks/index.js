@@ -1,0 +1,1 @@
+export { useAdminSettings } from './useAdminSettings';

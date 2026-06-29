@@ -1,0 +1,11 @@
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { Link } from 'react-router-dom';
+import { RegisterForm, SocialLogin } from './components';
+import { useRegister } from './hooks';
+export const RegisterPage = () => {
+    const { registerUser, isLoading, error, isSuccess } = useRegister();
+    if (isSuccess) {
+        return (_jsx("div", { className: "flex min-h-screen items-center justify-center bg-gray-50 px-4", children: _jsxs("div", { className: "w-full max-w-md rounded-xl bg-white p-8 text-center shadow-lg", children: [_jsx("div", { className: "mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100", children: _jsx("svg", { className: "h-6 w-6 text-green-600", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", children: _jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M5 13l4 4L19 7" }) }) }), _jsx("h2", { className: "text-xl font-semibold text-gray-900", children: "Account created!" }), _jsx("p", { className: "mt-2 text-sm text-gray-600", children: "Please check your email to verify your account." }), _jsx(Link, { to: "/login", className: "mt-4 inline-block text-sm font-medium text-indigo-600 hover:text-indigo-500", children: "Go to Login" })] }) }));
+    }
+    return (_jsx("div", { className: "flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12", children: _jsxs("div", { className: "w-full max-w-md space-y-8", children: [_jsxs("div", { className: "text-center", children: [_jsx("h1", { className: "text-3xl font-bold tracking-tight text-gray-900", children: "Create your account" }), _jsx("p", { className: "mt-2 text-sm text-gray-600", children: "Start your financial wellness journey" })] }), _jsxs("div", { className: "rounded-xl bg-white p-8 shadow-lg", children: [error && (_jsx("div", { className: "mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700", children: error })), _jsx(RegisterForm, { onSubmit: registerUser, isLoading: isLoading }), _jsx("div", { className: "mt-6", children: _jsx(SocialLogin, {}) })] }), _jsxs("p", { className: "text-center text-sm text-gray-600", children: ["Already have an account?", ' ', _jsx(Link, { to: "/login", className: "font-medium text-indigo-600 hover:text-indigo-500", children: "Sign in" })] })] }) }));
+};

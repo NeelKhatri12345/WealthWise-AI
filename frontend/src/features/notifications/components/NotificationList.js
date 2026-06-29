@@ -1,0 +1,6 @@
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { NotificationItem } from './NotificationItem';
+export const NotificationList = ({ notifications, onMarkRead, onMarkAllRead, onDelete, }) => {
+    const unreadCount = notifications.filter((n) => !n.read).length;
+    return (_jsxs("div", { className: "rounded-xl bg-white shadow-sm border border-gray-100", children: [_jsxs("div", { className: "flex items-center justify-between border-b border-gray-100 px-6 py-4", children: [_jsxs("div", { children: [_jsx("h3", { className: "text-lg font-semibold text-gray-900", children: "Notifications" }), unreadCount > 0 && (_jsxs("p", { className: "text-sm text-gray-500", children: [unreadCount, " unread"] }))] }), unreadCount > 0 && onMarkAllRead && (_jsx("button", { onClick: onMarkAllRead, className: "text-sm font-medium text-indigo-600 hover:text-indigo-500", children: "Mark all as read" }))] }), notifications.length === 0 ? (_jsx("p", { className: "p-6 text-center text-sm text-gray-500", children: "No notifications" })) : (_jsx("div", { className: "divide-y divide-gray-100", children: notifications.map((notification) => (_jsx(NotificationItem, { ...notification, onMarkRead: () => onMarkRead?.(notification.id), onDelete: () => onDelete?.(notification.id) }, notification.id))) }))] }));
+};

@@ -1,0 +1,4 @@
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+export const QuickStats = ({ stats }) => {
+    return (_jsx("div", { className: "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4", children: stats.map((stat) => (_jsxs("div", { className: "rounded-xl bg-white p-5 shadow-sm border border-gray-100 hover:shadow-md transition-shadow", children: [_jsxs("div", { className: "flex items-center justify-between", children: [_jsx("div", { className: "rounded-lg bg-indigo-50 p-2 text-indigo-600", children: stat.icon }), stat.change !== undefined && (_jsxs("span", { className: `text-sm font-medium ${stat.change >= 0 ? 'text-green-600' : 'text-red-600'}`, children: [stat.change >= 0 ? '+' : '', stat.change, "%"] }))] }), _jsx("p", { className: "mt-3 text-2xl font-bold text-gray-900", children: stat.value }), _jsx("p", { className: "text-sm text-gray-500", children: stat.label })] }, stat.label))) }));
+};

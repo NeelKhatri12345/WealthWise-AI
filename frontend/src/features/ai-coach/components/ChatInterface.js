@@ -1,0 +1,11 @@
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { useRef, useEffect } from 'react';
+import { ChatMessage } from './ChatMessage';
+import { ChatInput } from './ChatInput';
+export const ChatInterface = ({ messages, onSendMessage, isTyping = false }) => {
+    const messagesEndRef = useRef(null);
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages]);
+    return (_jsxs("div", { className: "flex h-[600px] flex-col rounded-xl bg-white shadow-sm border border-gray-100", children: [_jsxs("div", { className: "border-b border-gray-100 px-6 py-4", children: [_jsx("h3", { className: "text-lg font-semibold text-gray-900", children: "AI Financial Coach" }), _jsx("p", { className: "text-sm text-gray-500", children: "Ask me anything about your finances" })] }), _jsxs("div", { className: "flex-1 overflow-y-auto px-6 py-4 space-y-4", children: [messages.length === 0 && (_jsx("div", { className: "flex h-full items-center justify-center text-center", children: _jsxs("div", { children: [_jsx("div", { className: "mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100", children: _jsx("svg", { className: "h-6 w-6 text-indigo-600", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", children: _jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" }) }) }), _jsx("p", { className: "text-sm text-gray-500", children: "Start a conversation with your AI coach" })] }) })), messages.map((msg) => (_jsx(ChatMessage, { role: msg.role, content: msg.content, timestamp: msg.timestamp }, msg.id))), isTyping && (_jsxs("div", { className: "flex items-center gap-2 text-sm text-gray-500", children: [_jsxs("div", { className: "flex gap-1", children: [_jsx("span", { className: "h-2 w-2 animate-bounce rounded-full bg-gray-400" }), _jsx("span", { className: "h-2 w-2 animate-bounce rounded-full bg-gray-400", style: { animationDelay: '0.1s' } }), _jsx("span", { className: "h-2 w-2 animate-bounce rounded-full bg-gray-400", style: { animationDelay: '0.2s' } })] }), _jsx("span", { children: "AI is thinking..." })] })), _jsx("div", { ref: messagesEndRef })] }), _jsx(ChatInput, { onSend: onSendMessage, disabled: isTyping })] }));
+};

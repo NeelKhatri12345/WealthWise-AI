@@ -1,0 +1,4 @@
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+export const UserActions = ({ userId, currentStatus, onActivate, onBan, onDelete }) => {
+    return (_jsxs("div", { className: "flex items-center gap-2", children: [currentStatus !== 'active' && (_jsx("button", { onClick: () => onActivate(userId), className: "rounded-lg bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700 hover:bg-green-100 transition-colors", children: "Activate" })), currentStatus !== 'banned' && (_jsx("button", { onClick: () => onBan(userId), className: "rounded-lg bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100 transition-colors", children: "Ban" })), _jsx("button", { onClick: () => onDelete(userId), className: "rounded-lg bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 transition-colors", children: "Delete" })] }));
+};

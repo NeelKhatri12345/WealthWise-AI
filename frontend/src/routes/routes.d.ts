@@ -1,0 +1,21 @@
+export declare const ROUTES: {
+    readonly HOME: "/";
+    readonly LOGIN: "/login";
+    readonly REGISTER: "/register";
+    readonly DASHBOARD: "/dashboard";
+    readonly UPLOAD: "/upload";
+    readonly TRANSACTIONS: "/transactions";
+    readonly HEALTH_SCORE: "/health-score";
+    readonly RISK_PROFILE: "/risk-profile";
+    readonly PORTFOLIO: "/portfolio";
+    readonly AI_COACH: "/ai-coach";
+    readonly REPORTS: "/reports";
+    readonly NOTIFICATIONS: "/notifications";
+    readonly PROFILE: "/profile";
+    readonly SETTINGS: "/settings";
+    readonly ADMIN_DASHBOARD: "/admin";
+    readonly ADMIN_USERS: "/admin/users";
+    readonly UNAUTHORIZED: "/unauthorized";
+    readonly NOT_FOUND: "/404";
+};
+export type RoutePath = (typeof ROUTES)[keyof typeof ROUTES];

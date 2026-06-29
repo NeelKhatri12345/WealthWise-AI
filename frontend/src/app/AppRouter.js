@@ -1,0 +1,31 @@
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import React, { Suspense } from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ROUTES } from "@/routes/routes";
+import { PrivateRoute } from "@/routes/PrivateRoute";
+import { AdminRoute } from "@/routes/AdminRoute";
+import { PublicRoute } from "@/routes/PublicRoute";
+import { MainLayout } from "@/layouts/MainLayout";
+import { AdminLayout } from "@/layouts/AdminLayout";
+import { AuthLayout } from "@/layouts/AuthLayout";
+import { LoadingScreen } from "@/components/feedback/LoadingScreen";
+const LoginPage = React.lazy(() => import("@/pages/auth/LoginPage"));
+const RegisterPage = React.lazy(() => import("@/pages/auth/RegisterPage"));
+const DashboardPage = React.lazy(() => import("@/pages/dashboard/DashboardPage"));
+const UploadPage = React.lazy(() => import("@/pages/upload/UploadPage"));
+const TransactionsPage = React.lazy(() => import("@/pages/transactions/TransactionsPage"));
+const HealthScorePage = React.lazy(() => import("@/pages/health/HealthScorePage"));
+const RiskProfilePage = React.lazy(() => import("@/pages/risk/RiskProfilePage"));
+const PortfolioPage = React.lazy(() => import("@/pages/portfolio/PortfolioPage"));
+const AICoachPage = React.lazy(() => import("@/pages/coach/AICoachPage"));
+const ReportsPage = React.lazy(() => import("@/pages/reports/ReportsPage"));
+const NotificationsPage = React.lazy(() => import("@/pages/notifications/NotificationsPage"));
+const ProfilePage = React.lazy(() => import("@/pages/profile/ProfilePage"));
+const SettingsPage = React.lazy(() => import("@/pages/settings/SettingsPage"));
+const AdminDashboardPage = React.lazy(() => import("@/pages/admin/AdminDashboardPage"));
+const AdminUsersPage = React.lazy(() => import("@/pages/admin/AdminUsersPage"));
+const NotFoundPage = React.lazy(() => import("@/pages/NotFound"));
+const UnauthorizedPage = React.lazy(() => import("@/pages/Unauthorized"));
+export function AppRouter() {
+    return (_jsx(BrowserRouter, { children: _jsx(Suspense, { fallback: _jsx(LoadingScreen, {}), children: _jsxs(Routes, { children: [_jsx(Route, { element: _jsx(PublicRoute, {}), children: _jsxs(Route, { element: _jsx(AuthLayout, {}), children: [_jsx(Route, { path: ROUTES.LOGIN, element: _jsx(LoginPage, {}) }), _jsx(Route, { path: ROUTES.REGISTER, element: _jsx(RegisterPage, {}) })] }) }), _jsx(Route, { element: _jsx(PrivateRoute, {}), children: _jsxs(Route, { element: _jsx(MainLayout, {}), children: [_jsx(Route, { path: ROUTES.HOME, element: _jsx(DashboardPage, {}) }), _jsx(Route, { path: ROUTES.DASHBOARD, element: _jsx(DashboardPage, {}) }), _jsx(Route, { path: ROUTES.UPLOAD, element: _jsx(UploadPage, {}) }), _jsx(Route, { path: ROUTES.TRANSACTIONS, element: _jsx(TransactionsPage, {}) }), _jsx(Route, { path: ROUTES.HEALTH_SCORE, element: _jsx(HealthScorePage, {}) }), _jsx(Route, { path: ROUTES.RISK_PROFILE, element: _jsx(RiskProfilePage, {}) }), _jsx(Route, { path: ROUTES.PORTFOLIO, element: _jsx(PortfolioPage, {}) }), _jsx(Route, { path: ROUTES.AI_COACH, element: _jsx(AICoachPage, {}) }), _jsx(Route, { path: ROUTES.REPORTS, element: _jsx(ReportsPage, {}) }), _jsx(Route, { path: ROUTES.NOTIFICATIONS, element: _jsx(NotificationsPage, {}) }), _jsx(Route, { path: ROUTES.PROFILE, element: _jsx(ProfilePage, {}) }), _jsx(Route, { path: ROUTES.SETTINGS, element: _jsx(SettingsPage, {}) })] }) }), _jsx(Route, { element: _jsx(AdminRoute, {}), children: _jsxs(Route, { element: _jsx(AdminLayout, {}), children: [_jsx(Route, { path: ROUTES.ADMIN_DASHBOARD, element: _jsx(AdminDashboardPage, {}) }), _jsx(Route, { path: ROUTES.ADMIN_USERS, element: _jsx(AdminUsersPage, {}) })] }) }), _jsx(Route, { path: ROUTES.UNAUTHORIZED, element: _jsx(UnauthorizedPage, {}) }), _jsx(Route, { path: "*", element: _jsx(NotFoundPage, {}) })] }) }) }));
+}
