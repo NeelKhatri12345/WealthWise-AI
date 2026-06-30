@@ -1,17 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 export const useUsers = (page = 1, filters) => {
     const [users, setUsers] = useState([]);
     const [totalPages, setTotalPages] = useState(1);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
-    const fetchUsers = async () => {
+    const fetchUsers = useCallback(async () => {
         setIsLoading(true);
         setError(null);
         try {
             // TODO: Replace with actual API call
             await new Promise((resolve) => setTimeout(resolve, 500));
             void page;
-            void filters;
+            void filters?.role;
+            void filters?.status;
+            void filters?.search;
             setUsers([]);
             setTotalPages(1);
         }
@@ -21,7 +23,7 @@ export const useUsers = (page = 1, filters) => {
         finally {
             setIsLoading(false);
         }
-    };
+    }, [page, filters?.role, filters?.status, filters?.search]);
     const updateUserStatus = async (id, status) => {
         await new Promise((resolve) => setTimeout(resolve, 300));
         setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, status } : u)));
@@ -30,6 +32,8 @@ export const useUsers = (page = 1, filters) => {
         await new Promise((resolve) => setTimeout(resolve, 300));
         setUsers((prev) => prev.filter((u) => u.id !== id));
     };
-    useEffect(() => { fetchUsers(); }, [page, filters?.role, filters?.status, filters?.search]);
+    useEffect(() => {
+        fetchUsers();
+    }, [fetchUsers]);
     return { users, totalPages, isLoading, error, updateUserStatus, deleteUser, refetch: fetchUsers };
 };

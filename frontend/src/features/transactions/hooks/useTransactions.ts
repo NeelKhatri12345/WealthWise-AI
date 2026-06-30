@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface Transaction {
   id: string;
@@ -35,7 +35,7 @@ export const useTransactions = ({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchTransactions = async () => {
+  const fetchTransactions = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
@@ -51,11 +51,11 @@ export const useTransactions = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [page, pageSize, search]);
 
   useEffect(() => {
     fetchTransactions();
-  }, [page, pageSize, search]);
+  }, [fetchTransactions]);
 
   return { transactions, totalPages, isLoading, error, refetch: fetchTransactions };
 };

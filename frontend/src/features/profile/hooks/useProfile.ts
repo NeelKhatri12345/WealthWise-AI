@@ -50,7 +50,7 @@ export const useProfile = (): UseProfileReturn => {
     setProfile((prev) => (prev ? { ...prev, ...data } : prev));
   };
 
-  const changePassword = async (_current: string, _newPwd: string) => {
+  const changePassword = async (): Promise<void> => {
     // TODO: Replace with actual API call
     await new Promise((resolve) => setTimeout(resolve, 500));
   };

@@ -12,7 +12,7 @@ export function getRiskGaugeOptions(
 ): Highcharts.Options {
   const max = data.maxScore ?? 100;
   const pct = (data.score / max) * 100;
-  let color = CHART_COLORS.gauge.high;
+  let color: string = CHART_COLORS.gauge.high;
   if (pct >= 70) color = CHART_COLORS.gauge.low;
   else if (pct >= 40) color = CHART_COLORS.gauge.medium;
 
@@ -140,9 +140,8 @@ export function getRiskTrendOptions(
       ],
     },
     tooltip: {
-      formatter() {
-        const point = this as unknown as Highcharts.TooltipFormatterContextObject;
-        return `<b>${point.x}</b><br/>Risk Score: <b>${point.y}</b>`;
+      formatter: function (this: Highcharts.Point) {
+        return `<b>${this.x}</b><br/>Risk Score: <b>${this.y}</b>`;
       },
     },
     series: [

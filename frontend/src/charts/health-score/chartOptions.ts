@@ -12,7 +12,7 @@ export function getScoreGaugeOptions(
 ): Highcharts.Options {
   const max = data.maxScore ?? 100;
   const pct = (data.score / max) * 100;
-  let color = CHART_COLORS.gauge.low;
+  let color: string = CHART_COLORS.gauge.low;
   if (pct >= 70) color = CHART_COLORS.gauge.high;
   else if (pct >= 40) color = CHART_COLORS.gauge.medium;
 
@@ -94,9 +94,8 @@ export function getScoreHistoryOptions(
       ],
     },
     tooltip: {
-      formatter() {
-        const point = this as unknown as Highcharts.TooltipFormatterContextObject;
-        return `<b>${point.x}</b><br/>Score: <b>${point.y}</b>`;
+      formatter: function (this: Highcharts.Point) {
+        return `<b>${this.x}</b><br/>Score: <b>${this.y}</b>`;
       },
     },
     series: [
@@ -121,7 +120,7 @@ export function getMetricRadarOptions(
   data: MetricRadarData
 ): Highcharts.Options {
   return {
-    chart: { polar: true, type: 'line' },
+    chart: { polar: true, type: 'area' },
     title: { text: undefined },
     pane: { size: '80%' },
     xAxis: {
@@ -141,7 +140,7 @@ export function getMetricRadarOptions(
     series: [
       {
         name: 'Metrics',
-        type: 'line',
+        type: 'area',
         data: data.values,
         pointPlacement: 'on',
         color: CHART_COLORS.primary,

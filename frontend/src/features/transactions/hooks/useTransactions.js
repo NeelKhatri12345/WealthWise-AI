@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 export const useTransactions = ({ page = 1, pageSize = 20, search, } = {}) => {
     const [transactions, setTransactions] = useState([]);
     const [totalPages, setTotalPages] = useState(1);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
-    const fetchTransactions = async () => {
+    const fetchTransactions = useCallback(async () => {
         setIsLoading(true);
         setError(null);
         try {
@@ -22,9 +22,9 @@ export const useTransactions = ({ page = 1, pageSize = 20, search, } = {}) => {
         finally {
             setIsLoading(false);
         }
-    };
+    }, [page, pageSize, search]);
     useEffect(() => {
         fetchTransactions();
-    }, [page, pageSize, search]);
+    }, [fetchTransactions]);
     return { transactions, totalPages, isLoading, error, refetch: fetchTransactions };
 };

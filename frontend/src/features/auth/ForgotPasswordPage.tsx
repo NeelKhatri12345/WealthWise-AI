@@ -6,7 +6,7 @@ export const ForgotPasswordPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  const handleSubmit = async (_data: { email: string }) => {
+  const handleSubmit = async () => {
     setIsLoading(true);
     try {
       // TODO: Replace with actual API call

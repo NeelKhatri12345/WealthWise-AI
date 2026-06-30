@@ -1,7 +1,7 @@
 export declare const env: {
-    readonly API_BASE_URL: string;
-    readonly APP_NAME: string;
-    readonly APP_VERSION: string;
-    readonly IS_DEV: boolean;
-    readonly IS_PROD: boolean;
+    readonly API_BASE_URL: any;
+    readonly APP_NAME: any;
+    readonly APP_VERSION: any;
+    readonly IS_DEV: any;
+    readonly IS_PROD: any;
 };

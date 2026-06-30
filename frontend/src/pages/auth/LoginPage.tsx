@@ -28,7 +28,7 @@ export default function LoginPage() {
   });
 
   // Placeholder submit handler — no API call yet
-  const onSubmit = handleSubmit(async (_data) => {
+  const onSubmit = handleSubmit(async () => {
     setServerError(null);
     // TODO: Wire up authentication API call
     // Example:
@@ -96,7 +96,7 @@ export default function LoginPage() {
           </label>
 
           <Link
-            to="#"
+            to={ROUTES.FORGOT_PASSWORD}
             className="text-sm font-medium text-primary-600 hover:text-primary-700"
           >
             Forgot password?

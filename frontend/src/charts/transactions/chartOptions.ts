@@ -27,10 +27,10 @@ export function getMonthlyTrendOptions(
     ],
     tooltip: {
       shared: true,
-      formatter() {
-        const points = (this as unknown as Highcharts.TooltipFormatterContextObject).points ?? [];
+      formatter: function (this: Highcharts.Point) {
+        const points = this.points ?? [];
         let s = `<b>${points[0]?.x}</b>`;
-        points.forEach((p) => {
+        points.forEach((p: Highcharts.Point) => {
           const val =
             p.series.name === 'Amount'
               ? formatCurrency(p.y ?? 0)
@@ -118,9 +118,8 @@ export function getDailySpendingOptions(
       labels: { formatter: currencyAxisFormatter },
     },
     tooltip: {
-      formatter() {
-        const point = this as unknown as Highcharts.TooltipFormatterContextObject;
-        return `<b>${point.x}</b><br/>Spent: <b>${formatCurrency(point.y ?? 0)}</b>`;
+      formatter: function (this: Highcharts.Point) {
+        return `<b>${this.x}</b><br/>Spent: <b>${formatCurrency(this.y ?? 0)}</b>`;
       },
     },
     plotOptions: {

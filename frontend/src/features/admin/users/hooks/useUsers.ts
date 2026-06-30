@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface User {
   id: string;
@@ -27,14 +27,16 @@ export const useUsers = (page = 1, filters?: { role?: string; status?: string; s
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
       // TODO: Replace with actual API call
       await new Promise((resolve) => setTimeout(resolve, 500));
       void page;
-      void filters;
+      void filters?.role;
+      void filters?.status;
+      void filters?.search;
       setUsers([]);
       setTotalPages(1);
     } catch (err) {
@@ -42,7 +44,7 @@ export const useUsers = (page = 1, filters?: { role?: string; status?: string; s
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [page, filters?.role, filters?.status, filters?.search]);
 
   const updateUserStatus = async (id: string, status: 'active' | 'inactive' | 'banned') => {
     await new Promise((resolve) => setTimeout(resolve, 300));
@@ -54,7 +56,9 @@ export const useUsers = (page = 1, filters?: { role?: string; status?: string; s
     setUsers((prev) => prev.filter((u) => u.id !== id));
   };
 
-  useEffect(() => { fetchUsers(); }, [page, filters?.role, filters?.status, filters?.search]);
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   return { users, totalPages, isLoading, error, updateUserStatus, deleteUser, refetch: fetchUsers };
 };

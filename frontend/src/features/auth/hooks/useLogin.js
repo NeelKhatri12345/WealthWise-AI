@@ -7,7 +7,7 @@ export const useLogin = () => {
         setError(null);
         try {
             // TODO: Replace with actual API call
-            const _response = await new Promise((resolve) => setTimeout(() => resolve({
+            await new Promise((resolve) => setTimeout(() => resolve({
                 token: 'mock-token',
                 user: { id: '1', name: 'User', email: credentials.email, role: 'user' },
             }), 1000));

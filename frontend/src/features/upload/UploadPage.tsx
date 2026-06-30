@@ -28,7 +28,7 @@ export const UploadPage = () => {
         <UploadProgress
           fileName={currentFile.name}
           progress={progress}
-          status={status === 'idle' ? 'uploading' : status}
+          status={status}
           errorMessage={error ?? undefined}
           onCancel={reset}
         />

@@ -2,6 +2,7 @@ export declare const ROUTES: {
     readonly HOME: "/";
     readonly LOGIN: "/login";
     readonly REGISTER: "/register";
+    readonly FORGOT_PASSWORD: "/forgot-password";
     readonly DASHBOARD: "/dashboard";
     readonly UPLOAD: "/upload";
     readonly TRANSACTIONS: "/transactions";

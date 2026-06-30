@@ -30,7 +30,7 @@ export const useLogin = (): UseLoginReturn => {
     setError(null);
     try {
       // TODO: Replace with actual API call
-      const _response: LoginResponse = await new Promise((resolve) =>
+      await new Promise<LoginResponse>((resolve) =>
         setTimeout(
           () =>
             resolve({

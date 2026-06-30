@@ -22,9 +22,8 @@ export function getSpendingOverviewOptions(
       labels: { formatter: currencyAxisFormatter },
     },
     tooltip: {
-      formatter() {
-        const point = this as unknown as Highcharts.TooltipFormatterContextObject;
-        return `<b>${point.x}</b><br/>Spending: <b>${formatCurrency(point.y ?? 0)}</b>`;
+      formatter: function (this: Highcharts.Point) {
+        return `<b>${this.x}</b><br/>Spending: <b>${formatCurrency(this.y ?? 0)}</b>`;
       },
     },
     series: [
@@ -64,10 +63,10 @@ export function getIncomeVsExpenseOptions(
     },
     tooltip: {
       shared: true,
-      formatter() {
-        const points = (this as unknown as Highcharts.TooltipFormatterContextObject).points ?? [];
+      formatter: function (this: Highcharts.Point) {
+        const points = this.points ?? [];
         let s = `<b>${points[0]?.x}</b>`;
-        points.forEach((p) => {
+        points.forEach((p: Highcharts.Point) => {
           s += `<br/><span style="color:${p.color}">\u25CF</span> ${p.series.name}: <b>${formatCurrency(p.y ?? 0)}</b>`;
         });
         return s;
@@ -162,9 +161,8 @@ export function getSavingsRateOptions(
       ],
     },
     tooltip: {
-      formatter() {
-        const point = this as unknown as Highcharts.TooltipFormatterContextObject;
-        return `<b>${point.x}</b><br/>Savings Rate: <b>${(point.y ?? 0).toFixed(1)}%</b>`;
+      formatter: function (this: Highcharts.Point) {
+        return `<b>${this.x}</b><br/>Savings Rate: <b>${(this.y ?? 0).toFixed(1)}%</b>`;
       },
     },
     series: [

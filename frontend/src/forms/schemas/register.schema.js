@@ -1,11 +1,9 @@
 import { z } from "zod";
-import { emailSchema, passwordSchema, nameSchema, phoneSchema } from "@/utils/validation";
+import { emailSchema, nameSchema, passwordSchema } from "@/utils/validation";
 export const registerSchema = z
     .object({
-    firstName: nameSchema,
-    lastName: nameSchema,
+    fullName: nameSchema,
     email: emailSchema,
-    phone: phoneSchema,
     password: passwordSchema,
     confirmPassword: z.string().min(1, "Please confirm your password"),
 })

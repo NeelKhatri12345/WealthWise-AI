@@ -80,10 +80,10 @@ export function getPerformanceLineOptions(
     },
     tooltip: {
       shared: true,
-      formatter() {
-        const points = (this as unknown as Highcharts.TooltipFormatterContextObject).points ?? [];
+      formatter: function (this: Highcharts.Point) {
+        const points = this.points ?? [];
         let s = `<b>${points[0]?.x}</b>`;
-        points.forEach((p) => {
+        points.forEach((p: Highcharts.Point) => {
           s += `<br/><span style="color:${p.color}">\u25CF</span> ${p.series.name}: <b>${formatCurrency(p.y ?? 0)}</b>`;
         });
         return s;

@@ -5,7 +5,7 @@ import { ForgotPasswordForm } from './components';
 export const ForgotPasswordPage = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
-    const handleSubmit = async (_data) => {
+    const handleSubmit = async () => {
         setIsLoading(true);
         try {
             // TODO: Replace with actual API call

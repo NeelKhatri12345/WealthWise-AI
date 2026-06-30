@@ -1,16 +1,18 @@
-import { type ReactNode } from "react";
-interface DropdownItem {
+import { type HTMLAttributes, type ReactNode } from "react";
+export interface DropdownItem {
     label: string;
     value: string;
     icon?: ReactNode;
     disabled?: boolean;
 }
-interface DropdownProps {
+export interface DropdownProps extends Omit<HTMLAttributes<HTMLDivElement>, "onSelect"> {
+    /** The element that opens the menu when activated */
     trigger: ReactNode;
+    /** Menu items */
     items: DropdownItem[];
+    /** Called when an enabled item is selected */
     onSelect: (value: string) => void;
-    className?: string;
+    /** Horizontal alignment of the menu relative to the trigger */
     align?: "left" | "right";
 }
-export declare function Dropdown({ trigger, items, onSelect, className, align }: DropdownProps): import("react").JSX.Element;
-export {};
+export declare const Dropdown: import("react").ForwardRefExoticComponent<DropdownProps & import("react").RefAttributes<HTMLDivElement>>;

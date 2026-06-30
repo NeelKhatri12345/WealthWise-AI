@@ -11,6 +11,9 @@ import { LoadingScreen } from "@/components/feedback/LoadingScreen";
 
 const LoginPage = React.lazy(() => import("@/pages/auth/LoginPage"));
 const RegisterPage = React.lazy(() => import("@/pages/auth/RegisterPage"));
+const ForgotPasswordPage = React.lazy(
+  () => import("@/pages/auth/ForgotPasswordPage"),
+);
 const DashboardPage = React.lazy(() => import("@/pages/dashboard/DashboardPage"));
 const UploadPage = React.lazy(() => import("@/pages/upload/UploadPage"));
 const TransactionsPage = React.lazy(() => import("@/pages/transactions/TransactionsPage"));
@@ -37,6 +40,10 @@ export function AppRouter() {
             <Route element={<AuthLayout />}>
               <Route path={ROUTES.LOGIN} element={<LoginPage />} />
               <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
+              <Route
+                path={ROUTES.FORGOT_PASSWORD}
+                element={<ForgotPasswordPage />}
+              />
             </Route>
           </Route>
 

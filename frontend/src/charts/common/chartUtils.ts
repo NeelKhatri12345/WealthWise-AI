@@ -50,14 +50,16 @@ export function formatMonthYear(dateStr: string): string {
   return formatDate(dateStr, 'MMM yyyy');
 }
 
-export function currencyAxisFormatter(): string {
-  const ctx = this as unknown as Highcharts.AxisLabelsFormatterContextObject;
-  return formatCurrency(ctx.value as number, 'INR', true);
+export function currencyAxisFormatter(
+  this: Highcharts.AxisLabelsFormatterContextObject
+): string {
+  return formatCurrency(this.value as number, 'INR', true);
 }
 
-export function percentageAxisFormatter(): string {
-  const ctx = this as unknown as Highcharts.AxisLabelsFormatterContextObject;
-  return formatPercentage(ctx.value as number);
+export function percentageAxisFormatter(
+  this: Highcharts.AxisLabelsFormatterContextObject
+): string {
+  return formatPercentage(this.value as number);
 }
 
 export function currencyTooltipFormatter(value: number): string {

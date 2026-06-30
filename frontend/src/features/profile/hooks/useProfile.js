@@ -28,7 +28,7 @@ export const useProfile = () => {
         await new Promise((resolve) => setTimeout(resolve, 500));
         setProfile((prev) => (prev ? { ...prev, ...data } : prev));
     };
-    const changePassword = async (_current, _newPwd) => {
+    const changePassword = async () => {
         // TODO: Replace with actual API call
         await new Promise((resolve) => setTimeout(resolve, 500));
     };

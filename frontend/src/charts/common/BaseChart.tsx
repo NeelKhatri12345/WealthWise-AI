@@ -1,14 +1,10 @@
 import React, { useRef, useEffect } from 'react';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
-import HighchartsMore from 'highcharts/highcharts-more';
-import HighchartsSolidGauge from 'highcharts/modules/solid-gauge';
-import HighchartsTreemap from 'highcharts/modules/treemap';
+import 'highcharts/highcharts-more';
+import 'highcharts/modules/solid-gauge';
+import 'highcharts/modules/treemap';
 import { mergeWithDefaults } from './chartDefaults';
-
-HighchartsMore(Highcharts);
-HighchartsSolidGauge(Highcharts);
-HighchartsTreemap(Highcharts);
 
 export interface BaseChartProps {
   options: Highcharts.Options;

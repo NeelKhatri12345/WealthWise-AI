@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface AuditEntry {
   id: string;
@@ -29,14 +29,18 @@ export const useAuditLogs = (
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchLogs = async () => {
+  const fetchLogs = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
       // TODO: Replace with actual API call
       await new Promise((resolve) => setTimeout(resolve, 500));
       void page;
-      void filters;
+      void filters?.action;
+      void filters?.user;
+      void filters?.dateFrom;
+      void filters?.dateTo;
+      void filters?.status;
       setEntries([]);
       setTotalPages(1);
     } catch (err) {
@@ -44,9 +48,11 @@ export const useAuditLogs = (
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [page, filters?.action, filters?.user, filters?.dateFrom, filters?.dateTo, filters?.status]);
 
-  useEffect(() => { fetchLogs(); }, [page, filters?.action, filters?.user, filters?.dateFrom, filters?.dateTo, filters?.status]);
+  useEffect(() => {
+    fetchLogs();
+  }, [fetchLogs]);
 
   return { entries, totalPages, isLoading, error, refetch: fetchLogs };
 };
