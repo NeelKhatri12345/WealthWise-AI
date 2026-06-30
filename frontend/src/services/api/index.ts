@@ -1,7 +1,6 @@
 export { default as axiosInstance } from "./axiosInstance";
 export type { ApiResponse, PaginatedResponse } from "./axiosInstance";
 
-export { authApi } from "./auth.api";
 export { dashboardApi } from "./dashboard.api";
 export { uploadApi } from "./upload.api";
 export { transactionApi } from "./transaction.api";

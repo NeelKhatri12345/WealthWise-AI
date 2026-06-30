@@ -1,60 +1,35 @@
-import {
-  useState,
-  useEffect,
-  useCallback,
-  useMemo,
-  type ReactNode,
-} from "react";
-import { AuthContext } from "@/context/AuthContext";
-import { storage } from "@/lib/storage";
-import type { User } from "@/types/auth.types";
+import { useEffect, useRef, type ReactNode } from "react";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { fetchCurrentUser, setHydrated } from "@/store/slices/authSlice";
 
 interface AuthProviderProps {
   children: ReactNode;
 }
 
-const TOKEN_KEY = "wealthwise-token";
-const USER_KEY = "wealthwise-user";
-
+/**
+ * Session restoration on app startup.
+ *
+ * Auth state lives in Redux; this component only triggers hydration.
+ * If a persisted token exists, it dispatches fetchCurrentUser to
+ * validate the token and populate state.auth.user.
+ * If no token exists, it marks hydration as complete immediately.
+ */
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [user, setUser] = useState<User | null>(() =>
-    storage.get<User>(USER_KEY),
-  );
-  const [token, setToken] = useState<string | null>(() =>
-    storage.get<string>(TOKEN_KEY),
-  );
-  const [isLoading, setIsLoading] = useState(true);
+  const dispatch = useAppDispatch();
+  const accessToken = useAppSelector((state) => state.auth.accessToken);
+  const isHydrated = useAppSelector((state) => state.auth.isHydrated);
+  const didRun = useRef(false);
 
   useEffect(() => {
-    const savedToken = storage.get<string>(TOKEN_KEY);
-    const savedUser = storage.get<User>(USER_KEY);
-    if (savedToken && savedUser) {
-      setToken(savedToken);
-      setUser(savedUser);
+    if (didRun.current) return;
+    didRun.current = true;
+
+    if (accessToken && !isHydrated) {
+      void dispatch(fetchCurrentUser());
+    } else if (!accessToken) {
+      dispatch(setHydrated());
     }
-    setIsLoading(false);
-  }, []);
+  }, [accessToken, isHydrated, dispatch]);
 
-  const login = useCallback((newToken: string, newUser: User) => {
-    storage.set(TOKEN_KEY, newToken);
-    storage.set(USER_KEY, newUser);
-    setToken(newToken);
-    setUser(newUser);
-  }, []);
-
-  const logout = useCallback(() => {
-    storage.remove(TOKEN_KEY);
-    storage.remove(USER_KEY);
-    setToken(null);
-    setUser(null);
-  }, []);
-
-  const isAuthenticated = !!token && !!user;
-
-  const value = useMemo(
-    () => ({ user, token, isAuthenticated, isLoading, login, logout }),
-    [user, token, isAuthenticated, isLoading, login, logout],
-  );
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return children;
 }

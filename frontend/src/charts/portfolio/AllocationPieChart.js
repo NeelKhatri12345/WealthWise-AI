@@ -1,8 +1,0 @@
-import { jsx as _jsx } from "react/jsx-runtime";
-import BaseChart from '../common/BaseChart';
-import { getAllocationPieOptions } from './chartOptions';
-const AllocationPieChart = ({ data, height = 350, loading, error, className, }) => {
-    const options = getAllocationPieOptions(data);
-    return (_jsx(BaseChart, { options: options, height: height, loading: loading, error: error, className: className }));
-};
-export default AllocationPieChart;

@@ -1,5 +1,6 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { LoadingScreen } from "@/components/feedback/LoadingScreen";
 import { ROUTES } from "./routes";
 
 export function PrivateRoute() {
@@ -7,7 +8,7 @@ export function PrivateRoute() {
   const location = useLocation();
 
   if (isLoading) {
-    return null;
+    return <LoadingScreen />;
   }
 
   if (!isAuthenticated) {

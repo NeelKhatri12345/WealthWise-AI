@@ -16,7 +16,7 @@ export default function ForgotPasswordPage() {
   useDocumentTitle("Forgot Password");
 
   const [serverError, setServerError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const {
     register,
@@ -31,8 +31,8 @@ export default function ForgotPasswordPage() {
 
   const onSubmit = handleSubmit(async () => {
     setServerError(null);
-    setSuccessMessage(null);
-    // TODO: Wire up password reset API call
+    // No backend — show confirmation after valid submission
+    setIsSubmitted(true);
   });
 
   return (
@@ -56,33 +56,27 @@ export default function ForgotPasswordPage() {
         </Alert>
       )}
 
-      {/* Success message */}
-      {successMessage && (
-        <Alert
-          variant="success"
-          className="mb-4"
-          onClose={() => setSuccessMessage(null)}
-        >
-          {successMessage}
+      {isSubmitted ? (
+        <Alert variant="success" className="mb-4">
+          Check your email for a password reset link.
         </Alert>
+      ) : (
+        <form onSubmit={onSubmit} noValidate className="space-y-4">
+          <Input
+            {...register("email")}
+            id="email"
+            type="email"
+            label="Email"
+            placeholder="you@example.com"
+            error={errors.email?.message}
+            autoComplete="email"
+          />
+
+          <Button type="submit" className="w-full" isLoading={isSubmitting}>
+            Send reset link
+          </Button>
+        </form>
       )}
-
-      {/* Form */}
-      <form onSubmit={onSubmit} noValidate className="space-y-4">
-        <Input
-          {...register("email")}
-          id="email"
-          type="email"
-          label="Email address"
-          placeholder="you@example.com"
-          error={errors.email?.message}
-          autoComplete="email"
-        />
-
-        <Button type="submit" className="w-full" isLoading={isSubmitting}>
-          Send reset link
-        </Button>
-      </form>
 
       {/* Back to login */}
       <p className="mt-6 text-center text-sm text-wealth-muted">

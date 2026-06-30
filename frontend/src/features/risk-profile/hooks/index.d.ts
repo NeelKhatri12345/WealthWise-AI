@@ -1,1 +1,0 @@
-export { useRiskProfile } from "./useRiskProfile";

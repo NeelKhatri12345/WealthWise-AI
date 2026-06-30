@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
@@ -8,17 +7,20 @@ import { ROUTES } from "@/routes/routes";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { clearAuthError, login, fetchCurrentUser } from "@/store/slices/authSlice";
 
 export default function LoginPage() {
   useDocumentTitle("Login");
 
-  // Server-side error state — will be populated when auth is wired up
-  const [serverError, setServerError] = useState<string | null>(null);
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const { isLoading, error } = useAppSelector((state) => state.auth);
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -27,17 +29,14 @@ export default function LoginPage() {
     },
   });
 
-  // Placeholder submit handler — no API call yet
-  const onSubmit = handleSubmit(async () => {
-    setServerError(null);
-    // TODO: Wire up authentication API call
-    // Example:
-    // try {
-    //   await dispatch(login(_data)).unwrap();
-    //   navigate(ROUTES.DASHBOARD);
-    // } catch (err) {
-    //   setServerError(err.message);
-    // }
+  const onSubmit = handleSubmit(async (data) => {
+    try {
+      await dispatch(login(data)).unwrap();
+      await dispatch(fetchCurrentUser()).unwrap();
+      navigate(ROUTES.DASHBOARD);
+    } catch {
+      // Thunk error is stored in auth.error and shown via Alert
+    }
   });
 
   return (
@@ -51,13 +50,13 @@ export default function LoginPage() {
       </div>
 
       {/* Server error */}
-      {serverError && (
+      {error && (
         <Alert
           variant="error"
           className="mb-4"
-          onClose={() => setServerError(null)}
+          onClose={() => dispatch(clearAuthError())}
         >
-          {serverError}
+          {error}
         </Alert>
       )}
 
@@ -104,7 +103,7 @@ export default function LoginPage() {
         </div>
 
         {/* Submit */}
-        <Button type="submit" className="w-full" isLoading={isSubmitting}>
+        <Button type="submit" className="w-full" isLoading={isLoading}>
           Sign in
         </Button>
       </form>

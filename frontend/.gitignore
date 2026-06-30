@@ -34,3 +34,7 @@ coverage/
 
 # Vite
 *.local
+
+# TypeScript emit artifacts (must not live in src/)
+src/**/*.js
+src/**/*.d.ts

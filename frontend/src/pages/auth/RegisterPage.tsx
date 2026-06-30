@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
@@ -11,16 +10,24 @@ import { ROUTES } from "@/routes/routes";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
+import { useAppDispatch, useAppSelector } from "@/store";
+import {
+  clearAuthError,
+  register as registerUser,
+  fetchCurrentUser,
+} from "@/store/slices/authSlice";
 
 export default function RegisterPage() {
   useDocumentTitle("Register");
 
-  const [serverError, setServerError] = useState<string | null>(null);
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const { isLoading, error } = useAppSelector((state) => state.auth);
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -31,33 +38,43 @@ export default function RegisterPage() {
     },
   });
 
-  const onSubmit = handleSubmit(async () => {
-    setServerError(null);
-    // TODO: Wire up registration API call
+  const onSubmit = handleSubmit(async (data) => {
+    try {
+      await dispatch(
+        registerUser({
+          full_name: data.fullName,
+          email: data.email,
+          password: data.password,
+        }),
+      ).unwrap();
+      await dispatch(fetchCurrentUser()).unwrap();
+      navigate(ROUTES.DASHBOARD);
+    } catch {
+      // Thunk error is stored in auth.error and shown via Alert
+    }
   });
 
   return (
     <div>
-      {/* Header */}
       <div className="mb-6 text-center">
-        <h1 className="text-2xl font-bold text-gray-900">Create Account</h1>
+        <h1 className="text-2xl font-bold text-gray-900">
+          Create Account
+        </h1>
         <p className="mt-1 text-sm text-wealth-muted">
           Start your financial wellness journey
         </p>
       </div>
 
-      {/* Server error */}
-      {serverError && (
+      {error && (
         <Alert
           variant="error"
           className="mb-4"
-          onClose={() => setServerError(null)}
+          onClose={() => dispatch(clearAuthError())}
         >
-          {serverError}
+          {error}
         </Alert>
       )}
 
-      {/* Form */}
       <form onSubmit={onSubmit} noValidate className="space-y-4">
         <Input
           {...register("fullName")}
@@ -100,12 +117,15 @@ export default function RegisterPage() {
           autoComplete="new-password"
         />
 
-        <Button type="submit" className="w-full" isLoading={isSubmitting}>
+        <Button
+          type="submit"
+          className="w-full"
+          isLoading={isLoading}
+        >
           Create account
         </Button>
       </form>
 
-      {/* Login link */}
       <p className="mt-6 text-center text-sm text-wealth-muted">
         Already have an account?{" "}
         <Link

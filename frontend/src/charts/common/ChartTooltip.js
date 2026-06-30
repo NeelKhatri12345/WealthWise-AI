@@ -1,5 +1,0 @@
-import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-const ChartTooltip = ({ title, rows, footer, className = '', }) => {
-    return (_jsxs("div", { className: `bg-slate-800 text-white rounded-lg shadow-xl px-3 py-2.5 text-sm ${className}`, children: [title && (_jsx("div", { className: "text-slate-300 text-xs font-medium mb-1.5 border-b border-slate-600 pb-1.5", children: title })), _jsx("div", { className: "space-y-1", children: rows.map((row, i) => (_jsxs("div", { className: "flex items-center justify-between gap-4", children: [_jsxs("div", { className: "flex items-center gap-1.5", children: [row.color && (_jsx("span", { className: "inline-block w-2 h-2 rounded-full", style: { backgroundColor: row.color } })), _jsx("span", { className: "text-slate-300", children: row.label })] }), _jsx("span", { className: "font-semibold", children: row.value })] }, i))) }), footer && (_jsx("div", { className: "text-slate-400 text-xs mt-1.5 pt-1.5 border-t border-slate-600", children: footer }))] }));
-};
-export default ChartTooltip;
