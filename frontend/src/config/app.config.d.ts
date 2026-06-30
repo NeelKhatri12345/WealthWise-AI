@@ -1,6 +1,6 @@
 export declare const appConfig: {
-    readonly name: any;
-    readonly version: any;
+    readonly name: string;
+    readonly version: string;
     readonly description: "Smart Financial Management powered by AI";
     readonly defaultPageSize: 20;
     readonly maxFileSize: number;

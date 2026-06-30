@@ -25,6 +25,6 @@ export interface NotificationState {
 export declare const fetchNotifications: import("@reduxjs/toolkit").AsyncThunk<import("../../services/api/notification.api").NotificationResponse[], void, import("@reduxjs/toolkit").AsyncThunkConfig>;
 export declare const markAsRead: import("@reduxjs/toolkit").AsyncThunk<string, string, import("@reduxjs/toolkit").AsyncThunkConfig>;
 export declare const updatePreferences: import("@reduxjs/toolkit").AsyncThunk<import("../../services/api/notification.api").NotificationPreferencesResponse, Partial<NotificationPreferences>, import("@reduxjs/toolkit").AsyncThunkConfig>;
-export declare const addNotification: import("@reduxjs/toolkit").ActionCreatorWithPayload<any, "notifications/addNotification">;
+export declare const addNotification: import("@reduxjs/toolkit").ActionCreatorWithPayload<Notification, "notifications/addNotification">;
 declare const _default: import("redux").Reducer<NotificationState>;
 export default _default;

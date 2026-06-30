@@ -1,15 +1,7 @@
-import { z } from 'zod';
-declare const loginSchema: z.ZodObject<{
-    email: z.ZodString;
-    password: z.ZodString;
-}, "strip", z.ZodTypeAny, {
+type LoginFormValues = {
     email: string;
     password: string;
-}, {
-    email: string;
-    password: string;
-}>;
-type LoginFormValues = z.infer<typeof loginSchema>;
+};
 interface LoginFormProps {
     onSubmit: (data: LoginFormValues) => void;
     isLoading?: boolean;

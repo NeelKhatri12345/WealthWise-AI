@@ -9,7 +9,6 @@ export function FormFileUpload({ name, label, accept, className, }) {
     const error = errors[name];
     const handleFile = useCallback((file) => {
         if (file) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             setValue(name, file, { shouldValidate: true });
             setFileName(file.name);
         }

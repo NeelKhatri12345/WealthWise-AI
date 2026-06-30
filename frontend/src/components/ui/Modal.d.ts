@@ -1,10 +1,4 @@
 import { type HTMLAttributes } from "react";
-declare const sizeStyles: {
-    readonly sm: "max-w-sm";
-    readonly md: "max-w-md";
-    readonly lg: "max-w-lg";
-    readonly xl: "max-w-xl";
-};
 export interface ModalProps extends Omit<HTMLAttributes<HTMLDivElement>, "title"> {
     /** Whether the modal is visible */
     isOpen: boolean;
@@ -13,7 +7,7 @@ export interface ModalProps extends Omit<HTMLAttributes<HTMLDivElement>, "title"
     /** Optional dialog title rendered in the header */
     title?: string;
     /** Size preset controlling `max-width` */
-    size?: keyof typeof sizeStyles;
+    size?: 'sm' | 'md' | 'lg' | 'xl';
 }
 export declare const Modal: import("react").ForwardRefExoticComponent<ModalProps & import("react").RefAttributes<HTMLDivElement>>;
 export {};
