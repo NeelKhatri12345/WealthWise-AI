@@ -33,10 +33,15 @@ export const AssetCard = ({
         ${value.toLocaleString()}
       </p>
 
-      <div className={`mt-1 flex items-center gap-1 text-sm ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
-        <span>{isPositive ? '\u2191' : '\u2193'}</span>
+      <div
+        className={`mt-1 flex items-center gap-1 text-sm ${isPositive ? "text-green-600" : "text-red-600"}`}
+      >
+        <span>{isPositive ? "\u2191" : "\u2193"}</span>
         <span>${Math.abs(change).toLocaleString()}</span>
-        <span>({isPositive ? '+' : ''}{changePercent.toFixed(2)}%)</span>
+        <span>
+          ({isPositive ? "+" : ""}
+          {changePercent.toFixed(2)}%)
+        </span>
       </div>
     </div>
   );

@@ -3,7 +3,7 @@ interface User {
   name: string;
   email: string;
   role: string;
-  status: 'active' | 'inactive' | 'banned';
+  status: "active" | "inactive" | "banned";
   createdAt: string;
 }
 
@@ -16,29 +16,47 @@ interface UserTableProps {
 }
 
 const statusStyles = {
-  active: 'bg-green-100 text-green-700',
-  inactive: 'bg-gray-100 text-gray-700',
-  banned: 'bg-red-100 text-red-700',
+  active: "bg-green-100 text-green-700",
+  inactive: "bg-gray-100 text-gray-700",
+  banned: "bg-red-100 text-red-700",
 };
 
-export const UserTable = ({ users, onUserClick, currentPage, totalPages, onPageChange }: UserTableProps) => {
+export const UserTable = ({
+  users,
+  onUserClick,
+  currentPage,
+  totalPages,
+  onPageChange,
+}: UserTableProps) => {
   return (
     <div className="rounded-xl bg-white shadow-sm border border-gray-100">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100 bg-gray-50">
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Joined</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Name
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Email
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Role
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Status
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Joined
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {users.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-6 py-8 text-center text-gray-500">No users found</td>
+                <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                  No users found
+                </td>
               </tr>
             ) : (
               users.map((user) => (
@@ -47,7 +65,9 @@ export const UserTable = ({ users, onUserClick, currentPage, totalPages, onPageC
                   onClick={() => onUserClick?.(user.id)}
                   className="cursor-pointer hover:bg-gray-50 transition-colors"
                 >
-                  <td className="px-6 py-4 font-medium text-gray-900">{user.name}</td>
+                  <td className="px-6 py-4 font-medium text-gray-900">
+                    {user.name}
+                  </td>
                   <td className="px-6 py-4 text-gray-600">{user.email}</td>
                   <td className="px-6 py-4">
                     <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700">
@@ -55,7 +75,9 @@ export const UserTable = ({ users, onUserClick, currentPage, totalPages, onPageC
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusStyles[user.status]}`}>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusStyles[user.status]}`}
+                    >
                       {user.status}
                     </span>
                   </td>
@@ -76,7 +98,9 @@ export const UserTable = ({ users, onUserClick, currentPage, totalPages, onPageC
           >
             Previous
           </button>
-          <span className="text-sm text-gray-500">Page {currentPage} of {totalPages}</span>
+          <span className="text-sm text-gray-500">
+            Page {currentPage} of {totalPages}
+          </span>
           <button
             onClick={() => onPageChange(currentPage + 1)}
             disabled={currentPage >= totalPages}

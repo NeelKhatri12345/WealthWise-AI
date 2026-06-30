@@ -1,6 +1,6 @@
-import { Link } from 'react-router-dom';
-import { LoginForm, SocialLogin } from './components';
-import { useLogin } from './hooks';
+import { Link } from "react-router-dom";
+import { LoginForm, SocialLogin } from "./components";
+import { useLogin } from "./hooks";
 
 export const LoginPage = () => {
   const { login, isLoading, error } = useLogin();
@@ -41,8 +41,11 @@ export const LoginPage = () => {
         </div>
 
         <p className="text-center text-sm text-gray-600">
-          Don&apos;t have an account?{' '}
-          <Link to="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
+          Don&apos;t have an account?{" "}
+          <Link
+            to="/register"
+            className="font-medium text-indigo-600 hover:text-indigo-500"
+          >
             Sign up
           </Link>
         </p>

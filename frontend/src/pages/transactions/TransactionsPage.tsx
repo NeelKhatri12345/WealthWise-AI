@@ -11,7 +11,9 @@ export default function TransactionsPage() {
         description="View and manage your categorized transactions"
       />
       <div className="card">
-        <p className="text-sm text-wealth-muted">Transaction table placeholder</p>
+        <p className="text-sm text-wealth-muted">
+          Transaction table placeholder
+        </p>
       </div>
     </div>
   );

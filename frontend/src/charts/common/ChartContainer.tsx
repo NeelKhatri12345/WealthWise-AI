@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
-export type TimeRange = '7d' | '30d' | '90d' | '6m' | '1y' | 'all';
+export type TimeRange = "7d" | "30d" | "90d" | "6m" | "1y" | "all";
 
 export interface ChartContainerProps {
   title: string;
@@ -14,15 +14,15 @@ export interface ChartContainerProps {
   className?: string;
 }
 
-const defaultTimeRanges: TimeRange[] = ['7d', '30d', '90d', '6m', '1y'];
+const defaultTimeRanges: TimeRange[] = ["7d", "30d", "90d", "6m", "1y"];
 
 const timeRangeLabels: Record<TimeRange, string> = {
-  '7d': '7D',
-  '30d': '30D',
-  '90d': '90D',
-  '6m': '6M',
-  '1y': '1Y',
-  all: 'All',
+  "7d": "7D",
+  "30d": "30D",
+  "90d": "90D",
+  "6m": "6M",
+  "1y": "1Y",
+  all: "All",
 };
 
 const ChartContainer: React.FC<ChartContainerProps> = ({
@@ -31,10 +31,10 @@ const ChartContainer: React.FC<ChartContainerProps> = ({
   children,
   showTimeRange = false,
   timeRanges = defaultTimeRanges,
-  defaultRange = '30d',
+  defaultRange = "30d",
   onTimeRangeChange,
   actions,
-  className = '',
+  className = "",
 }) => {
   const [activeRange, setActiveRange] = useState<TimeRange>(defaultRange);
 
@@ -64,8 +64,8 @@ const ChartContainer: React.FC<ChartContainerProps> = ({
                   onClick={() => handleRangeChange(range)}
                   className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
                     activeRange === range
-                      ? 'bg-white text-indigo-600 shadow-sm'
-                      : 'text-slate-500 hover:text-slate-700'
+                      ? "bg-white text-indigo-600 shadow-sm"
+                      : "text-slate-500 hover:text-slate-700"
                   }`}
                 >
                   {timeRangeLabels[range]}

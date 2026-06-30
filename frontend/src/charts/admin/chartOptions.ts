@@ -1,5 +1,5 @@
-import Highcharts from 'highcharts';
-import { CHART_COLORS } from '../common/chartColors';
+import Highcharts from "highcharts";
+import { CHART_COLORS } from "../common/chartColors";
 
 export interface UserGrowthData {
   categories: string[];
@@ -7,22 +7,20 @@ export interface UserGrowthData {
   totalUsers: number[];
 }
 
-export function getUserGrowthOptions(
-  data: UserGrowthData
-): Highcharts.Options {
+export function getUserGrowthOptions(data: UserGrowthData): Highcharts.Options {
   return {
-    chart: { type: 'area' },
+    chart: { type: "area" },
     title: { text: undefined },
     xAxis: { categories: data.categories, crosshair: true },
     yAxis: [
-      { title: { text: 'New Users' } },
-      { title: { text: 'Total Users' }, opposite: true },
+      { title: { text: "New Users" } },
+      { title: { text: "Total Users" }, opposite: true },
     ],
     tooltip: { shared: true },
     series: [
       {
-        name: 'New Users',
-        type: 'area',
+        name: "New Users",
+        type: "area",
         data: data.newUsers,
         color: CHART_COLORS.primary,
         fillColor: {
@@ -35,12 +33,12 @@ export function getUserGrowthOptions(
         yAxis: 0,
       },
       {
-        name: 'Total Users',
-        type: 'line',
+        name: "Total Users",
+        type: "line",
         data: data.totalUsers,
         color: CHART_COLORS.secondary,
         yAxis: 1,
-        dashStyle: 'ShortDash',
+        dashStyle: "ShortDash",
       },
     ],
   };
@@ -52,45 +50,43 @@ export interface SystemLoadData {
   memory: number[];
 }
 
-export function getSystemLoadOptions(
-  data: SystemLoadData
-): Highcharts.Options {
+export function getSystemLoadOptions(data: SystemLoadData): Highcharts.Options {
   return {
-    chart: { type: 'line' },
+    chart: { type: "line" },
     title: { text: undefined },
     xAxis: { categories: data.categories, crosshair: true },
     yAxis: {
-      title: { text: 'Usage (%)' },
+      title: { text: "Usage (%)" },
       min: 0,
       max: 100,
-      labels: { format: '{value}%' },
+      labels: { format: "{value}%" },
       plotLines: [
         {
           value: 80,
           color: CHART_COLORS.danger,
-          dashStyle: 'Dash',
+          dashStyle: "Dash",
           width: 1,
           label: {
-            text: 'Warning (80%)',
-            style: { color: CHART_COLORS.danger, fontSize: '10px' },
+            text: "Warning (80%)",
+            style: { color: CHART_COLORS.danger, fontSize: "10px" },
           },
         },
       ],
     },
     tooltip: {
       shared: true,
-      valueSuffix: '%',
+      valueSuffix: "%",
     },
     series: [
       {
-        name: 'CPU',
-        type: 'line',
+        name: "CPU",
+        type: "line",
         data: data.cpu,
         color: CHART_COLORS.primary,
       },
       {
-        name: 'Memory',
-        type: 'line',
+        name: "Memory",
+        type: "line",
         data: data.memory,
         color: CHART_COLORS.accent,
       },
@@ -106,40 +102,40 @@ export interface ApiResponseTimeData {
 }
 
 export function getApiResponseTimeOptions(
-  data: ApiResponseTimeData
+  data: ApiResponseTimeData,
 ): Highcharts.Options {
   return {
-    chart: { type: 'line' },
+    chart: { type: "line" },
     title: { text: undefined },
     xAxis: { categories: data.categories, crosshair: true },
     yAxis: {
-      title: { text: 'Response Time (ms)' },
+      title: { text: "Response Time (ms)" },
       min: 0,
     },
     tooltip: {
       shared: true,
-      valueSuffix: 'ms',
+      valueSuffix: "ms",
     },
     series: [
       {
-        name: 'Average',
-        type: 'line',
+        name: "Average",
+        type: "line",
         data: data.avgMs,
         color: CHART_COLORS.primary,
       },
       {
-        name: 'P95',
-        type: 'line',
+        name: "P95",
+        type: "line",
         data: data.p95Ms,
         color: CHART_COLORS.warning,
-        dashStyle: 'ShortDash',
+        dashStyle: "ShortDash",
       },
       {
-        name: 'P99',
-        type: 'line',
+        name: "P99",
+        type: "line",
         data: data.p99Ms,
         color: CHART_COLORS.danger,
-        dashStyle: 'Dot',
+        dashStyle: "Dot",
       },
     ],
   };
@@ -151,26 +147,24 @@ export interface ErrorRateData {
   totalRequests: number[];
 }
 
-export function getErrorRateOptions(
-  data: ErrorRateData
-): Highcharts.Options {
+export function getErrorRateOptions(data: ErrorRateData): Highcharts.Options {
   const errorRates = data.errors.map((e, i) =>
     data.totalRequests[i] > 0
       ? parseFloat(((e / data.totalRequests[i]) * 100).toFixed(2))
-      : 0
+      : 0,
   );
 
   return {
-    chart: { type: 'column' },
+    chart: { type: "column" },
     title: { text: undefined },
     xAxis: { categories: data.categories, crosshair: true },
     yAxis: [
-      { title: { text: 'Errors' }, min: 0 },
+      { title: { text: "Errors" }, min: 0 },
       {
-        title: { text: 'Error Rate (%)' },
+        title: { text: "Error Rate (%)" },
         opposite: true,
         min: 0,
-        labels: { format: '{value}%' },
+        labels: { format: "{value}%" },
       },
     ],
     tooltip: { shared: true },
@@ -179,19 +173,19 @@ export function getErrorRateOptions(
     },
     series: [
       {
-        name: 'Errors',
-        type: 'column',
+        name: "Errors",
+        type: "column",
         data: data.errors,
         color: CHART_COLORS.danger,
         yAxis: 0,
       },
       {
-        name: 'Error Rate',
-        type: 'line',
+        name: "Error Rate",
+        type: "line",
         data: errorRates,
         color: CHART_COLORS.warning,
         yAxis: 1,
-        tooltip: { valueSuffix: '%' },
+        tooltip: { valueSuffix: "%" },
         marker: { enabled: true, radius: 3 },
       },
     ],

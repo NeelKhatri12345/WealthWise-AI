@@ -1,1 +1,1 @@
-export { useRiskProfile } from './useRiskProfile';
+export { useRiskProfile } from "./useRiskProfile";

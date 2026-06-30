@@ -4,12 +4,16 @@ interface WelcomeCardProps {
   netWorth?: number;
 }
 
-export const WelcomeCard = ({ userName, lastLogin, netWorth }: WelcomeCardProps) => {
+export const WelcomeCard = ({
+  userName,
+  lastLogin,
+  netWorth,
+}: WelcomeCardProps) => {
   const greeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
+    if (hour < 12) return "Good morning";
+    if (hour < 18) return "Good afternoon";
+    return "Good evening";
   };
 
   return (
@@ -24,9 +28,7 @@ export const WelcomeCard = ({ userName, lastLogin, netWorth }: WelcomeCardProps)
         {netWorth !== undefined && (
           <div>
             <p className="text-sm text-indigo-200">Net Worth</p>
-            <p className="text-3xl font-bold">
-              ${netWorth.toLocaleString()}
-            </p>
+            <p className="text-3xl font-bold">${netWorth.toLocaleString()}</p>
           </div>
         )}
         {lastLogin && (

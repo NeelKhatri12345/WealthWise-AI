@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 interface DashboardStats {
   totalBalance: number;
@@ -10,7 +10,7 @@ interface DashboardStats {
 interface DashboardData {
   stats: DashboardStats | null;
   healthScore: number;
-  riskLevel: 'low' | 'moderate' | 'high' | 'very-high';
+  riskLevel: "low" | "moderate" | "high" | "very-high";
   riskScore: number;
   recentTransactions: Array<{
     id: string;
@@ -18,7 +18,7 @@ interface DashboardData {
     amount: number;
     category: string;
     date: string;
-    type: 'credit' | 'debit';
+    type: "credit" | "debit";
   }>;
   spendingData: Array<{ month: string; amount: number }>;
 }
@@ -49,13 +49,15 @@ export const useDashboardData = (): UseDashboardDataReturn => {
           savingsRate: 38.8,
         },
         healthScore: 72,
-        riskLevel: 'moderate',
+        riskLevel: "moderate",
         riskScore: 55,
         recentTransactions: [],
         spendingData: [],
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load dashboard data');
+      setError(
+        err instanceof Error ? err.message : "Failed to load dashboard data",
+      );
     } finally {
       setIsLoading(false);
     }

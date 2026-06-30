@@ -1,6 +1,6 @@
-import React from 'react';
-import BaseChart from '../common/BaseChart';
-import { getRebalanceOptions, type RebalanceData } from './chartOptions';
+import React from "react";
+import BaseChart from "../common/BaseChart";
+import { getRebalanceOptions, type RebalanceData } from "./chartOptions";
 
 interface RebalanceChartProps {
   data: RebalanceData;

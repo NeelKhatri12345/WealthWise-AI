@@ -1,6 +1,6 @@
-import Highcharts from 'highcharts';
-import { CHART_COLORS } from '../common/chartColors';
-import { currencyAxisFormatter, formatCurrency } from '../common/chartUtils';
+import Highcharts from "highcharts";
+import { CHART_COLORS } from "../common/chartColors";
+import { currencyAxisFormatter, formatCurrency } from "../common/chartUtils";
 
 export interface SpendingOverviewData {
   categories: string[];
@@ -8,17 +8,17 @@ export interface SpendingOverviewData {
 }
 
 export function getSpendingOverviewOptions(
-  data: SpendingOverviewData
+  data: SpendingOverviewData,
 ): Highcharts.Options {
   return {
-    chart: { type: 'area' },
+    chart: { type: "area" },
     title: { text: undefined },
     xAxis: {
       categories: data.categories,
       crosshair: true,
     },
     yAxis: {
-      title: { text: 'Amount' },
+      title: { text: "Amount" },
       labels: { formatter: currencyAxisFormatter },
     },
     tooltip: {
@@ -28,8 +28,8 @@ export function getSpendingOverviewOptions(
     },
     series: [
       {
-        name: 'Spending',
-        type: 'area',
+        name: "Spending",
+        type: "area",
         data: data.data,
         color: CHART_COLORS.primary,
         fillColor: {
@@ -51,14 +51,14 @@ export interface IncomeVsExpenseData {
 }
 
 export function getIncomeVsExpenseOptions(
-  data: IncomeVsExpenseData
+  data: IncomeVsExpenseData,
 ): Highcharts.Options {
   return {
-    chart: { type: 'column' },
+    chart: { type: "column" },
     title: { text: undefined },
     xAxis: { categories: data.categories, crosshair: true },
     yAxis: {
-      title: { text: 'Amount' },
+      title: { text: "Amount" },
       labels: { formatter: currencyAxisFormatter },
     },
     tooltip: {
@@ -77,14 +77,14 @@ export function getIncomeVsExpenseOptions(
     },
     series: [
       {
-        name: 'Income',
-        type: 'column',
+        name: "Income",
+        type: "column",
         data: data.income,
         color: CHART_COLORS.success,
       },
       {
-        name: 'Expense',
-        type: 'column',
+        name: "Expense",
+        type: "column",
         data: data.expense,
         color: CHART_COLORS.danger,
       },
@@ -99,31 +99,33 @@ export interface CategoryDistributionItem {
 }
 
 export function getCategoryDistributionOptions(
-  data: CategoryDistributionItem[]
+  data: CategoryDistributionItem[],
 ): Highcharts.Options {
   return {
-    chart: { type: 'pie' },
+    chart: { type: "pie" },
     title: { text: undefined },
     tooltip: {
       pointFormat:
-        '<b>{point.percentage:.1f}%</b><br/>Amount: <b>₹{point.y:,.0f}</b>',
+        "<b>{point.percentage:.1f}%</b><br/>Amount: <b>₹{point.y:,.0f}</b>",
     },
     plotOptions: {
       pie: {
-        innerSize: '55%',
+        innerSize: "55%",
         dataLabels: {
-          format: '<b>{point.name}</b>: {point.percentage:.1f}%',
+          format: "<b>{point.name}</b>: {point.percentage:.1f}%",
         },
       },
     },
     series: [
       {
-        name: 'Category',
-        type: 'pie',
+        name: "Category",
+        type: "pie",
         data: data.map((item, i) => ({
           name: item.name,
           y: item.value,
-          color: item.color ?? CHART_COLORS.categorical[i % CHART_COLORS.categorical.length],
+          color:
+            item.color ??
+            CHART_COLORS.categorical[i % CHART_COLORS.categorical.length],
         })),
       },
     ],
@@ -136,26 +138,26 @@ export interface SavingsRateData {
 }
 
 export function getSavingsRateOptions(
-  data: SavingsRateData
+  data: SavingsRateData,
 ): Highcharts.Options {
   return {
-    chart: { type: 'line' },
+    chart: { type: "line" },
     title: { text: undefined },
     xAxis: { categories: data.categories },
     yAxis: {
-      title: { text: 'Savings Rate (%)' },
-      labels: { format: '{value}%' },
+      title: { text: "Savings Rate (%)" },
+      labels: { format: "{value}%" },
       min: 0,
       max: 100,
       plotLines: [
         {
           value: 20,
           color: CHART_COLORS.warning,
-          dashStyle: 'Dash',
+          dashStyle: "Dash",
           width: 1,
           label: {
-            text: 'Recommended (20%)',
-            style: { color: CHART_COLORS.warning, fontSize: '10px' },
+            text: "Recommended (20%)",
+            style: { color: CHART_COLORS.warning, fontSize: "10px" },
           },
         },
       ],
@@ -167,8 +169,8 @@ export function getSavingsRateOptions(
     },
     series: [
       {
-        name: 'Savings Rate',
-        type: 'line',
+        name: "Savings Rate",
+        type: "line",
         data: data.rates,
         color: CHART_COLORS.secondary,
         marker: { enabled: true, radius: 4 },

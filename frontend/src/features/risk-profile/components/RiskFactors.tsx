@@ -3,7 +3,7 @@ interface RiskFactor {
   value: number;
   maxValue: number;
   description: string;
-  status: 'good' | 'warning' | 'danger';
+  status: "good" | "warning" | "danger";
 }
 
 interface RiskFactorsProps {
@@ -12,9 +12,9 @@ interface RiskFactorsProps {
 
 export const RiskFactors = ({ factors }: RiskFactorsProps) => {
   const statusStyles = {
-    good: { bar: 'bg-green-500', badge: 'bg-green-100 text-green-700' },
-    warning: { bar: 'bg-yellow-500', badge: 'bg-yellow-100 text-yellow-700' },
-    danger: { bar: 'bg-red-500', badge: 'bg-red-100 text-red-700' },
+    good: { bar: "bg-green-500", badge: "bg-green-100 text-green-700" },
+    warning: { bar: "bg-yellow-500", badge: "bg-yellow-100 text-yellow-700" },
+    danger: { bar: "bg-red-500", badge: "bg-red-100 text-red-700" },
   };
 
   return (
@@ -29,8 +29,12 @@ export const RiskFactors = ({ factors }: RiskFactorsProps) => {
           return (
             <div key={factor.name} className="rounded-lg bg-gray-50 p-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-900">{factor.name}</span>
-                <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${style.badge}`}>
+                <span className="text-sm font-medium text-gray-900">
+                  {factor.name}
+                </span>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-xs font-medium ${style.badge}`}
+                >
                   {factor.value}/{factor.maxValue}
                 </span>
               </div>

@@ -1,5 +1,5 @@
-import Highcharts from 'highcharts';
-import { CHART_COLORS } from '../common/chartColors';
+import Highcharts from "highcharts";
+import { CHART_COLORS } from "../common/chartColors";
 
 export interface RiskGaugeData {
   score: number;
@@ -7,9 +7,7 @@ export interface RiskGaugeData {
   riskLevel?: string;
 }
 
-export function getRiskGaugeOptions(
-  data: RiskGaugeData
-): Highcharts.Options {
+export function getRiskGaugeOptions(data: RiskGaugeData): Highcharts.Options {
   const max = data.maxScore ?? 100;
   const pct = (data.score / max) * 100;
   let color: string = CHART_COLORS.gauge.high;
@@ -17,19 +15,19 @@ export function getRiskGaugeOptions(
   else if (pct >= 40) color = CHART_COLORS.gauge.medium;
 
   return {
-    chart: { type: 'solidgauge' },
+    chart: { type: "solidgauge" },
     title: { text: undefined },
     pane: {
-      center: ['50%', '70%'],
-      size: '120%',
+      center: ["50%", "70%"],
+      size: "120%",
       startAngle: -120,
       endAngle: 120,
       background: [
         {
           backgroundColor: `${CHART_COLORS.border}80`,
-          innerRadius: '75%',
-          outerRadius: '100%',
-          shape: 'arc',
+          innerRadius: "75%",
+          outerRadius: "100%",
+          shape: "arc",
           borderWidth: 0,
         },
       ],
@@ -51,19 +49,19 @@ export function getRiskGaugeOptions(
     tooltip: { enabled: false },
     plotOptions: {
       solidgauge: {
-        innerRadius: '75%',
+        innerRadius: "75%",
         dataLabels: {
           y: -30,
           borderWidth: 0,
           useHTML: true,
-          format: `<div style="text-align:center"><span style="font-size:2rem;font-weight:700;color:${color}">{y}</span><br/><span style="font-size:0.8rem;color:${CHART_COLORS.text.secondary}">${data.riskLevel ?? 'Risk Score'}</span></div>`,
+          format: `<div style="text-align:center"><span style="font-size:2rem;font-weight:700;color:${color}">{y}</span><br/><span style="font-size:0.8rem;color:${CHART_COLORS.text.secondary}">${data.riskLevel ?? "Risk Score"}</span></div>`,
         },
       },
     },
     series: [
       {
-        name: 'Risk',
-        type: 'solidgauge',
+        name: "Risk",
+        type: "solidgauge",
         data: [data.score],
         color,
       },
@@ -76,25 +74,23 @@ export interface RiskFactorData {
   values: number[];
 }
 
-export function getRiskFactorOptions(
-  data: RiskFactorData
-): Highcharts.Options {
+export function getRiskFactorOptions(data: RiskFactorData): Highcharts.Options {
   return {
-    chart: { polar: true, type: 'column' },
+    chart: { polar: true, type: "column" },
     title: { text: undefined },
-    pane: { size: '85%' },
+    pane: { size: "85%" },
     xAxis: {
       categories: data.categories,
-      tickmarkPlacement: 'on',
+      tickmarkPlacement: "on",
     },
     yAxis: {
       min: 0,
       max: 100,
-      gridLineInterpolation: 'polygon',
-      labels: { format: '{value}%' },
+      gridLineInterpolation: "polygon",
+      labels: { format: "{value}%" },
     },
     tooltip: {
-      pointFormat: '<b>{point.y}%</b>',
+      pointFormat: "<b>{point.y}%</b>",
     },
     plotOptions: {
       column: {
@@ -106,8 +102,8 @@ export function getRiskFactorOptions(
     legend: { enabled: false },
     series: [
       {
-        name: 'Risk Factor',
-        type: 'column',
+        name: "Risk Factor",
+        type: "column",
         data: data.values.map((v, i) => ({
           y: v,
           color: CHART_COLORS.categorical[i % CHART_COLORS.categorical.length],
@@ -122,21 +118,43 @@ export interface RiskTrendData {
   scores: number[];
 }
 
-export function getRiskTrendOptions(
-  data: RiskTrendData
-): Highcharts.Options {
+export function getRiskTrendOptions(data: RiskTrendData): Highcharts.Options {
   return {
-    chart: { type: 'line' },
+    chart: { type: "line" },
     title: { text: undefined },
     xAxis: { categories: data.categories },
     yAxis: {
-      title: { text: 'Risk Score' },
+      title: { text: "Risk Score" },
       min: 0,
       max: 100,
       plotBands: [
-        { from: 0, to: 30, color: `${CHART_COLORS.gauge.high}10`, label: { text: 'Low Risk', style: { fontSize: '10px', color: CHART_COLORS.text.muted } } },
-        { from: 30, to: 70, color: `${CHART_COLORS.gauge.medium}10`, label: { text: 'Moderate', style: { fontSize: '10px', color: CHART_COLORS.text.muted } } },
-        { from: 70, to: 100, color: `${CHART_COLORS.gauge.low}10`, label: { text: 'High Risk', style: { fontSize: '10px', color: CHART_COLORS.text.muted } } },
+        {
+          from: 0,
+          to: 30,
+          color: `${CHART_COLORS.gauge.high}10`,
+          label: {
+            text: "Low Risk",
+            style: { fontSize: "10px", color: CHART_COLORS.text.muted },
+          },
+        },
+        {
+          from: 30,
+          to: 70,
+          color: `${CHART_COLORS.gauge.medium}10`,
+          label: {
+            text: "Moderate",
+            style: { fontSize: "10px", color: CHART_COLORS.text.muted },
+          },
+        },
+        {
+          from: 70,
+          to: 100,
+          color: `${CHART_COLORS.gauge.low}10`,
+          label: {
+            text: "High Risk",
+            style: { fontSize: "10px", color: CHART_COLORS.text.muted },
+          },
+        },
       ],
     },
     tooltip: {
@@ -146,8 +164,8 @@ export function getRiskTrendOptions(
     },
     series: [
       {
-        name: 'Risk Score',
-        type: 'line',
+        name: "Risk Score",
+        type: "line",
         data: data.scores,
         color: CHART_COLORS.danger,
         marker: { enabled: true, radius: 4 },
@@ -163,14 +181,14 @@ export interface BenchmarkComparisonData {
 }
 
 export function getBenchmarkComparisonOptions(
-  data: BenchmarkComparisonData
+  data: BenchmarkComparisonData,
 ): Highcharts.Options {
   return {
-    chart: { type: 'column' },
+    chart: { type: "column" },
     title: { text: undefined },
     xAxis: { categories: data.categories, crosshair: true },
     yAxis: {
-      title: { text: 'Score' },
+      title: { text: "Score" },
       min: 0,
     },
     tooltip: {
@@ -181,14 +199,14 @@ export function getBenchmarkComparisonOptions(
     },
     series: [
       {
-        name: 'Your Score',
-        type: 'column',
+        name: "Your Score",
+        type: "column",
         data: data.userValues,
         color: CHART_COLORS.primary,
       },
       {
-        name: 'Benchmark',
-        type: 'column',
+        name: "Benchmark",
+        type: "column",
         data: data.benchmarkValues,
         color: CHART_COLORS.text.muted,
       },

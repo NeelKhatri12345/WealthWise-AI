@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 
 interface Transaction {
   id: string;
@@ -6,7 +6,7 @@ interface Transaction {
   description: string;
   category: string;
   amount: number;
-  type: 'credit' | 'debit';
+  type: "credit" | "debit";
   reference?: string;
   notes?: string;
 }
@@ -47,7 +47,9 @@ export const useTransactions = ({
       setTransactions([]);
       setTotalPages(1);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load transactions');
+      setError(
+        err instanceof Error ? err.message : "Failed to load transactions",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -57,5 +59,11 @@ export const useTransactions = ({
     fetchTransactions();
   }, [fetchTransactions]);
 
-  return { transactions, totalPages, isLoading, error, refetch: fetchTransactions };
+  return {
+    transactions,
+    totalPages,
+    isLoading,
+    error,
+    refetch: fetchTransactions,
+  };
 };

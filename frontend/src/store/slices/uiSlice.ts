@@ -1,4 +1,4 @@
-import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 export interface Breadcrumb {
   label: string;
@@ -7,20 +7,20 @@ export interface Breadcrumb {
 
 export interface UIState {
   sidebarOpen: boolean;
-  theme: 'light' | 'dark' | 'system';
+  theme: "light" | "dark" | "system";
   activeModal: string | null;
   breadcrumbs: Breadcrumb[];
 }
 
 const initialState: UIState = {
   sidebarOpen: true,
-  theme: (localStorage.getItem('theme') as UIState['theme']) ?? 'light',
+  theme: (localStorage.getItem("theme") as UIState["theme"]) ?? "light",
   activeModal: null,
   breadcrumbs: [],
 };
 
 const uiSlice = createSlice({
-  name: 'ui',
+  name: "ui",
   initialState,
   reducers: {
     toggleSidebar(state) {
@@ -29,9 +29,9 @@ const uiSlice = createSlice({
     setSidebarOpen(state, action: PayloadAction<boolean>) {
       state.sidebarOpen = action.payload;
     },
-    setTheme(state, action: PayloadAction<UIState['theme']>) {
+    setTheme(state, action: PayloadAction<UIState["theme"]>) {
       state.theme = action.payload;
-      localStorage.setItem('theme', action.payload);
+      localStorage.setItem("theme", action.payload);
     },
     openModal(state, action: PayloadAction<string>) {
       state.activeModal = action.payload;

@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 export interface LegendItem {
   name: string;
@@ -10,20 +10,20 @@ export interface LegendItem {
 export interface ChartLegendProps {
   items: LegendItem[];
   onToggle?: (index: number) => void;
-  layout?: 'horizontal' | 'vertical';
+  layout?: "horizontal" | "vertical";
   className?: string;
 }
 
 const ChartLegend: React.FC<ChartLegendProps> = ({
   items,
   onToggle,
-  layout = 'horizontal',
-  className = '',
+  layout = "horizontal",
+  className = "",
 }) => {
   const containerClass =
-    layout === 'horizontal'
-      ? 'flex flex-wrap items-center gap-4'
-      : 'flex flex-col gap-2';
+    layout === "horizontal"
+      ? "flex flex-wrap items-center gap-4"
+      : "flex flex-col gap-2";
 
   return (
     <div className={`${containerClass} ${className}`}>
@@ -32,8 +32,8 @@ const ChartLegend: React.FC<ChartLegendProps> = ({
           key={item.name}
           onClick={() => onToggle?.(index)}
           className={`flex items-center gap-2 text-sm transition-opacity ${
-            item.active === false ? 'opacity-40' : 'opacity-100'
-          } ${onToggle ? 'cursor-pointer hover:opacity-80' : 'cursor-default'}`}
+            item.active === false ? "opacity-40" : "opacity-100"
+          } ${onToggle ? "cursor-pointer hover:opacity-80" : "cursor-default"}`}
         >
           <span
             className="inline-block w-3 h-3 rounded-full flex-shrink-0"

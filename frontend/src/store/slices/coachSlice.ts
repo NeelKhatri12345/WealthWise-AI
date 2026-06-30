@@ -1,8 +1,12 @@
-import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
+import {
+  createSlice,
+  createAsyncThunk,
+  type PayloadAction,
+} from "@reduxjs/toolkit";
 
 export interface CoachMessage {
   id: string;
-  role: 'user' | 'assistant';
+  role: "user" | "assistant";
   content: string;
   timestamp: string;
   metadata?: Record<string, unknown>;
@@ -33,63 +37,63 @@ const initialState: CoachState = {
 };
 
 export const sendMessage = createAsyncThunk(
-  'coach/sendMessage',
+  "coach/sendMessage",
   async (
     { sessionId, content }: { sessionId: string; content: string },
-    { dispatch, rejectWithValue }
+    { dispatch, rejectWithValue },
   ) => {
     try {
       const userMessage: CoachMessage = {
         id: `temp-${Date.now()}`,
-        role: 'user',
+        role: "user",
         content,
         timestamp: new Date().toISOString(),
       };
       dispatch(coachSlice.actions.addMessage(userMessage));
 
-      const { coachApi } = await import('../../services/api/coach.api');
+      const { coachApi } = await import("../../services/api/coach.api");
       return await coachApi.sendMessage(sessionId, content);
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       return rejectWithValue(
-        error.response?.data?.message ?? 'Failed to send message'
+        error.response?.data?.message ?? "Failed to send message",
       );
     }
-  }
+  },
 );
 
 export const fetchSessions = createAsyncThunk(
-  'coach/fetchSessions',
+  "coach/fetchSessions",
   async (_, { rejectWithValue }) => {
     try {
-      const { coachApi } = await import('../../services/api/coach.api');
+      const { coachApi } = await import("../../services/api/coach.api");
       return await coachApi.getSessions();
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       return rejectWithValue(
-        error.response?.data?.message ?? 'Failed to fetch sessions'
+        error.response?.data?.message ?? "Failed to fetch sessions",
       );
     }
-  }
+  },
 );
 
 export const createSession = createAsyncThunk(
-  'coach/createSession',
+  "coach/createSession",
   async (title: string | undefined, { rejectWithValue }) => {
     try {
-      const { coachApi } = await import('../../services/api/coach.api');
+      const { coachApi } = await import("../../services/api/coach.api");
       return await coachApi.createSession(title);
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       return rejectWithValue(
-        error.response?.data?.message ?? 'Failed to create session'
+        error.response?.data?.message ?? "Failed to create session",
       );
     }
-  }
+  },
 );
 
 const coachSlice = createSlice({
-  name: 'coach',
+  name: "coach",
   initialState,
   reducers: {
     setCurrentSession(state, action: PayloadAction<string | null>) {

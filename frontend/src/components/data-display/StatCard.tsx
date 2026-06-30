@@ -10,7 +10,13 @@ interface StatCardProps {
   className?: string;
 }
 
-export function StatCard({ title, value, change, icon, className }: StatCardProps) {
+export function StatCard({
+  title,
+  value,
+  change,
+  icon,
+  className,
+}: StatCardProps) {
   return (
     <Card className={cn("flex items-start justify-between", className)}>
       <div>

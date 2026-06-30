@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 import {
   TransactionList,
   TransactionFilters,
@@ -6,12 +6,12 @@ import {
   CategoryBreakdown,
   MonthlyTrend,
   TransactionSearch,
-} from './components';
-import { useTransactions, useTransactionFilters } from './hooks';
+} from "./components";
+import { useTransactions, useTransactionFilters } from "./hooks";
 
 export const TransactionsPage = () => {
   const [page, setPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedTxnId, setSelectedTxnId] = useState<string | null>(null);
 
   const { filters, setFilters, resetFilters } = useTransactionFilters();
@@ -26,7 +26,9 @@ export const TransactionsPage = () => {
     <div className="space-y-6 p-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Transactions</h1>
-        <p className="mt-1 text-sm text-gray-600">View and manage your financial transactions</p>
+        <p className="mt-1 text-sm text-gray-600">
+          View and manage your financial transactions
+        </p>
       </div>
 
       <div className="flex flex-col gap-4 lg:flex-row">
@@ -37,7 +39,7 @@ export const TransactionsPage = () => {
 
       <TransactionFilters
         filters={filters}
-        categories={['Food', 'Transport', 'Shopping', 'Bills', 'Entertainment']}
+        categories={["Food", "Transport", "Shopping", "Bills", "Entertainment"]}
         onFilterChange={setFilters}
         onReset={resetFilters}
       />

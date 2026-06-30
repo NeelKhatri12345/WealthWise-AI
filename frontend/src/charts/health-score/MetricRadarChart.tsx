@@ -1,6 +1,6 @@
-import React from 'react';
-import BaseChart from '../common/BaseChart';
-import { getMetricRadarOptions, type MetricRadarData } from './chartOptions';
+import React from "react";
+import BaseChart from "../common/BaseChart";
+import { getMetricRadarOptions, type MetricRadarData } from "./chartOptions";
 
 interface MetricRadarChartProps {
   data: MetricRadarData;

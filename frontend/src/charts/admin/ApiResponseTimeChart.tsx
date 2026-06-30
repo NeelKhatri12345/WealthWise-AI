@@ -1,9 +1,9 @@
-import React from 'react';
-import BaseChart from '../common/BaseChart';
+import React from "react";
+import BaseChart from "../common/BaseChart";
 import {
   getApiResponseTimeOptions,
   type ApiResponseTimeData,
-} from './chartOptions';
+} from "./chartOptions";
 
 interface ApiResponseTimeChartProps {
   data: ApiResponseTimeData;

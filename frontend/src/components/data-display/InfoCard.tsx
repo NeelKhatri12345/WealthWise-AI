@@ -9,7 +9,12 @@ interface InfoCardProps {
   className?: string;
 }
 
-export function InfoCard({ title, children, footer, className }: InfoCardProps) {
+export function InfoCard({
+  title,
+  children,
+  footer,
+  className,
+}: InfoCardProps) {
   return (
     <Card padding="none" className={cn("overflow-hidden", className)}>
       <div className="border-b border-wealth-border px-6 py-4">
@@ -17,7 +22,9 @@ export function InfoCard({ title, children, footer, className }: InfoCardProps) 
       </div>
       <div className="p-6">{children}</div>
       {footer && (
-        <div className="border-t border-wealth-border bg-gray-50 px-6 py-3">{footer}</div>
+        <div className="border-t border-wealth-border bg-gray-50 px-6 py-3">
+          {footer}
+        </div>
       )}
     </Card>
   );

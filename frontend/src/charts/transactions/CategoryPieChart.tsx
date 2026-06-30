@@ -1,6 +1,6 @@
-import React from 'react';
-import BaseChart from '../common/BaseChart';
-import { getCategoryPieOptions, type CategoryPieItem } from './chartOptions';
+import React from "react";
+import BaseChart from "../common/BaseChart";
+import { getCategoryPieOptions, type CategoryPieItem } from "./chartOptions";
 
 interface CategoryPieChartProps {
   data: CategoryPieItem[];

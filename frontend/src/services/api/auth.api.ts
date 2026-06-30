@@ -1,4 +1,4 @@
-import axiosInstance, { type ApiResponse } from './axiosInstance';
+import axiosInstance, { type ApiResponse } from "./axiosInstance";
 
 export interface LoginRequest {
   email: string;
@@ -19,7 +19,7 @@ export interface AuthResponse {
     firstName: string;
     lastName: string;
     avatar?: string;
-    role: 'user' | 'admin';
+    role: "user" | "admin";
     createdAt: string;
   };
   token: string;
@@ -35,58 +35,58 @@ export interface ProfileUpdateRequest {
 export const authApi = {
   async login(credentials: LoginRequest): Promise<AuthResponse> {
     const { data } = await axiosInstance.post<ApiResponse<AuthResponse>>(
-      '/auth/login',
-      credentials
+      "/auth/login",
+      credentials,
     );
     return data.data;
   },
 
   async register(payload: RegisterRequest): Promise<AuthResponse> {
     const { data } = await axiosInstance.post<ApiResponse<AuthResponse>>(
-      '/auth/register',
-      payload
+      "/auth/register",
+      payload,
     );
     return data.data;
   },
 
   async logout(): Promise<void> {
-    await axiosInstance.post('/auth/logout');
+    await axiosInstance.post("/auth/logout");
   },
 
   async refreshToken(
-    refreshToken: string
+    refreshToken: string,
   ): Promise<{ token: string; refreshToken: string }> {
     const { data } = await axiosInstance.post<
       ApiResponse<{ token: string; refreshToken: string }>
-    >('/auth/refresh', { refreshToken });
+    >("/auth/refresh", { refreshToken });
     return data.data;
   },
 
   async forgotPassword(email: string): Promise<{ message: string }> {
     const { data } = await axiosInstance.post<ApiResponse<{ message: string }>>(
-      '/auth/forgot-password',
-      { email }
+      "/auth/forgot-password",
+      { email },
     );
     return data.data;
   },
 
   async resetPassword(
     token: string,
-    password: string
+    password: string,
   ): Promise<{ message: string }> {
     const { data } = await axiosInstance.post<ApiResponse<{ message: string }>>(
-      '/auth/reset-password',
-      { token, password }
+      "/auth/reset-password",
+      { token, password },
     );
     return data.data;
   },
 
   async updateProfile(
-    payload: ProfileUpdateRequest
-  ): Promise<AuthResponse['user']> {
+    payload: ProfileUpdateRequest,
+  ): Promise<AuthResponse["user"]> {
     const { data } = await axiosInstance.patch<
-      ApiResponse<AuthResponse['user']>
-    >('/auth/profile', payload);
+      ApiResponse<AuthResponse["user"]>
+    >("/auth/profile", payload);
     return data.data;
   },
 };

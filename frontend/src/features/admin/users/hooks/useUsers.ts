@@ -1,11 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 
 interface User {
   id: string;
   name: string;
   email: string;
   role: string;
-  status: 'active' | 'inactive' | 'banned';
+  status: "active" | "inactive" | "banned";
   createdAt: string;
   lastLogin?: string;
   transactionCount?: number;
@@ -16,12 +16,18 @@ interface UseUsersReturn {
   totalPages: number;
   isLoading: boolean;
   error: string | null;
-  updateUserStatus: (id: string, status: 'active' | 'inactive' | 'banned') => Promise<void>;
+  updateUserStatus: (
+    id: string,
+    status: "active" | "inactive" | "banned",
+  ) => Promise<void>;
   deleteUser: (id: string) => Promise<void>;
   refetch: () => void;
 }
 
-export const useUsers = (page = 1, filters?: { role?: string; status?: string; search?: string }): UseUsersReturn => {
+export const useUsers = (
+  page = 1,
+  filters?: { role?: string; status?: string; search?: string },
+): UseUsersReturn => {
   const [users, setUsers] = useState<User[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
@@ -40,13 +46,16 @@ export const useUsers = (page = 1, filters?: { role?: string; status?: string; s
       setUsers([]);
       setTotalPages(1);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load users');
+      setError(err instanceof Error ? err.message : "Failed to load users");
     } finally {
       setIsLoading(false);
     }
   }, [page, filters?.role, filters?.status, filters?.search]);
 
-  const updateUserStatus = async (id: string, status: 'active' | 'inactive' | 'banned') => {
+  const updateUserStatus = async (
+    id: string,
+    status: "active" | "inactive" | "banned",
+  ) => {
     await new Promise((resolve) => setTimeout(resolve, 300));
     setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, status } : u)));
   };
@@ -60,5 +69,13 @@ export const useUsers = (page = 1, filters?: { role?: string; status?: string; s
     fetchUsers();
   }, [fetchUsers]);
 
-  return { users, totalPages, isLoading, error, updateUserStatus, deleteUser, refetch: fetchUsers };
+  return {
+    users,
+    totalPages,
+    isLoading,
+    error,
+    updateUserStatus,
+    deleteUser,
+    refetch: fetchUsers,
+  };
 };

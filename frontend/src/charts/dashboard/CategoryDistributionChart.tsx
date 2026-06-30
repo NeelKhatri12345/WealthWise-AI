@@ -1,9 +1,9 @@
-import React from 'react';
-import BaseChart from '../common/BaseChart';
+import React from "react";
+import BaseChart from "../common/BaseChart";
 import {
   getCategoryDistributionOptions,
   type CategoryDistributionItem,
-} from './chartOptions';
+} from "./chartOptions";
 
 interface CategoryDistributionChartProps {
   data: CategoryDistributionItem[];

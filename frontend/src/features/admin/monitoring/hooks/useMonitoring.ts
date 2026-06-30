@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 interface MonitoringData {
   apiEndpoints: Array<{
@@ -7,35 +7,35 @@ interface MonitoringData {
     avgResponseTime: number;
     requestCount: number;
     errorRate: number;
-    status: 'healthy' | 'degraded' | 'down';
+    status: "healthy" | "degraded" | "down";
   }>;
   systemMetrics: Array<{
     label: string;
     value: number;
     maxValue: number;
     unit: string;
-    status: 'normal' | 'warning' | 'critical';
+    status: "normal" | "warning" | "critical";
   }>;
   ocrStats: {
     totalProcessed: number;
     successRate: number;
     avgProcessingTime: number;
     queueSize: number;
-    status: 'running' | 'idle' | 'error';
+    status: "running" | "idle" | "error";
   };
   uploadStats: {
     totalUploads: number;
     processingCount: number;
     failedCount: number;
     avgUploadSize: string;
-    status: 'normal' | 'busy' | 'overloaded';
+    status: "normal" | "busy" | "overloaded";
   };
   errors: Array<{
     id: string;
     message: string;
     source: string;
     timestamp: string;
-    severity: 'error' | 'warning' | 'critical';
+    severity: "error" | "warning" | "critical";
     count: number;
   }>;
 }
@@ -61,22 +61,56 @@ export const useMonitoring = (): UseMonitoringReturn => {
       setData({
         apiEndpoints: [],
         systemMetrics: [
-          { label: 'CPU', value: 42, maxValue: 100, unit: '%', status: 'normal' },
-          { label: 'Memory', value: 6.2, maxValue: 16, unit: 'GB', status: 'normal' },
-          { label: 'Disk', value: 120, maxValue: 500, unit: 'GB', status: 'normal' },
+          {
+            label: "CPU",
+            value: 42,
+            maxValue: 100,
+            unit: "%",
+            status: "normal",
+          },
+          {
+            label: "Memory",
+            value: 6.2,
+            maxValue: 16,
+            unit: "GB",
+            status: "normal",
+          },
+          {
+            label: "Disk",
+            value: 120,
+            maxValue: 500,
+            unit: "GB",
+            status: "normal",
+          },
         ],
-        ocrStats: { totalProcessed: 15420, successRate: 97.8, avgProcessingTime: 3.2, queueSize: 0, status: 'idle' },
-        uploadStats: { totalUploads: 8920, processingCount: 0, failedCount: 12, avgUploadSize: '2.4MB', status: 'normal' },
+        ocrStats: {
+          totalProcessed: 15420,
+          successRate: 97.8,
+          avgProcessingTime: 3.2,
+          queueSize: 0,
+          status: "idle",
+        },
+        uploadStats: {
+          totalUploads: 8920,
+          processingCount: 0,
+          failedCount: 12,
+          avgUploadSize: "2.4MB",
+          status: "normal",
+        },
         errors: [],
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load monitoring data');
+      setError(
+        err instanceof Error ? err.message : "Failed to load monitoring data",
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   return { data, isLoading, error, refetch: fetchData };
 };

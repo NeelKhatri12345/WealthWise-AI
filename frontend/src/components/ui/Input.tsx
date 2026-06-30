@@ -11,8 +11,10 @@ import { cn } from "@/utils/cn";
 // Types
 // ---------------------------------------------------------------------------
 
-export interface InputProps
-  extends Omit<InputHTMLAttributes<HTMLInputElement>, "size"> {
+export interface InputProps extends Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  "size"
+> {
   /** Field label rendered above the input */
   label?: string;
   /** Validation error message — also sets aria-invalid */
@@ -182,7 +184,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 
         {/* Error message */}
         {error && (
-          <p id={errorId} className="mt-1 text-xs text-wealth-danger" role="alert">
+          <p
+            id={errorId}
+            className="mt-1 text-xs text-wealth-danger"
+            role="alert"
+          >
             {error}
           </p>
         )}

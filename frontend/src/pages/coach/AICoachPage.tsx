@@ -11,7 +11,9 @@ export default function AICoachPage() {
         description="Get personalized financial advice from your AI assistant"
       />
       <div className="card">
-        <p className="text-sm text-wealth-muted">AI chat interface placeholder</p>
+        <p className="text-sm text-wealth-muted">
+          AI chat interface placeholder
+        </p>
       </div>
     </div>
   );

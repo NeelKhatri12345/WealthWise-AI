@@ -11,7 +11,10 @@ interface ErrorBoundaryState {
   error: Error | null;
 }
 
-export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+export class ErrorBoundary extends Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false, error: null };
@@ -35,7 +38,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
       return (
         <div className="flex min-h-[400px] flex-col items-center justify-center p-8 text-center">
-          <h2 className="mb-2 text-xl font-semibold text-gray-900">Something went wrong</h2>
+          <h2 className="mb-2 text-xl font-semibold text-gray-900">
+            Something went wrong
+          </h2>
           <p className="mb-4 text-sm text-wealth-muted">
             {this.state.error?.message || "An unexpected error occurred."}
           </p>

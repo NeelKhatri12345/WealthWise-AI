@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 export interface TooltipRow {
   label: string;
@@ -17,7 +17,7 @@ const ChartTooltip: React.FC<ChartTooltipProps> = ({
   title,
   rows,
   footer,
-  className = '',
+  className = "",
 }) => {
   return (
     <div

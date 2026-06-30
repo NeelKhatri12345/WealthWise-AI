@@ -1,6 +1,6 @@
-import React from 'react';
-import BaseChart from '../common/BaseChart';
-import { getMonthlyTrendOptions, type MonthlyTrendData } from './chartOptions';
+import React from "react";
+import BaseChart from "../common/BaseChart";
+import { getMonthlyTrendOptions, type MonthlyTrendData } from "./chartOptions";
 
 interface MonthlyTrendChartProps {
   data: MonthlyTrendData;

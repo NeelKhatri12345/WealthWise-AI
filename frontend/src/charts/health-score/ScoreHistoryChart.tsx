@@ -1,9 +1,6 @@
-import React from 'react';
-import BaseChart from '../common/BaseChart';
-import {
-  getScoreHistoryOptions,
-  type ScoreHistoryData,
-} from './chartOptions';
+import React from "react";
+import BaseChart from "../common/BaseChart";
+import { getScoreHistoryOptions, type ScoreHistoryData } from "./chartOptions";
 
 interface ScoreHistoryChartProps {
   data: ScoreHistoryData;

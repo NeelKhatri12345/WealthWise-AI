@@ -1,5 +1,5 @@
-import Highcharts from 'highcharts';
-import { CHART_COLORS } from './chartColors';
+import Highcharts from "highcharts";
+import { CHART_COLORS } from "./chartColors";
 
 export const defaultChartOptions: Highcharts.Options = {
   chart: {
@@ -19,16 +19,16 @@ export const defaultChartOptions: Highcharts.Options = {
   title: {
     style: {
       color: CHART_COLORS.text.primary,
-      fontSize: '16px',
-      fontWeight: '600',
+      fontSize: "16px",
+      fontWeight: "600",
     },
   },
 
   subtitle: {
     style: {
       color: CHART_COLORS.text.secondary,
-      fontSize: '13px',
-      fontWeight: '400',
+      fontSize: "13px",
+      fontWeight: "400",
     },
   },
 
@@ -36,7 +36,7 @@ export const defaultChartOptions: Highcharts.Options = {
     labels: {
       style: {
         color: CHART_COLORS.text.secondary,
-        fontSize: '11px',
+        fontSize: "11px",
       },
     },
     lineColor: CHART_COLORS.border,
@@ -48,15 +48,15 @@ export const defaultChartOptions: Highcharts.Options = {
     labels: {
       style: {
         color: CHART_COLORS.text.secondary,
-        fontSize: '11px',
+        fontSize: "11px",
       },
     },
     gridLineColor: CHART_COLORS.border,
     title: {
       style: {
         color: CHART_COLORS.text.secondary,
-        fontSize: '12px',
-        fontWeight: '500',
+        fontSize: "12px",
+        fontWeight: "500",
       },
     },
   },
@@ -64,8 +64,8 @@ export const defaultChartOptions: Highcharts.Options = {
   legend: {
     itemStyle: {
       color: CHART_COLORS.text.primary,
-      fontSize: '12px',
-      fontWeight: '500',
+      fontSize: "12px",
+      fontWeight: "500",
     },
     itemHoverStyle: {
       color: CHART_COLORS.primaryDark,
@@ -77,12 +77,12 @@ export const defaultChartOptions: Highcharts.Options = {
 
   tooltip: {
     backgroundColor: CHART_COLORS.text.primary,
-    borderColor: 'transparent',
+    borderColor: "transparent",
     borderRadius: 8,
     shadow: true,
     style: {
-      color: '#ffffff',
-      fontSize: '12px',
+      color: "#ffffff",
+      fontSize: "12px",
     },
   },
 
@@ -114,16 +114,16 @@ export const defaultChartOptions: Highcharts.Options = {
     },
     pie: {
       allowPointSelect: true,
-      cursor: 'pointer',
+      cursor: "pointer",
       borderWidth: 2,
       borderColor: CHART_COLORS.background,
       dataLabels: {
         enabled: true,
         style: {
-          fontSize: '11px',
-          fontWeight: '500',
+          fontSize: "11px",
+          fontWeight: "500",
           color: CHART_COLORS.text.primary,
-          textOutline: 'none',
+          textOutline: "none",
         },
       },
     },
@@ -139,9 +139,9 @@ export const defaultChartOptions: Highcharts.Options = {
         condition: { maxWidth: 500 },
         chartOptions: {
           legend: {
-            layout: 'horizontal',
-            align: 'center',
-            verticalAlign: 'bottom',
+            layout: "horizontal",
+            align: "center",
+            verticalAlign: "bottom",
           },
           chart: {
             spacingTop: 8,
@@ -156,7 +156,7 @@ export const defaultChartOptions: Highcharts.Options = {
 };
 
 export function mergeWithDefaults(
-  options: Highcharts.Options
+  options: Highcharts.Options,
 ): Highcharts.Options {
   return Highcharts.merge(defaultChartOptions, options) as Highcharts.Options;
 }

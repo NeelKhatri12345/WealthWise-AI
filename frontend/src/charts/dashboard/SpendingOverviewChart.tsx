@@ -1,9 +1,9 @@
-import React from 'react';
-import BaseChart from '../common/BaseChart';
+import React from "react";
+import BaseChart from "../common/BaseChart";
 import {
   getSpendingOverviewOptions,
   type SpendingOverviewData,
-} from './chartOptions';
+} from "./chartOptions";
 
 interface SpendingOverviewChartProps {
   data: SpendingOverviewData;

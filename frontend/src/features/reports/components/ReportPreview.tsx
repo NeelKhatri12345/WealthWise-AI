@@ -11,7 +11,13 @@ interface ReportPreviewProps {
   onDownload?: () => void;
 }
 
-export const ReportPreview = ({ title, dateRange, sections, onClose, onDownload }: ReportPreviewProps) => {
+export const ReportPreview = ({
+  title,
+  dateRange,
+  sections,
+  onClose,
+  onDownload,
+}: ReportPreviewProps) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-xl bg-white shadow-xl">
@@ -29,9 +35,22 @@ export const ReportPreview = ({ title, dateRange, sections, onClose, onDownload 
                 Download
               </button>
             )}
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
@@ -40,8 +59,12 @@ export const ReportPreview = ({ title, dateRange, sections, onClose, onDownload 
         <div className="p-6 space-y-6">
           {sections.map((section, idx) => (
             <div key={idx}>
-              <h4 className="text-base font-semibold text-gray-900 mb-2">{section.title}</h4>
-              <p className="text-sm text-gray-600 whitespace-pre-wrap">{section.content}</p>
+              <h4 className="text-base font-semibold text-gray-900 mb-2">
+                {section.title}
+              </h4>
+              <p className="text-sm text-gray-600 whitespace-pre-wrap">
+                {section.content}
+              </p>
             </div>
           ))}
         </div>

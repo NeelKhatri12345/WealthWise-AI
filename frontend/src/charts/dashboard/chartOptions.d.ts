@@ -1,23 +1,31 @@
-import Highcharts from 'highcharts';
+import Highcharts from "highcharts";
 export interface SpendingOverviewData {
-    categories: string[];
-    data: number[];
+  categories: string[];
+  data: number[];
 }
-export declare function getSpendingOverviewOptions(data: SpendingOverviewData): Highcharts.Options;
+export declare function getSpendingOverviewOptions(
+  data: SpendingOverviewData,
+): Highcharts.Options;
 export interface IncomeVsExpenseData {
-    categories: string[];
-    income: number[];
-    expense: number[];
+  categories: string[];
+  income: number[];
+  expense: number[];
 }
-export declare function getIncomeVsExpenseOptions(data: IncomeVsExpenseData): Highcharts.Options;
+export declare function getIncomeVsExpenseOptions(
+  data: IncomeVsExpenseData,
+): Highcharts.Options;
 export interface CategoryDistributionItem {
-    name: string;
-    value: number;
-    color?: string;
+  name: string;
+  value: number;
+  color?: string;
 }
-export declare function getCategoryDistributionOptions(data: CategoryDistributionItem[]): Highcharts.Options;
+export declare function getCategoryDistributionOptions(
+  data: CategoryDistributionItem[],
+): Highcharts.Options;
 export interface SavingsRateData {
-    categories: string[];
-    rates: number[];
+  categories: string[];
+  rates: number[];
 }
-export declare function getSavingsRateOptions(data: SavingsRateData): Highcharts.Options;
+export declare function getSavingsRateOptions(
+  data: SavingsRateData,
+): Highcharts.Options;

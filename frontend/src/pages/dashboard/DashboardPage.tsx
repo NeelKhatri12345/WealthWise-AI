@@ -13,7 +13,9 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
         {/* Stat cards and widgets will be implemented here */}
         <div className="card">
-          <p className="text-sm text-wealth-muted">Dashboard content placeholder</p>
+          <p className="text-sm text-wealth-muted">
+            Dashboard content placeholder
+          </p>
         </div>
       </div>
     </div>

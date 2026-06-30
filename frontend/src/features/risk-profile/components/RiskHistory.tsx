@@ -1,5 +1,5 @@
-import { useRef, useEffect } from 'react';
-import Highcharts from 'highcharts';
+import { useRef, useEffect } from "react";
+import Highcharts from "highcharts";
 
 interface RiskHistoryPoint {
   date: string;
@@ -12,18 +12,21 @@ interface RiskHistoryProps {
   title?: string;
 }
 
-export const RiskHistory = ({ data, title = 'Risk Score History' }: RiskHistoryProps) => {
+export const RiskHistory = ({
+  data,
+  title = "Risk Score History",
+}: RiskHistoryProps) => {
   const chartRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!chartRef.current || data.length === 0) return;
 
     const chart = Highcharts.chart(chartRef.current, {
-      chart: { type: 'area', height: 280 },
+      chart: { type: "area", height: 280 },
       title: { text: undefined },
       xAxis: {
         categories: data.map((d) => d.date),
-        labels: { style: { color: '#6B7280' } },
+        labels: { style: { color: "#6B7280" } },
       },
       yAxis: {
         title: { text: undefined },
@@ -32,17 +35,17 @@ export const RiskHistory = ({ data, title = 'Risk Score History' }: RiskHistoryP
       },
       series: [
         {
-          name: 'Risk Score',
+          name: "Risk Score",
           data: data.map((d) => d.score),
-          color: '#F97316',
+          color: "#F97316",
           fillColor: {
             linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
             stops: [
-              [0, 'rgba(249, 115, 22, 0.3)'],
-              [1, 'rgba(249, 115, 22, 0.0)'],
+              [0, "rgba(249, 115, 22, 0.3)"],
+              [1, "rgba(249, 115, 22, 0.0)"],
             ],
           },
-          type: 'area',
+          type: "area",
         },
       ],
       credits: { enabled: false },
@@ -58,7 +61,9 @@ export const RiskHistory = ({ data, title = 'Risk Score History' }: RiskHistoryP
     <div className="rounded-xl bg-white p-6 shadow-sm border border-gray-100">
       <h3 className="mb-4 text-lg font-semibold text-gray-900">{title}</h3>
       {data.length === 0 ? (
-        <p className="py-8 text-center text-sm text-gray-500">No history data available</p>
+        <p className="py-8 text-center text-sm text-gray-500">
+          No history data available
+        </p>
       ) : (
         <div ref={chartRef} />
       )}

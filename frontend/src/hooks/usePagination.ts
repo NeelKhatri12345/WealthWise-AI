@@ -29,10 +29,7 @@ export function usePagination({
     [totalPages],
   );
 
-  const prevPage = useCallback(
-    () => setPage((p) => Math.max(p - 1, 1)),
-    [],
-  );
+  const prevPage = useCallback(() => setPage((p) => Math.max(p - 1, 1)), []);
 
   const changePageSize = useCallback((size: number) => {
     setPageSize(size);

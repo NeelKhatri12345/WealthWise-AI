@@ -1,6 +1,6 @@
-import { Link } from 'react-router-dom';
-import { RegisterForm, SocialLogin } from './components';
-import { useRegister } from './hooks';
+import { Link } from "react-router-dom";
+import { RegisterForm, SocialLogin } from "./components";
+import { useRegister } from "./hooks";
 
 export const RegisterPage = () => {
   const { registerUser, isLoading, error, isSuccess } = useRegister();
@@ -10,11 +10,23 @@ export const RegisterPage = () => {
       <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
         <div className="w-full max-w-md rounded-xl bg-white p-8 text-center shadow-lg">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-            <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            <svg
+              className="h-6 w-6 text-green-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
             </svg>
           </div>
-          <h2 className="text-xl font-semibold text-gray-900">Account created!</h2>
+          <h2 className="text-xl font-semibold text-gray-900">
+            Account created!
+          </h2>
           <p className="mt-2 text-sm text-gray-600">
             Please check your email to verify your account.
           </p>
@@ -56,8 +68,11 @@ export const RegisterPage = () => {
         </div>
 
         <p className="text-center text-sm text-gray-600">
-          Already have an account?{' '}
-          <Link to="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
+          Already have an account?{" "}
+          <Link
+            to="/login"
+            className="font-medium text-indigo-600 hover:text-indigo-500"
+          >
             Sign in
           </Link>
         </p>

@@ -13,7 +13,10 @@ interface BreadcrumbProps {
 
 export function Breadcrumb({ items, className }: BreadcrumbProps) {
   return (
-    <nav className={cn("flex items-center text-sm text-wealth-muted", className)} aria-label="Breadcrumb">
+    <nav
+      className={cn("flex items-center text-sm text-wealth-muted", className)}
+      aria-label="Breadcrumb"
+    >
       {items.map((item, index) => (
         <span key={item.label} className="flex items-center">
           {index > 0 && <span className="mx-2">/</span>}

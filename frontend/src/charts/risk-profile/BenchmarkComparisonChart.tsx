@@ -1,9 +1,9 @@
-import React from 'react';
-import BaseChart from '../common/BaseChart';
+import React from "react";
+import BaseChart from "../common/BaseChart";
 import {
   getBenchmarkComparisonOptions,
   type BenchmarkComparisonData,
-} from './chartOptions';
+} from "./chartOptions";
 
 interface BenchmarkComparisonChartProps {
   data: BenchmarkComparisonData;

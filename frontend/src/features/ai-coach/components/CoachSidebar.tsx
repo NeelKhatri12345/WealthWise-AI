@@ -10,7 +10,11 @@ interface CoachSidebarProps {
   recentQuestions?: string[];
 }
 
-export const CoachSidebar = ({ topics, onTopicSelect, recentQuestions = [] }: CoachSidebarProps) => {
+export const CoachSidebar = ({
+  topics,
+  onTopicSelect,
+  recentQuestions = [],
+}: CoachSidebarProps) => {
   return (
     <div className="rounded-xl bg-white p-6 shadow-sm border border-gray-100">
       <h3 className="mb-4 text-sm font-semibold text-gray-900 uppercase tracking-wide">

@@ -1,12 +1,16 @@
-import { ChatInterface, AdviceCard, CoachSidebar } from './components';
-import { useCoachChat } from './hooks';
+import { ChatInterface, AdviceCard, CoachSidebar } from "./components";
+import { useCoachChat } from "./hooks";
 
 const suggestedTopics = [
-  { id: 'savings', label: 'How can I save more?', icon: '\uD83D\uDCB0' },
-  { id: 'invest', label: 'Where should I invest?', icon: '\uD83D\uDCC8' },
-  { id: 'debt', label: 'How to pay off debt faster?', icon: '\uD83D\uDCB3' },
-  { id: 'budget', label: 'Help me create a budget', icon: '\uD83D\uDCCB' },
-  { id: 'retire', label: 'Am I on track for retirement?', icon: '\uD83C\uDFD6\uFE0F' },
+  { id: "savings", label: "How can I save more?", icon: "\uD83D\uDCB0" },
+  { id: "invest", label: "Where should I invest?", icon: "\uD83D\uDCC8" },
+  { id: "debt", label: "How to pay off debt faster?", icon: "\uD83D\uDCB3" },
+  { id: "budget", label: "Help me create a budget", icon: "\uD83D\uDCCB" },
+  {
+    id: "retire",
+    label: "Am I on track for retirement?",
+    icon: "\uD83C\uDFD6\uFE0F",
+  },
 ];
 
 export const AICoachPage = () => {
@@ -31,10 +35,7 @@ export const AICoachPage = () => {
         </div>
 
         <div className="space-y-4">
-          <CoachSidebar
-            topics={suggestedTopics}
-            onTopicSelect={sendMessage}
-          />
+          <CoachSidebar topics={suggestedTopics} onTopicSelect={sendMessage} />
 
           <AdviceCard
             title="Track Your Spending"

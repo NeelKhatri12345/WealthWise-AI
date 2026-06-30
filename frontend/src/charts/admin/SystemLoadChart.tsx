@@ -1,6 +1,6 @@
-import React from 'react';
-import BaseChart from '../common/BaseChart';
-import { getSystemLoadOptions, type SystemLoadData } from './chartOptions';
+import React from "react";
+import BaseChart from "../common/BaseChart";
+import { getSystemLoadOptions, type SystemLoadData } from "./chartOptions";
 
 interface SystemLoadChartProps {
   data: SystemLoadData;

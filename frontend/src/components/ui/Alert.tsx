@@ -30,15 +30,14 @@ export interface AlertProps extends HTMLAttributes<HTMLDivElement> {
 // ---------------------------------------------------------------------------
 
 export const Alert = forwardRef<HTMLDivElement, AlertProps>(
-  ({ children, variant = "info", title, onClose, className, ...props }, ref) => (
+  (
+    { children, variant = "info", title, onClose, className, ...props },
+    ref,
+  ) => (
     <div
       ref={ref}
       role="alert"
-      className={cn(
-        "rounded-lg border p-4",
-        variantStyles[variant],
-        className,
-      )}
+      className={cn("rounded-lg border p-4", variantStyles[variant], className)}
       {...props}
     >
       <div className="flex items-start justify-between">

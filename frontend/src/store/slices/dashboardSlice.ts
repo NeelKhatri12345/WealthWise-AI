@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
 export interface DashboardStats {
   totalBalance: number;
@@ -15,7 +15,7 @@ export interface RecentTransaction {
   description: string;
   amount: number;
   category: string;
-  type: 'credit' | 'debit';
+  type: "credit" | "debit";
 }
 
 export interface DashboardWidget {
@@ -43,12 +43,10 @@ const initialState: DashboardState = {
 };
 
 export const fetchDashboardData = createAsyncThunk(
-  'dashboard/fetchData',
+  "dashboard/fetchData",
   async (_, { rejectWithValue }) => {
     try {
-      const { dashboardApi } = await import(
-        '../../services/api/dashboard.api'
-      );
+      const { dashboardApi } = await import("../../services/api/dashboard.api");
       const [stats, transactions, widgets] = await Promise.all([
         dashboardApi.getDashboardStats(),
         dashboardApi.getRecentTransactions(),
@@ -58,31 +56,29 @@ export const fetchDashboardData = createAsyncThunk(
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       return rejectWithValue(
-        error.response?.data?.message ?? 'Failed to fetch dashboard data'
+        error.response?.data?.message ?? "Failed to fetch dashboard data",
       );
     }
-  }
+  },
 );
 
 export const refreshStats = createAsyncThunk(
-  'dashboard/refreshStats',
+  "dashboard/refreshStats",
   async (_, { rejectWithValue }) => {
     try {
-      const { dashboardApi } = await import(
-        '../../services/api/dashboard.api'
-      );
+      const { dashboardApi } = await import("../../services/api/dashboard.api");
       return await dashboardApi.getDashboardStats();
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       return rejectWithValue(
-        error.response?.data?.message ?? 'Failed to refresh stats'
+        error.response?.data?.message ?? "Failed to refresh stats",
       );
     }
-  }
+  },
 );
 
 const dashboardSlice = createSlice({
-  name: 'dashboard',
+  name: "dashboard",
   initialState,
   reducers: {
     clearDashboardError(state) {

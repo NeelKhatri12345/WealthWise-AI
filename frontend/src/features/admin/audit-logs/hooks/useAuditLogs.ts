@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 
 interface AuditEntry {
   id: string;
@@ -7,7 +7,7 @@ interface AuditEntry {
   resource: string;
   timestamp: string;
   ipAddress?: string;
-  status: 'success' | 'failure';
+  status: "success" | "failure";
   details?: Record<string, unknown>;
   userAgent?: string;
 }
@@ -22,7 +22,13 @@ interface UseAuditLogsReturn {
 
 export const useAuditLogs = (
   page = 1,
-  filters?: { action?: string; user?: string; dateFrom?: string; dateTo?: string; status?: string },
+  filters?: {
+    action?: string;
+    user?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    status?: string;
+  },
 ): UseAuditLogsReturn => {
   const [entries, setEntries] = useState<AuditEntry[]>([]);
   const [totalPages, setTotalPages] = useState(1);
@@ -44,11 +50,20 @@ export const useAuditLogs = (
       setEntries([]);
       setTotalPages(1);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load audit logs');
+      setError(
+        err instanceof Error ? err.message : "Failed to load audit logs",
+      );
     } finally {
       setIsLoading(false);
     }
-  }, [page, filters?.action, filters?.user, filters?.dateFrom, filters?.dateTo, filters?.status]);
+  }, [
+    page,
+    filters?.action,
+    filters?.user,
+    filters?.dateFrom,
+    filters?.dateTo,
+    filters?.status,
+  ]);
 
   useEffect(() => {
     fetchLogs();

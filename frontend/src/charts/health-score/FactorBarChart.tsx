@@ -1,6 +1,6 @@
-import React from 'react';
-import BaseChart from '../common/BaseChart';
-import { getFactorBarOptions, type FactorBarData } from './chartOptions';
+import React from "react";
+import BaseChart from "../common/BaseChart";
+import { getFactorBarOptions, type FactorBarData } from "./chartOptions";
 
 interface FactorBarChartProps {
   data: FactorBarData;

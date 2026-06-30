@@ -38,9 +38,18 @@ function BrandIcon({ className }: { className?: string }) {
 // ---------------------------------------------------------------------------
 
 const features = [
-  { title: "AI-Powered Insights", description: "Smart analysis of your spending patterns" },
-  { title: "Portfolio Tracking", description: "Real-time monitoring of your investments" },
-  { title: "Financial Health Score", description: "Understand your financial wellness at a glance" },
+  {
+    title: "AI-Powered Insights",
+    description: "Smart analysis of your spending patterns",
+  },
+  {
+    title: "Portfolio Tracking",
+    description: "Real-time monitoring of your investments",
+  },
+  {
+    title: "Financial Health Score",
+    description: "Understand your financial wellness at a glance",
+  },
 ] as const;
 
 // ---------------------------------------------------------------------------
@@ -82,8 +91,8 @@ export function AuthLayout() {
                 financial companion
               </h1>
               <p className="mt-3 max-w-md text-base text-primary-200">
-                Take control of your finances with AI-driven insights,
-                smart budgeting, and personalised coaching.
+                Take control of your finances with AI-driven insights, smart
+                budgeting, and personalised coaching.
               </p>
             </div>
 
@@ -99,11 +108,17 @@ export function AuthLayout() {
                       strokeWidth={3}
                       aria-hidden="true"
                     >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M5 13l4 4L19 7"
+                      />
                     </svg>
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-white">{f.title}</p>
+                    <p className="text-sm font-semibold text-white">
+                      {f.title}
+                    </p>
                     <p className="text-sm text-primary-200">{f.description}</p>
                   </div>
                 </div>
@@ -113,7 +128,8 @@ export function AuthLayout() {
 
           {/* Footer */}
           <p className="relative z-10 text-xs text-primary-300">
-            &copy; {new Date().getFullYear()} WealthWise AI. All rights reserved.
+            &copy; {new Date().getFullYear()} WealthWise AI. All rights
+            reserved.
           </p>
         </div>
       </div>

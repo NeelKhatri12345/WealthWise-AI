@@ -1,11 +1,13 @@
 interface StatItem {
-    label: string;
-    value: string;
-    change?: number;
-    icon: React.ReactNode;
+  label: string;
+  value: string;
+  change?: number;
+  icon: React.ReactNode;
 }
 interface QuickStatsProps {
-    stats: StatItem[];
+  stats: StatItem[];
 }
-export declare const QuickStats: ({ stats }: QuickStatsProps) => import("react").JSX.Element;
+export declare const QuickStats: ({
+  stats,
+}: QuickStatsProps) => import("react").JSX.Element;
 export {};

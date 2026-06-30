@@ -1,10 +1,10 @@
-import { NotificationItem } from './NotificationItem';
+import { NotificationItem } from "./NotificationItem";
 
 interface Notification {
   id: string;
   title: string;
   message: string;
-  type: 'info' | 'warning' | 'success' | 'error';
+  type: "info" | "warning" | "success" | "error";
   read: boolean;
   createdAt: string;
 }
@@ -44,7 +44,9 @@ export const NotificationList = ({
       </div>
 
       {notifications.length === 0 ? (
-        <p className="p-6 text-center text-sm text-gray-500">No notifications</p>
+        <p className="p-6 text-center text-sm text-gray-500">
+          No notifications
+        </p>
       ) : (
         <div className="divide-y divide-gray-100">
           {notifications.map((notification) => (

@@ -1,8 +1,14 @@
-import { GeneralSettings, NotificationSettings, ThemeSettings, DataExport } from './components';
-import { useSettings } from './hooks';
+import {
+  GeneralSettings,
+  NotificationSettings,
+  ThemeSettings,
+  DataExport,
+} from "./components";
+import { useSettings } from "./hooks";
 
 export const SettingsPage = () => {
-  const { settings, isLoading, error, updateSettings, exportData } = useSettings();
+  const { settings, isLoading, error, updateSettings, exportData } =
+    useSettings();
 
   if (isLoading) {
     return (
@@ -15,7 +21,7 @@ export const SettingsPage = () => {
   if (error || !settings) {
     return (
       <div className="rounded-lg bg-red-50 p-4 text-red-700">
-        <p>{error ?? 'Failed to load settings'}</p>
+        <p>{error ?? "Failed to load settings"}</p>
       </div>
     );
   }
@@ -24,7 +30,9 @@ export const SettingsPage = () => {
     <div className="mx-auto max-w-3xl space-y-6 p-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-        <p className="mt-1 text-sm text-gray-600">Customize your WealthWise experience</p>
+        <p className="mt-1 text-sm text-gray-600">
+          Customize your WealthWise experience
+        </p>
       </div>
 
       <GeneralSettings
@@ -47,8 +55,8 @@ export const SettingsPage = () => {
       />
 
       <DataExport
-        onExportJSON={() => exportData('json')}
-        onExportCSV={() => exportData('csv')}
+        onExportJSON={() => exportData("json")}
+        onExportCSV={() => exportData("csv")}
       />
     </div>
   );

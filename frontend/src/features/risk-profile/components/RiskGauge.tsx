@@ -1,4 +1,4 @@
-type RiskLevel = 'low' | 'moderate' | 'high' | 'very-high';
+type RiskLevel = "low" | "moderate" | "high" | "very-high";
 
 interface RiskGaugeProps {
   level: RiskLevel;
@@ -6,11 +6,14 @@ interface RiskGaugeProps {
   maxScore?: number;
 }
 
-const riskLevels: Record<RiskLevel, { label: string; color: string; position: number }> = {
-  low: { label: 'Low Risk', color: '#10B981', position: 20 },
-  moderate: { label: 'Moderate', color: '#F59E0B', position: 40 },
-  high: { label: 'High Risk', color: '#F97316', position: 65 },
-  'very-high': { label: 'Very High', color: '#EF4444', position: 85 },
+const riskLevels: Record<
+  RiskLevel,
+  { label: string; color: string; position: number }
+> = {
+  low: { label: "Low Risk", color: "#10B981", position: 20 },
+  moderate: { label: "Moderate", color: "#F59E0B", position: 40 },
+  high: { label: "High Risk", color: "#F97316", position: 65 },
+  "very-high": { label: "Very High", color: "#EF4444", position: 85 },
 };
 
 export const RiskGauge = ({ level, score, maxScore = 100 }: RiskGaugeProps) => {

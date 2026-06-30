@@ -1,5 +1,7 @@
 interface FooterProps {
-    className?: string;
+  className?: string;
 }
-export declare function Footer({ className }: FooterProps): import("react").JSX.Element;
+export declare function Footer({
+  className,
+}: FooterProps): import("react").JSX.Element;
 export {};

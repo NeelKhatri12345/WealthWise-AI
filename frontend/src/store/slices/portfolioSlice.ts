@@ -1,10 +1,10 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
 export interface Recommendation {
   id: string;
   assetClass: string;
   instrument: string;
-  action: 'buy' | 'sell' | 'hold';
+  action: "buy" | "sell" | "hold";
   currentAllocation: number;
   targetAllocation: number;
   rationale: string;
@@ -43,12 +43,10 @@ const initialState: PortfolioState = {
 };
 
 export const fetchPortfolio = createAsyncThunk(
-  'portfolio/fetchPortfolio',
+  "portfolio/fetchPortfolio",
   async (_, { rejectWithValue }) => {
     try {
-      const { portfolioApi } = await import(
-        '../../services/api/portfolio.api'
-      );
+      const { portfolioApi } = await import("../../services/api/portfolio.api");
       const [allocations, summary] = await Promise.all([
         portfolioApi.getAllocations(),
         portfolioApi.getPortfolioSummary(),
@@ -57,31 +55,29 @@ export const fetchPortfolio = createAsyncThunk(
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       return rejectWithValue(
-        error.response?.data?.message ?? 'Failed to fetch portfolio'
+        error.response?.data?.message ?? "Failed to fetch portfolio",
       );
     }
-  }
+  },
 );
 
 export const fetchRecommendations = createAsyncThunk(
-  'portfolio/fetchRecommendations',
+  "portfolio/fetchRecommendations",
   async (_, { rejectWithValue }) => {
     try {
-      const { portfolioApi } = await import(
-        '../../services/api/portfolio.api'
-      );
+      const { portfolioApi } = await import("../../services/api/portfolio.api");
       return await portfolioApi.getRecommendations();
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       return rejectWithValue(
-        error.response?.data?.message ?? 'Failed to fetch recommendations'
+        error.response?.data?.message ?? "Failed to fetch recommendations",
       );
     }
-  }
+  },
 );
 
 const portfolioSlice = createSlice({
-  name: 'portfolio',
+  name: "portfolio",
   initialState,
   reducers: {
     clearPortfolioError(state) {

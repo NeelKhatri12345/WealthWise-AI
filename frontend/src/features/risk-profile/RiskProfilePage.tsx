@@ -1,35 +1,41 @@
-import { RiskGauge, RiskFactors, RiskAssessment, RiskComparison, RiskHistory } from './components';
-import { useRiskProfile } from './hooks';
+import {
+  RiskGauge,
+  RiskFactors,
+  RiskAssessment,
+  RiskComparison,
+  RiskHistory,
+} from "./components";
+import { useRiskProfile } from "./hooks";
 
 const assessmentQuestions = [
   {
-    id: 'income_stability',
-    text: 'How stable is your monthly income?',
+    id: "income_stability",
+    text: "How stable is your monthly income?",
     options: [
-      { value: 'very_stable', label: 'Very stable - fixed salary' },
-      { value: 'stable', label: 'Mostly stable with some variation' },
-      { value: 'variable', label: 'Variable - freelance/commission based' },
-      { value: 'unstable', label: 'Highly unpredictable' },
+      { value: "very_stable", label: "Very stable - fixed salary" },
+      { value: "stable", label: "Mostly stable with some variation" },
+      { value: "variable", label: "Variable - freelance/commission based" },
+      { value: "unstable", label: "Highly unpredictable" },
     ],
   },
   {
-    id: 'emergency_fund',
-    text: 'How many months of expenses do you have saved?',
+    id: "emergency_fund",
+    text: "How many months of expenses do you have saved?",
     options: [
-      { value: '6_plus', label: '6+ months' },
-      { value: '3_to_6', label: '3-6 months' },
-      { value: '1_to_3', label: '1-3 months' },
-      { value: 'less_1', label: 'Less than 1 month' },
+      { value: "6_plus", label: "6+ months" },
+      { value: "3_to_6", label: "3-6 months" },
+      { value: "1_to_3", label: "1-3 months" },
+      { value: "less_1", label: "Less than 1 month" },
     ],
   },
   {
-    id: 'debt_comfort',
-    text: 'How comfortable are you with your current debt level?',
+    id: "debt_comfort",
+    text: "How comfortable are you with your current debt level?",
     options: [
-      { value: 'no_debt', label: 'No debt at all' },
-      { value: 'comfortable', label: 'Comfortable - manageable payments' },
-      { value: 'concerned', label: 'Somewhat concerned' },
-      { value: 'stressed', label: 'Very stressed about debt' },
+      { value: "no_debt", label: "No debt at all" },
+      { value: "comfortable", label: "Comfortable - manageable payments" },
+      { value: "concerned", label: "Somewhat concerned" },
+      { value: "stressed", label: "Very stressed about debt" },
     ],
   },
 ];
@@ -48,7 +54,7 @@ export const RiskProfilePage = () => {
   if (error || !data) {
     return (
       <div className="rounded-lg bg-red-50 p-4 text-red-700">
-        <p>{error ?? 'Failed to load risk profile'}</p>
+        <p>{error ?? "Failed to load risk profile"}</p>
       </div>
     );
   }
@@ -71,7 +77,10 @@ export const RiskProfilePage = () => {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <RiskComparison benchmarks={data.benchmarks} />
-        <RiskAssessment questions={assessmentQuestions} onSubmit={submitAssessment} />
+        <RiskAssessment
+          questions={assessmentQuestions}
+          onSubmit={submitAssessment}
+        />
       </div>
 
       <RiskHistory data={data.history} />

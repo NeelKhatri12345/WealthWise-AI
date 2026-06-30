@@ -3,7 +3,7 @@ interface ActivityItem {
   action: string;
   user: string;
   timestamp: string;
-  type: 'user' | 'system' | 'security';
+  type: "user" | "system" | "security";
 }
 
 interface RecentActivityProps {
@@ -11,9 +11,9 @@ interface RecentActivityProps {
 }
 
 const typeIcons = {
-  user: '\uD83D\uDC64',
-  system: '\u2699\uFE0F',
-  security: '\uD83D\uDD12',
+  user: "\uD83D\uDC64",
+  system: "\u2699\uFE0F",
+  security: "\uD83D\uDD12",
 };
 
 export const RecentActivity = ({ activities }: RecentActivityProps) => {
@@ -24,15 +24,22 @@ export const RecentActivity = ({ activities }: RecentActivityProps) => {
       </div>
 
       {activities.length === 0 ? (
-        <p className="p-6 text-center text-sm text-gray-500">No recent activity</p>
+        <p className="p-6 text-center text-sm text-gray-500">
+          No recent activity
+        </p>
       ) : (
         <div className="divide-y divide-gray-100">
           {activities.map((activity) => (
-            <div key={activity.id} className="flex items-center gap-3 px-6 py-3">
+            <div
+              key={activity.id}
+              className="flex items-center gap-3 px-6 py-3"
+            >
               <span className="text-lg">{typeIcons[activity.type]}</span>
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-gray-900">{activity.action}</p>
-                <p className="text-xs text-gray-500">{activity.user} &middot; {activity.timestamp}</p>
+                <p className="text-xs text-gray-500">
+                  {activity.user} &middot; {activity.timestamp}
+                </p>
               </div>
             </div>
           ))}

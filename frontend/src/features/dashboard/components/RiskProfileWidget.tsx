@@ -1,4 +1,4 @@
-type RiskLevel = 'low' | 'moderate' | 'high' | 'very-high';
+type RiskLevel = "low" | "moderate" | "high" | "very-high";
 
 interface RiskProfileWidgetProps {
   riskLevel: RiskLevel;
@@ -6,14 +6,33 @@ interface RiskProfileWidgetProps {
   onClick?: () => void;
 }
 
-const riskConfig: Record<RiskLevel, { label: string; color: string; bgColor: string }> = {
-  low: { label: 'Low Risk', color: 'text-green-700', bgColor: 'bg-green-100' },
-  moderate: { label: 'Moderate', color: 'text-yellow-700', bgColor: 'bg-yellow-100' },
-  high: { label: 'High Risk', color: 'text-orange-700', bgColor: 'bg-orange-100' },
-  'very-high': { label: 'Very High', color: 'text-red-700', bgColor: 'bg-red-100' },
+const riskConfig: Record<
+  RiskLevel,
+  { label: string; color: string; bgColor: string }
+> = {
+  low: { label: "Low Risk", color: "text-green-700", bgColor: "bg-green-100" },
+  moderate: {
+    label: "Moderate",
+    color: "text-yellow-700",
+    bgColor: "bg-yellow-100",
+  },
+  high: {
+    label: "High Risk",
+    color: "text-orange-700",
+    bgColor: "bg-orange-100",
+  },
+  "very-high": {
+    label: "Very High",
+    color: "text-red-700",
+    bgColor: "bg-red-100",
+  },
 };
 
-export const RiskProfileWidget = ({ riskLevel, riskScore, onClick }: RiskProfileWidgetProps) => {
+export const RiskProfileWidget = ({
+  riskLevel,
+  riskScore,
+  onClick,
+}: RiskProfileWidgetProps) => {
   const config = riskConfig[riskLevel];
 
   return (
@@ -23,7 +42,9 @@ export const RiskProfileWidget = ({ riskLevel, riskScore, onClick }: RiskProfile
     >
       <h3 className="text-sm font-medium text-gray-500 mb-2">Risk Profile</h3>
       <div className="flex items-center gap-3">
-        <span className={`rounded-full px-3 py-1 text-sm font-medium ${config.color} ${config.bgColor}`}>
+        <span
+          className={`rounded-full px-3 py-1 text-sm font-medium ${config.color} ${config.bgColor}`}
+        >
           {config.label}
         </span>
         <span className="text-2xl font-bold text-gray-900">{riskScore}</span>

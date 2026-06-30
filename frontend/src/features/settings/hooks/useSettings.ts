@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
-type Theme = 'light' | 'dark' | 'system';
+type Theme = "light" | "dark" | "system";
 
 interface AppSettings {
   language: string;
@@ -17,14 +17,14 @@ interface UseSettingsReturn {
   isLoading: boolean;
   error: string | null;
   updateSettings: (updates: Partial<AppSettings>) => Promise<void>;
-  exportData: (format: 'json' | 'csv') => Promise<void>;
+  exportData: (format: "json" | "csv") => Promise<void>;
 }
 
 const defaultSettings: AppSettings = {
-  language: 'en',
-  currency: 'USD',
-  dateFormat: 'MM/DD/YYYY',
-  theme: 'system',
+  language: "en",
+  currency: "USD",
+  dateFormat: "MM/DD/YYYY",
+  theme: "system",
   emailNotifications: true,
   pushNotifications: true,
   weeklyDigest: false,
@@ -43,7 +43,7 @@ export const useSettings = (): UseSettingsReturn => {
       await new Promise((resolve) => setTimeout(resolve, 300));
       setSettings(defaultSettings);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load settings');
+      setError(err instanceof Error ? err.message : "Failed to load settings");
     } finally {
       setIsLoading(false);
     }
@@ -55,7 +55,7 @@ export const useSettings = (): UseSettingsReturn => {
     setSettings((prev) => (prev ? { ...prev, ...updates } : prev));
   };
 
-  const exportData = async (format: 'json' | 'csv') => {
+  const exportData = async (format: "json" | "csv") => {
     // TODO: Replace with actual API call
     await new Promise((resolve) => setTimeout(resolve, 1000));
     void format;

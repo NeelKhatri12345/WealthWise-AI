@@ -11,7 +11,9 @@ export default function HealthScorePage() {
         description="Your comprehensive financial wellness assessment"
       />
       <div className="card">
-        <p className="text-sm text-wealth-muted">Health score dashboard placeholder</p>
+        <p className="text-sm text-wealth-muted">
+          Health score dashboard placeholder
+        </p>
       </div>
     </div>
   );

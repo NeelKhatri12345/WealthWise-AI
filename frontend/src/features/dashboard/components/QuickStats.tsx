@@ -24,10 +24,10 @@ export const QuickStats = ({ stats }: QuickStatsProps) => {
             {stat.change !== undefined && (
               <span
                 className={`text-sm font-medium ${
-                  stat.change >= 0 ? 'text-green-600' : 'text-red-600'
+                  stat.change >= 0 ? "text-green-600" : "text-red-600"
                 }`}
               >
-                {stat.change >= 0 ? '+' : ''}
+                {stat.change >= 0 ? "+" : ""}
                 {stat.change}%
               </span>
             )}

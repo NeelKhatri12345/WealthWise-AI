@@ -23,7 +23,14 @@ function getScoreColor(score: number, max: number): string {
   return "text-wealth-danger";
 }
 
-export function ScoreGauge({ score, maxScore = 100, label, grade, size = "md", className }: ScoreGaugeProps) {
+export function ScoreGauge({
+  score,
+  maxScore = 100,
+  label,
+  grade,
+  size = "md",
+  className,
+}: ScoreGaugeProps) {
   return (
     <div className={cn("flex flex-col items-center", className)}>
       <div
@@ -34,7 +41,9 @@ export function ScoreGauge({ score, maxScore = 100, label, grade, size = "md", c
         )}
       >
         <span className="font-bold">{score}</span>
-        {grade && <span className="text-xs font-medium opacity-75">{grade}</span>}
+        {grade && (
+          <span className="text-xs font-medium opacity-75">{grade}</span>
+        )}
       </div>
       {label && <p className="mt-2 text-sm text-wealth-muted">{label}</p>}
     </div>

@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
 export interface SystemStats {
   totalUsers: number;
@@ -16,8 +16,8 @@ export interface AdminUser {
   email: string;
   firstName: string;
   lastName: string;
-  role: 'user' | 'admin';
-  status: 'active' | 'inactive' | 'suspended';
+  role: "user" | "admin";
+  status: "active" | "inactive" | "suspended";
   createdAt: string;
   lastLogin: string;
 }
@@ -60,10 +60,10 @@ const initialState: AdminState = {
 };
 
 export const fetchAdminDashboard = createAsyncThunk(
-  'admin/fetchDashboard',
+  "admin/fetchDashboard",
   async (_, { rejectWithValue }) => {
     try {
-      const { adminApi } = await import('../../services/api/admin.api');
+      const { adminApi } = await import("../../services/api/admin.api");
       const [stats, monitoring] = await Promise.all([
         adminApi.getAdminStats(),
         adminApi.getSystemHealth(),
@@ -72,44 +72,44 @@ export const fetchAdminDashboard = createAsyncThunk(
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       return rejectWithValue(
-        error.response?.data?.message ?? 'Failed to fetch admin dashboard'
+        error.response?.data?.message ?? "Failed to fetch admin dashboard",
       );
     }
-  }
+  },
 );
 
 export const fetchUsers = createAsyncThunk(
-  'admin/fetchUsers',
+  "admin/fetchUsers",
   async (_, { rejectWithValue }) => {
     try {
-      const { adminApi } = await import('../../services/api/admin.api');
+      const { adminApi } = await import("../../services/api/admin.api");
       return await adminApi.getUsers();
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       return rejectWithValue(
-        error.response?.data?.message ?? 'Failed to fetch users'
+        error.response?.data?.message ?? "Failed to fetch users",
       );
     }
-  }
+  },
 );
 
 export const fetchAuditLogs = createAsyncThunk(
-  'admin/fetchAuditLogs',
+  "admin/fetchAuditLogs",
   async (_, { rejectWithValue }) => {
     try {
-      const { adminApi } = await import('../../services/api/admin.api');
+      const { adminApi } = await import("../../services/api/admin.api");
       return await adminApi.getAuditLogs();
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       return rejectWithValue(
-        error.response?.data?.message ?? 'Failed to fetch audit logs'
+        error.response?.data?.message ?? "Failed to fetch audit logs",
       );
     }
-  }
+  },
 );
 
 const adminSlice = createSlice({
-  name: 'admin',
+  name: "admin",
   initialState,
   reducers: {
     clearAdminError(state) {

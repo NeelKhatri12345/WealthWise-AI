@@ -9,10 +9,16 @@ export const uploadSchema = z.object({
       `File size must be less than ${appConfig.maxFileSize / (1024 * 1024)}MB`,
     )
     .refine(
-      (f) => appConfig.supportedFileTypes.some((ext) => f.name.toLowerCase().endsWith(ext)),
+      (f) =>
+        appConfig.supportedFileTypes.some((ext) =>
+          f.name.toLowerCase().endsWith(ext),
+        ),
       `Supported file types: ${appConfig.supportedFileTypes.join(", ")}`,
     ),
-  description: z.string().max(200, "Description must be at most 200 characters").optional(),
+  description: z
+    .string()
+    .max(200, "Description must be at most 200 characters")
+    .optional(),
 });
 
 export type UploadFormData = z.infer<typeof uploadSchema>;

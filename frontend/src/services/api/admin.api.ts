@@ -1,4 +1,4 @@
-import axiosInstance, { type ApiResponse } from './axiosInstance';
+import axiosInstance, { type ApiResponse } from "./axiosInstance";
 
 export interface AdminStatsResponse {
   totalUsers: number;
@@ -16,8 +16,8 @@ export interface AdminUserResponse {
   email: string;
   firstName: string;
   lastName: string;
-  role: 'user' | 'admin';
-  status: 'active' | 'inactive' | 'suspended';
+  role: "user" | "admin";
+  status: "active" | "inactive" | "suspended";
   createdAt: string;
   lastLogin: string;
 }
@@ -42,53 +42,53 @@ export interface SystemHealthResponse {
 }
 
 export interface UpdateUserRequest {
-  role?: 'user' | 'admin';
-  status?: 'active' | 'inactive' | 'suspended';
+  role?: "user" | "admin";
+  status?: "active" | "inactive" | "suspended";
 }
 
 export const adminApi = {
   async getAdminStats(): Promise<AdminStatsResponse> {
-    const { data } = await axiosInstance.get<
-      ApiResponse<AdminStatsResponse>
-    >('/admin/stats');
+    const { data } =
+      await axiosInstance.get<ApiResponse<AdminStatsResponse>>("/admin/stats");
     return data.data;
   },
 
   async getUsers(): Promise<AdminUserResponse[]> {
-    const { data } = await axiosInstance.get<
-      ApiResponse<AdminUserResponse[]>
-    >('/admin/users');
+    const { data } =
+      await axiosInstance.get<ApiResponse<AdminUserResponse[]>>("/admin/users");
     return data.data;
   },
 
   async getUserById(id: string): Promise<AdminUserResponse> {
-    const { data } = await axiosInstance.get<
-      ApiResponse<AdminUserResponse>
-    >(`/admin/users/${id}`);
+    const { data } = await axiosInstance.get<ApiResponse<AdminUserResponse>>(
+      `/admin/users/${id}`,
+    );
     return data.data;
   },
 
   async updateUser(
     id: string,
-    payload: UpdateUserRequest
+    payload: UpdateUserRequest,
   ): Promise<AdminUserResponse> {
-    const { data } = await axiosInstance.patch<
-      ApiResponse<AdminUserResponse>
-    >(`/admin/users/${id}`, payload);
+    const { data } = await axiosInstance.patch<ApiResponse<AdminUserResponse>>(
+      `/admin/users/${id}`,
+      payload,
+    );
     return data.data;
   },
 
   async getAuditLogs(): Promise<AuditLogResponse[]> {
-    const { data } = await axiosInstance.get<
-      ApiResponse<AuditLogResponse[]>
-    >('/admin/audit-logs');
+    const { data } =
+      await axiosInstance.get<ApiResponse<AuditLogResponse[]>>(
+        "/admin/audit-logs",
+      );
     return data.data;
   },
 
   async getSystemHealth(): Promise<SystemHealthResponse> {
-    const { data } = await axiosInstance.get<
-      ApiResponse<SystemHealthResponse>
-    >('/admin/system-health');
+    const { data } = await axiosInstance.get<ApiResponse<SystemHealthResponse>>(
+      "/admin/system-health",
+    );
     return data.data;
   },
 };

@@ -1,6 +1,6 @@
-import React from 'react';
-import BaseChart from '../common/BaseChart';
-import { getUserGrowthOptions, type UserGrowthData } from './chartOptions';
+import React from "react";
+import BaseChart from "../common/BaseChart";
+import { getUserGrowthOptions, type UserGrowthData } from "./chartOptions";
 
 interface UserGrowthChartProps {
   data: UserGrowthData;

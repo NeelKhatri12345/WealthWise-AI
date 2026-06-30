@@ -1,6 +1,6 @@
-import React from 'react';
-import BaseChart from '../common/BaseChart';
-import { getErrorRateOptions, type ErrorRateData } from './chartOptions';
+import React from "react";
+import BaseChart from "../common/BaseChart";
+import { getErrorRateOptions, type ErrorRateData } from "./chartOptions";
 
 interface ErrorRateChartProps {
   data: ErrorRateData;

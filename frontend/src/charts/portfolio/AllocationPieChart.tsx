@@ -1,6 +1,6 @@
-import React from 'react';
-import BaseChart from '../common/BaseChart';
-import { getAllocationPieOptions, type AllocationItem } from './chartOptions';
+import React from "react";
+import BaseChart from "../common/BaseChart";
+import { getAllocationPieOptions, type AllocationItem } from "./chartOptions";
 
 interface AllocationPieChartProps {
   data: AllocationItem[];

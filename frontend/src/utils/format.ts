@@ -11,10 +11,7 @@ export function formatCurrency(
   }).format(amount);
 }
 
-export function formatNumber(
-  value: number,
-  locale: string = "en-IN",
-): string {
+export function formatNumber(value: number, locale: string = "en-IN"): string {
   return new Intl.NumberFormat(locale).format(value);
 }
 

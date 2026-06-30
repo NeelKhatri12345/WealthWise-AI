@@ -7,7 +7,12 @@ interface SkeletonProps {
   height?: string | number;
 }
 
-export function Skeleton({ className, variant = "text", width, height }: SkeletonProps) {
+export function Skeleton({
+  className,
+  variant = "text",
+  width,
+  height,
+}: SkeletonProps) {
   return (
     <div
       className={cn(

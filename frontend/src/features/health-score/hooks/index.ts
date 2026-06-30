@@ -1,1 +1,1 @@
-export { useHealthScore } from './useHealthScore';
+export { useHealthScore } from "./useHealthScore";

@@ -1,10 +1,10 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
 export interface Notification {
   id: string;
   title: string;
   message: string;
-  type: 'info' | 'success' | 'warning' | 'error';
+  type: "info" | "success" | "warning" | "error";
   read: boolean;
   createdAt: string;
   actionUrl?: string;
@@ -36,59 +36,56 @@ const initialState: NotificationState = {
 };
 
 export const fetchNotifications = createAsyncThunk(
-  'notifications/fetchAll',
+  "notifications/fetchAll",
   async (_, { rejectWithValue }) => {
     try {
-      const { notificationApi } = await import(
-        '../../services/api/notification.api'
-      );
+      const { notificationApi } =
+        await import("../../services/api/notification.api");
       return await notificationApi.getNotifications();
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       return rejectWithValue(
-        error.response?.data?.message ?? 'Failed to fetch notifications'
+        error.response?.data?.message ?? "Failed to fetch notifications",
       );
     }
-  }
+  },
 );
 
 export const markAsRead = createAsyncThunk(
-  'notifications/markAsRead',
+  "notifications/markAsRead",
   async (id: string, { rejectWithValue }) => {
     try {
-      const { notificationApi } = await import(
-        '../../services/api/notification.api'
-      );
+      const { notificationApi } =
+        await import("../../services/api/notification.api");
       await notificationApi.markRead(id);
       return id;
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       return rejectWithValue(
-        error.response?.data?.message ?? 'Failed to mark as read'
+        error.response?.data?.message ?? "Failed to mark as read",
       );
     }
-  }
+  },
 );
 
 export const updatePreferences = createAsyncThunk(
-  'notifications/updatePreferences',
+  "notifications/updatePreferences",
   async (prefs: Partial<NotificationPreferences>, { rejectWithValue }) => {
     try {
-      const { notificationApi } = await import(
-        '../../services/api/notification.api'
-      );
+      const { notificationApi } =
+        await import("../../services/api/notification.api");
       return await notificationApi.updatePreferences(prefs);
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       return rejectWithValue(
-        error.response?.data?.message ?? 'Failed to update preferences'
+        error.response?.data?.message ?? "Failed to update preferences",
       );
     }
-  }
+  },
 );
 
 const notificationSlice = createSlice({
-  name: 'notifications',
+  name: "notifications",
   initialState,
   reducers: {
     addNotification(state, action) {
@@ -106,7 +103,7 @@ const notificationSlice = createSlice({
         state.loading = false;
         state.notifications = action.payload;
         state.unreadCount = action.payload.filter(
-          (n: Notification) => !n.read
+          (n: Notification) => !n.read,
         ).length;
       })
       .addCase(fetchNotifications.rejected, (state, action) => {
@@ -115,7 +112,7 @@ const notificationSlice = createSlice({
       })
       .addCase(markAsRead.fulfilled, (state, action) => {
         const notification = state.notifications.find(
-          (n) => n.id === action.payload
+          (n) => n.id === action.payload,
         );
         if (notification && !notification.read) {
           notification.read = true;

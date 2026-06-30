@@ -10,7 +10,7 @@ export const AdviceCard = ({
   title,
   description,
   category,
-  actionLabel = 'Learn More',
+  actionLabel = "Learn More",
   onAction,
 }: AdviceCardProps) => {
   return (

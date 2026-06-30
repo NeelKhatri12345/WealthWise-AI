@@ -1,6 +1,9 @@
 interface TransactionSearchProps {
-    onSearch: (query: string) => void;
-    placeholder?: string;
+  onSearch: (query: string) => void;
+  placeholder?: string;
 }
-export declare const TransactionSearch: ({ onSearch, placeholder, }: TransactionSearchProps) => import("react").JSX.Element;
+export declare const TransactionSearch: ({
+  onSearch,
+  placeholder,
+}: TransactionSearchProps) => import("react").JSX.Element;
 export {};

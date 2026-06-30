@@ -4,7 +4,7 @@ interface ApiEndpoint {
   avgResponseTime: number;
   requestCount: number;
   errorRate: number;
-  status: 'healthy' | 'degraded' | 'down';
+  status: "healthy" | "degraded" | "down";
 }
 
 interface ApiMonitorProps {
@@ -12,9 +12,9 @@ interface ApiMonitorProps {
 }
 
 const statusStyles = {
-  healthy: 'bg-green-100 text-green-700',
-  degraded: 'bg-yellow-100 text-yellow-700',
-  down: 'bg-red-100 text-red-700',
+  healthy: "bg-green-100 text-green-700",
+  degraded: "bg-yellow-100 text-yellow-700",
+  down: "bg-red-100 text-red-700",
 };
 
 export const ApiMonitor = ({ endpoints }: ApiMonitorProps) => {
@@ -28,11 +28,21 @@ export const ApiMonitor = ({ endpoints }: ApiMonitorProps) => {
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-100">
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Endpoint</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Avg Response</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Requests</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Error Rate</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Endpoint
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Avg Response
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Requests
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Error Rate
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Status
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -44,11 +54,17 @@ export const ApiMonitor = ({ endpoints }: ApiMonitorProps) => {
                   </span>
                   <span className="text-gray-900">{ep.path}</span>
                 </td>
-                <td className="px-6 py-3 text-gray-600">{ep.avgResponseTime}ms</td>
-                <td className="px-6 py-3 text-gray-600">{ep.requestCount.toLocaleString()}</td>
+                <td className="px-6 py-3 text-gray-600">
+                  {ep.avgResponseTime}ms
+                </td>
+                <td className="px-6 py-3 text-gray-600">
+                  {ep.requestCount.toLocaleString()}
+                </td>
                 <td className="px-6 py-3 text-gray-600">{ep.errorRate}%</td>
                 <td className="px-6 py-3">
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusStyles[ep.status]}`}>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusStyles[ep.status]}`}
+                  >
                     {ep.status}
                   </span>
                 </td>

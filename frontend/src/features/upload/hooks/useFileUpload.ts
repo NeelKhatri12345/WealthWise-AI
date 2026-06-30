@@ -1,6 +1,6 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback } from "react";
 
-type UploadStatus = 'idle' | 'uploading' | 'processing' | 'completed' | 'error';
+type UploadStatus = "idle" | "uploading" | "processing" | "completed" | "error";
 
 interface UseFileUploadReturn {
   upload: (file: File) => Promise<void>;
@@ -12,11 +12,11 @@ interface UseFileUploadReturn {
 
 export const useFileUpload = (): UseFileUploadReturn => {
   const [progress, setProgress] = useState(0);
-  const [status, setStatus] = useState<UploadStatus>('idle');
+  const [status, setStatus] = useState<UploadStatus>("idle");
   const [error, setError] = useState<string | null>(null);
 
   const upload = useCallback(async (file: File) => {
-    setStatus('uploading');
+    setStatus("uploading");
     setProgress(0);
     setError(null);
 
@@ -27,21 +27,21 @@ export const useFileUpload = (): UseFileUploadReturn => {
         setProgress(i);
       }
 
-      setStatus('processing');
+      setStatus("processing");
       // TODO: Replace with actual API call using FormData
       await new Promise((resolve) => setTimeout(resolve, 1500));
       void file;
 
-      setStatus('completed');
+      setStatus("completed");
     } catch (err) {
-      setStatus('error');
-      setError(err instanceof Error ? err.message : 'Upload failed');
+      setStatus("error");
+      setError(err instanceof Error ? err.message : "Upload failed");
     }
   }, []);
 
   const reset = useCallback(() => {
     setProgress(0);
-    setStatus('idle');
+    setStatus("idle");
     setError(null);
   }, []);
 

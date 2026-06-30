@@ -1,4 +1,10 @@
-import { useState, useEffect, useCallback, useMemo, type ReactNode } from "react";
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  type ReactNode,
+} from "react";
 import { AuthContext } from "@/context/AuthContext";
 import { storage } from "@/lib/storage";
 import type { User } from "@/types/auth.types";
@@ -11,8 +17,12 @@ const TOKEN_KEY = "wealthwise-token";
 const USER_KEY = "wealthwise-user";
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [user, setUser] = useState<User | null>(() => storage.get<User>(USER_KEY));
-  const [token, setToken] = useState<string | null>(() => storage.get<string>(TOKEN_KEY));
+  const [user, setUser] = useState<User | null>(() =>
+    storage.get<User>(USER_KEY),
+  );
+  const [token, setToken] = useState<string | null>(() =>
+    storage.get<string>(TOKEN_KEY),
+  );
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {

@@ -1,1 +1,1 @@
-export { useAdminSettings } from './useAdminSettings';
+export { useAdminSettings } from "./useAdminSettings";

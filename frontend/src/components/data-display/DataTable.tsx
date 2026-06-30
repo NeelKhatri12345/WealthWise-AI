@@ -54,7 +54,11 @@ export function DataTable<T extends Record<string, unknown>>({
       />
       {currentPage && totalPages && totalPages > 1 && onPageChange && (
         <div className="mt-4 flex justify-center">
-          <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={onPageChange} />
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={onPageChange}
+          />
         </div>
       )}
     </div>

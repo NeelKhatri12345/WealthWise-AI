@@ -1,10 +1,12 @@
 interface GrowthPoint {
-    date: string;
-    newUsers: number;
-    totalUsers: number;
+  date: string;
+  newUsers: number;
+  totalUsers: number;
 }
 interface UserGrowthChartProps {
-    data: GrowthPoint[];
+  data: GrowthPoint[];
 }
-export declare const UserGrowthChart: ({ data }: UserGrowthChartProps) => import("react").JSX.Element;
+export declare const UserGrowthChart: ({
+  data,
+}: UserGrowthChartProps) => import("react").JSX.Element;
 export {};

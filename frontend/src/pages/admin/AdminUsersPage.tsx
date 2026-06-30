@@ -11,7 +11,9 @@ export default function AdminUsersPage() {
         description="View and manage registered users"
       />
       <div className="card">
-        <p className="text-sm text-wealth-muted">User management table placeholder</p>
+        <p className="text-sm text-wealth-muted">
+          User management table placeholder
+        </p>
       </div>
     </div>
   );

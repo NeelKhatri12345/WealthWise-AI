@@ -26,12 +26,20 @@ export function Table<T extends Record<string, unknown>>({
   onRowClick,
 }: TableProps<T>) {
   return (
-    <div className={cn("overflow-x-auto rounded-lg border border-wealth-border", className)}>
+    <div
+      className={cn(
+        "overflow-x-auto rounded-lg border border-wealth-border",
+        className,
+      )}
+    >
       <table className="w-full text-left text-sm">
         <thead className="bg-gray-50 text-xs uppercase text-wealth-muted">
           <tr>
             {columns.map((col) => (
-              <th key={col.key} className={cn("px-4 py-3 font-medium", col.className)}>
+              <th
+                key={col.key}
+                className={cn("px-4 py-3 font-medium", col.className)}
+              >
                 {col.header}
               </th>
             ))}
@@ -40,7 +48,10 @@ export function Table<T extends Record<string, unknown>>({
         <tbody className="divide-y divide-wealth-border">
           {data.length === 0 ? (
             <tr>
-              <td colSpan={columns.length} className="px-4 py-8 text-center text-wealth-muted">
+              <td
+                colSpan={columns.length}
+                className="px-4 py-8 text-center text-wealth-muted"
+              >
                 {emptyMessage}
               </td>
             </tr>
@@ -56,7 +67,9 @@ export function Table<T extends Record<string, unknown>>({
               >
                 {columns.map((col) => (
                   <td key={col.key} className={cn("px-4 py-3", col.className)}>
-                    {col.render ? col.render(item) : (item[col.key] as ReactNode)}
+                    {col.render
+                      ? col.render(item)
+                      : (item[col.key] as ReactNode)}
                   </td>
                 ))}
               </tr>

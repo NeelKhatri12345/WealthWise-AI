@@ -4,22 +4,26 @@ interface ScoreDisplayProps {
   label?: string;
 }
 
-export const ScoreDisplay = ({ score, maxScore = 100, label = 'Financial Health Score' }: ScoreDisplayProps) => {
+export const ScoreDisplay = ({
+  score,
+  maxScore = 100,
+  label = "Financial Health Score",
+}: ScoreDisplayProps) => {
   const percentage = (score / maxScore) * 100;
   const circumference = 2 * Math.PI * 60;
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
   const getColor = () => {
-    if (percentage >= 75) return '#10B981';
-    if (percentage >= 50) return '#F59E0B';
-    return '#EF4444';
+    if (percentage >= 75) return "#10B981";
+    if (percentage >= 50) return "#F59E0B";
+    return "#EF4444";
   };
 
   const getRating = () => {
-    if (percentage >= 75) return 'Excellent';
-    if (percentage >= 50) return 'Good';
-    if (percentage >= 25) return 'Fair';
-    return 'Needs Improvement';
+    if (percentage >= 75) return "Excellent";
+    if (percentage >= 50) return "Good";
+    if (percentage >= 25) return "Fair";
+    return "Needs Improvement";
   };
 
   return (
@@ -28,7 +32,14 @@ export const ScoreDisplay = ({ score, maxScore = 100, label = 'Financial Health 
 
       <div className="relative">
         <svg className="h-40 w-40 -rotate-90 transform" viewBox="0 0 128 128">
-          <circle cx="64" cy="64" r="60" fill="none" stroke="#E5E7EB" strokeWidth="8" />
+          <circle
+            cx="64"
+            cy="64"
+            r="60"
+            fill="none"
+            stroke="#E5E7EB"
+            strokeWidth="8"
+          />
           <circle
             cx="64"
             cy="64"

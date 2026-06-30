@@ -1,7 +1,7 @@
 interface SystemStat {
   label: string;
   value: string | number;
-  status: 'healthy' | 'warning' | 'critical';
+  status: "healthy" | "warning" | "critical";
   icon?: React.ReactNode;
 }
 
@@ -10,9 +10,9 @@ interface SystemOverviewProps {
 }
 
 const statusStyles = {
-  healthy: 'bg-green-100 text-green-700',
-  warning: 'bg-yellow-100 text-yellow-700',
-  critical: 'bg-red-100 text-red-700',
+  healthy: "bg-green-100 text-green-700",
+  warning: "bg-yellow-100 text-yellow-700",
+  critical: "bg-red-100 text-red-700",
 };
 
 export const SystemOverview = ({ stats }: SystemOverviewProps) => {
@@ -25,7 +25,9 @@ export const SystemOverview = ({ stats }: SystemOverviewProps) => {
         >
           <div className="flex items-center justify-between mb-2">
             {stat.icon && <div className="text-gray-400">{stat.icon}</div>}
-            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusStyles[stat.status]}`}>
+            <span
+              className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusStyles[stat.status]}`}
+            >
               {stat.status}
             </span>
           </div>

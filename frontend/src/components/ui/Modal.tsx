@@ -25,7 +25,10 @@ const sizeStyles = {
 // Types
 // ---------------------------------------------------------------------------
 
-export interface ModalProps extends Omit<HTMLAttributes<HTMLDivElement>, "title"> {
+export interface ModalProps extends Omit<
+  HTMLAttributes<HTMLDivElement>,
+  "title"
+> {
   /** Whether the modal is visible */
   isOpen: boolean;
   /** Called when the user requests to close (backdrop click, Escape, close button) */
@@ -49,15 +52,7 @@ const FOCUSABLE =
 
 export const Modal = forwardRef<HTMLDivElement, ModalProps>(
   (
-    {
-      isOpen,
-      onClose,
-      title,
-      children,
-      className,
-      size = "md",
-      ...props
-    },
+    { isOpen, onClose, title, children, className, size = "md", ...props },
     ref,
   ) => {
     const titleId = useId();
@@ -115,37 +110,34 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
     }, [isOpen, onClose]);
 
     // ----- Focus trap -----
-    const handleKeyDown = useCallback(
-      (e: React.KeyboardEvent) => {
-        if (e.key !== "Tab") return;
+    const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+      if (e.key !== "Tab") return;
 
-        const panel = panelRef.current;
-        if (!panel) return;
+      const panel = panelRef.current;
+      if (!panel) return;
 
-        const focusable = Array.from(
-          panel.querySelectorAll<HTMLElement>(FOCUSABLE),
-        );
-        if (focusable.length === 0) return;
+      const focusable = Array.from(
+        panel.querySelectorAll<HTMLElement>(FOCUSABLE),
+      );
+      if (focusable.length === 0) return;
 
-        const first = focusable[0];
-        const last = focusable[focusable.length - 1];
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
 
-        if (e.shiftKey) {
-          // Shift+Tab: wrap from first → last
-          if (document.activeElement === first) {
-            e.preventDefault();
-            last.focus();
-          }
-        } else {
-          // Tab: wrap from last → first
-          if (document.activeElement === last) {
-            e.preventDefault();
-            first.focus();
-          }
+      if (e.shiftKey) {
+        // Shift+Tab: wrap from first → last
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
         }
-      },
-      [],
-    );
+      } else {
+        // Tab: wrap from last → first
+        if (document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }, []);
 
     // ----- Backdrop click (only when clicking the backdrop itself) -----
     const handleBackdropClick = useCallback(
@@ -172,9 +164,13 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
         <div
           ref={(node) => {
             // Merge external ref + internal ref
-            (panelRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+            (
+              panelRef as React.MutableRefObject<HTMLDivElement | null>
+            ).current = node;
             if (typeof ref === "function") ref(node);
-            else if (ref) (ref as React.MutableRefObject<HTMLDivElement | null>).current = node;
+            else if (ref)
+              (ref as React.MutableRefObject<HTMLDivElement | null>).current =
+                node;
           }}
           role="dialog"
           aria-modal="true"
@@ -190,10 +186,7 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
         >
           {title && (
             <div className="mb-4 flex items-center justify-between">
-              <h2
-                id={titleId}
-                className="text-lg font-semibold text-gray-900"
-              >
+              <h2 id={titleId} className="text-lg font-semibold text-gray-900">
                 {title}
               </h2>
               <button

@@ -47,7 +47,11 @@ export function FormFileUpload<T extends FieldValues>({
 
   return (
     <div className={className}>
-      {label && <label className="mb-1 block text-sm font-medium text-gray-700">{label}</label>}
+      {label && (
+        <label className="mb-1 block text-sm font-medium text-gray-700">
+          {label}
+        </label>
+      )}
       <div
         onDragOver={(e) => {
           e.preventDefault();
@@ -74,7 +78,11 @@ export function FormFileUpload<T extends FieldValues>({
           style={{ position: "relative" }}
         />
       </div>
-      {error && <p className="mt-1 text-xs text-wealth-danger">{error.message as string}</p>}
+      {error && (
+        <p className="mt-1 text-xs text-wealth-danger">
+          {error.message as string}
+        </p>
+      )}
     </div>
   );
 }

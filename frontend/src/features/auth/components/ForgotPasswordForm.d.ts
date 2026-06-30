@@ -1,9 +1,12 @@
 type ForgotPasswordFormValues = {
-    email: string;
+  email: string;
 };
 interface ForgotPasswordFormProps {
-    onSubmit: (data: ForgotPasswordFormValues) => void;
-    isLoading?: boolean;
+  onSubmit: (data: ForgotPasswordFormValues) => void;
+  isLoading?: boolean;
 }
-export declare const ForgotPasswordForm: ({ onSubmit, isLoading }: ForgotPasswordFormProps) => import("react").JSX.Element;
+export declare const ForgotPasswordForm: ({
+  onSubmit,
+  isLoading,
+}: ForgotPasswordFormProps) => import("react").JSX.Element;
 export {};

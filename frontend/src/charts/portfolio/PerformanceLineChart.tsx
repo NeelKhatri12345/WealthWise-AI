@@ -1,9 +1,9 @@
-import React from 'react';
-import BaseChart from '../common/BaseChart';
+import React from "react";
+import BaseChart from "../common/BaseChart";
 import {
   getPerformanceLineOptions,
   type PerformanceLineData,
-} from './chartOptions';
+} from "./chartOptions";
 
 interface PerformanceLineChartProps {
   data: PerformanceLineData;

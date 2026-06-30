@@ -1,8 +1,8 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback } from "react";
 
 interface Message {
   id: string;
-  role: 'user' | 'assistant';
+  role: "user" | "assistant";
   content: string;
   timestamp: string;
 }
@@ -21,7 +21,7 @@ export const useCoachChat = (): UseCoachChatReturn => {
   const sendMessage = useCallback(async (content: string) => {
     const userMessage: Message = {
       id: `msg-${Date.now()}`,
-      role: 'user',
+      role: "user",
       content,
       timestamp: new Date().toLocaleTimeString(),
     };
@@ -35,7 +35,7 @@ export const useCoachChat = (): UseCoachChatReturn => {
 
       const assistantMessage: Message = {
         id: `msg-${Date.now() + 1}`,
-        role: 'assistant',
+        role: "assistant",
         content: `Thank you for your question about "${content}". I'm analyzing your financial data to provide personalized advice. This feature will be connected to the AI backend soon.`,
         timestamp: new Date().toLocaleTimeString(),
       };
@@ -44,8 +44,8 @@ export const useCoachChat = (): UseCoachChatReturn => {
     } catch {
       const errorMessage: Message = {
         id: `msg-${Date.now() + 1}`,
-        role: 'assistant',
-        content: 'Sorry, I encountered an error. Please try again.',
+        role: "assistant",
+        content: "Sorry, I encountered an error. Please try again.",
         timestamp: new Date().toLocaleTimeString(),
       };
       setMessages((prev) => [...prev, errorMessage]);

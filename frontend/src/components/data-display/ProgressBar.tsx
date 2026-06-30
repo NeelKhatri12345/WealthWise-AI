@@ -39,12 +39,24 @@ export function ProgressBar({
       {(label || showValue) && (
         <div className="mb-1 flex items-center justify-between text-sm">
           {label && <span className="text-wealth-muted">{label}</span>}
-          {showValue && <span className="font-medium text-gray-900">{Math.round(percentage)}%</span>}
+          {showValue && (
+            <span className="font-medium text-gray-900">
+              {Math.round(percentage)}%
+            </span>
+          )}
         </div>
       )}
-      <div className={cn("w-full overflow-hidden rounded-full bg-gray-200", sizeClasses[size])}>
+      <div
+        className={cn(
+          "w-full overflow-hidden rounded-full bg-gray-200",
+          sizeClasses[size],
+        )}
+      >
         <div
-          className={cn("h-full rounded-full transition-all duration-300", colorClasses[color])}
+          className={cn(
+            "h-full rounded-full transition-all duration-300",
+            colorClasses[color],
+          )}
           style={{ width: `${percentage}%` }}
         />
       </div>

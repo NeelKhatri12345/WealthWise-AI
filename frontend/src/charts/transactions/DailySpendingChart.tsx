@@ -1,9 +1,9 @@
-import React from 'react';
-import BaseChart from '../common/BaseChart';
+import React from "react";
+import BaseChart from "../common/BaseChart";
 import {
   getDailySpendingOptions,
   type DailySpendingData,
-} from './chartOptions';
+} from "./chartOptions";
 
 interface DailySpendingChartProps {
   data: DailySpendingData;

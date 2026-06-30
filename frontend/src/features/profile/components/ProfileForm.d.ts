@@ -1,13 +1,17 @@
 type ProfileFormValues = {
-    email: string;
-    name: string;
-    phone?: string;
-    bio?: string;
+  email: string;
+  name: string;
+  phone?: string;
+  bio?: string;
 };
 interface ProfileFormProps {
-    defaultValues: ProfileFormValues;
-    onSubmit: (data: ProfileFormValues) => void;
-    isLoading?: boolean;
+  defaultValues: ProfileFormValues;
+  onSubmit: (data: ProfileFormValues) => void;
+  isLoading?: boolean;
 }
-export declare const ProfileForm: ({ defaultValues, onSubmit, isLoading }: ProfileFormProps) => import("react").JSX.Element;
+export declare const ProfileForm: ({
+  defaultValues,
+  onSubmit,
+  isLoading,
+}: ProfileFormProps) => import("react").JSX.Element;
 export {};

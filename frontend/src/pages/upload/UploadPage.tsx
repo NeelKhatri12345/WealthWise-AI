@@ -11,7 +11,9 @@ export default function UploadPage() {
         description="Upload your bank or credit card statements for analysis"
       />
       <div className="card">
-        <p className="text-sm text-wealth-muted">File upload area placeholder</p>
+        <p className="text-sm text-wealth-muted">
+          File upload area placeholder
+        </p>
       </div>
     </div>
   );

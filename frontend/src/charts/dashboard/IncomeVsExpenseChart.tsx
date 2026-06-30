@@ -1,9 +1,9 @@
-import React from 'react';
-import BaseChart from '../common/BaseChart';
+import React from "react";
+import BaseChart from "../common/BaseChart";
 import {
   getIncomeVsExpenseOptions,
   type IncomeVsExpenseData,
-} from './chartOptions';
+} from "./chartOptions";
 
 interface IncomeVsExpenseChartProps {
   data: IncomeVsExpenseData;

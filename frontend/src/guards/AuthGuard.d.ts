@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 interface AuthGuardProps {
-    children: ReactNode;
+  children: ReactNode;
 }
-export declare function AuthGuard({ children }: AuthGuardProps): import("react").JSX.Element;
+export declare function AuthGuard({
+  children,
+}: AuthGuardProps): import("react").JSX.Element;
 export {};

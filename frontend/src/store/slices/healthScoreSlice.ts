@@ -1,10 +1,10 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
 export interface HealthMetric {
   name: string;
   value: number;
   maxValue: number;
-  status: 'good' | 'fair' | 'poor';
+  status: "good" | "fair" | "poor";
   description: string;
 }
 
@@ -13,7 +13,7 @@ export interface HealthTip {
   title: string;
   description: string;
   category: string;
-  priority: 'high' | 'medium' | 'low';
+  priority: "high" | "medium" | "low";
 }
 
 export interface HealthScoreState {
@@ -35,10 +35,10 @@ const initialState: HealthScoreState = {
 };
 
 export const fetchHealthScore = createAsyncThunk(
-  'healthScore/fetchScore',
+  "healthScore/fetchScore",
   async (_, { rejectWithValue }) => {
     try {
-      const { healthApi } = await import('../../services/api/health.api');
+      const { healthApi } = await import("../../services/api/health.api");
       const [scoreData, metrics] = await Promise.all([
         healthApi.getHealthScore(),
         healthApi.getHealthMetrics(),
@@ -47,29 +47,29 @@ export const fetchHealthScore = createAsyncThunk(
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       return rejectWithValue(
-        error.response?.data?.message ?? 'Failed to fetch health score'
+        error.response?.data?.message ?? "Failed to fetch health score",
       );
     }
-  }
+  },
 );
 
 export const fetchHealthHistory = createAsyncThunk(
-  'healthScore/fetchHistory',
-  async (period: string = '6m', { rejectWithValue }) => {
+  "healthScore/fetchHistory",
+  async (period: string = "6m", { rejectWithValue }) => {
     try {
-      const { healthApi } = await import('../../services/api/health.api');
+      const { healthApi } = await import("../../services/api/health.api");
       return await healthApi.getHealthHistory(period);
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       return rejectWithValue(
-        error.response?.data?.message ?? 'Failed to fetch health history'
+        error.response?.data?.message ?? "Failed to fetch health history",
       );
     }
-  }
+  },
 );
 
 const healthScoreSlice = createSlice({
-  name: 'healthScore',
+  name: "healthScore",
   initialState,
   reducers: {
     clearHealthError(state) {

@@ -19,7 +19,10 @@ export function Header() {
         >
           {theme === "dark" ? "\u2600\uFE0F" : "\uD83C\uDF19"}
         </button>
-        <Avatar name={user ? `${user.firstName} ${user.lastName}` : undefined} size="sm" />
+        <Avatar
+          name={user ? `${user.firstName} ${user.lastName}` : undefined}
+          size="sm"
+        />
       </div>
     </header>
   );

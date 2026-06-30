@@ -2,7 +2,7 @@ interface UploadRecord {
   id: string;
   fileName: string;
   uploadDate: string;
-  status: 'completed' | 'processing' | 'failed';
+  status: "completed" | "processing" | "failed";
   transactionCount?: number;
 }
 
@@ -12,14 +12,16 @@ interface UploadHistoryProps {
 }
 
 export const UploadHistory = ({ uploads, onRetry }: UploadHistoryProps) => {
-  const statusBadge = (status: UploadRecord['status']) => {
+  const statusBadge = (status: UploadRecord["status"]) => {
     const styles = {
-      completed: 'bg-green-100 text-green-700',
-      processing: 'bg-yellow-100 text-yellow-700',
-      failed: 'bg-red-100 text-red-700',
+      completed: "bg-green-100 text-green-700",
+      processing: "bg-yellow-100 text-yellow-700",
+      failed: "bg-red-100 text-red-700",
     };
     return (
-      <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${styles[status]}`}>
+      <span
+        className={`rounded-full px-2 py-0.5 text-xs font-medium ${styles[status]}`}
+      >
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
     );
@@ -38,9 +40,14 @@ export const UploadHistory = ({ uploads, onRetry }: UploadHistoryProps) => {
       ) : (
         <div className="divide-y divide-gray-100">
           {uploads.map((upload) => (
-            <div key={upload.id} className="flex items-center justify-between px-6 py-4">
+            <div
+              key={upload.id}
+              className="flex items-center justify-between px-6 py-4"
+            >
               <div>
-                <p className="text-sm font-medium text-gray-900">{upload.fileName}</p>
+                <p className="text-sm font-medium text-gray-900">
+                  {upload.fileName}
+                </p>
                 <p className="text-xs text-gray-500">
                   {upload.uploadDate}
                   {upload.transactionCount !== undefined && (
@@ -50,7 +57,7 @@ export const UploadHistory = ({ uploads, onRetry }: UploadHistoryProps) => {
               </div>
               <div className="flex items-center gap-3">
                 {statusBadge(upload.status)}
-                {upload.status === 'failed' && onRetry && (
+                {upload.status === "failed" && onRetry && (
                   <button
                     onClick={() => onRetry(upload.id)}
                     className="text-xs text-indigo-600 hover:text-indigo-500"

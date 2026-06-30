@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 
 interface LoginCredentials {
   email: string;
@@ -34,15 +34,20 @@ export const useLogin = (): UseLoginReturn => {
         setTimeout(
           () =>
             resolve({
-              token: 'mock-token',
-              user: { id: '1', name: 'User', email: credentials.email, role: 'user' },
+              token: "mock-token",
+              user: {
+                id: "1",
+                name: "User",
+                email: credentials.email,
+                role: "user",
+              },
             }),
           1000,
         ),
       );
       // Store token and redirect after integration
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
+      setError(err instanceof Error ? err.message : "Login failed");
     } finally {
       setIsLoading(false);
     }

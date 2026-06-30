@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { AuditTable, AuditFilters, AuditDetail } from './components';
-import { useAuditLogs } from './hooks';
+import { useState } from "react";
+import { AuditTable, AuditFilters, AuditDetail } from "./components";
+import { useAuditLogs } from "./hooks";
 
 export const AuditLogsPage = () => {
   const [page, setPage] = useState(1);
@@ -14,10 +14,16 @@ export const AuditLogsPage = () => {
     <div className="space-y-6 p-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Audit Logs</h1>
-        <p className="mt-1 text-sm text-gray-600">Track all system actions and user activity</p>
+        <p className="mt-1 text-sm text-gray-600">
+          Track all system actions and user activity
+        </p>
       </div>
 
-      <AuditFilters filters={filters} onFilterChange={setFilters} onReset={() => setFilters({})} />
+      <AuditFilters
+        filters={filters}
+        onFilterChange={setFilters}
+        onReset={() => setFilters({})}
+      />
 
       {isLoading ? (
         <div className="flex h-32 items-center justify-center">

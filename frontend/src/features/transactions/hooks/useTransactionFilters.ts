@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback } from "react";
 
 interface TransactionFilters {
   dateFrom?: string;
@@ -6,11 +6,11 @@ interface TransactionFilters {
   category?: string;
   minAmount?: number;
   maxAmount?: number;
-  type?: 'all' | 'credit' | 'debit';
+  type?: "all" | "credit" | "debit";
 }
 
 const defaultFilters: TransactionFilters = {
-  type: 'all',
+  type: "all",
 };
 
 interface UseTransactionFiltersReturn {
@@ -33,7 +33,7 @@ export const useTransactionFilters = (): UseTransactionFiltersReturn => {
     !!filters.category ||
     filters.minAmount !== undefined ||
     filters.maxAmount !== undefined ||
-    (filters.type !== undefined && filters.type !== 'all');
+    (filters.type !== undefined && filters.type !== "all");
 
   return { filters, setFilters, resetFilters, hasActiveFilters };
 };

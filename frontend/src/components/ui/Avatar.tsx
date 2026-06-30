@@ -23,13 +23,23 @@ function getInitials(name: string): string {
     .slice(0, 2);
 }
 
-export function Avatar({ src, alt, name, size = "md", className }: AvatarProps) {
+export function Avatar({
+  src,
+  alt,
+  name,
+  size = "md",
+  className,
+}: AvatarProps) {
   if (src) {
     return (
       <img
         src={src}
         alt={alt || name || "Avatar"}
-        className={cn("rounded-full object-cover", sizeClasses[size], className)}
+        className={cn(
+          "rounded-full object-cover",
+          sizeClasses[size],
+          className,
+        )}
       />
     );
   }

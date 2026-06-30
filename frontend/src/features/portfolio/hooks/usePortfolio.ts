@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 interface PortfolioData {
   totalValue: number;
@@ -22,7 +22,7 @@ interface PortfolioData {
     id: string;
     title: string;
     description: string;
-    type: 'buy' | 'sell' | 'hold' | 'rebalance';
+    type: "buy" | "sell" | "hold" | "rebalance";
     confidence: number;
     asset?: string;
   }>;
@@ -30,7 +30,7 @@ interface PortfolioData {
     asset: string;
     currentAllocation: number;
     targetAllocation: number;
-    action: 'increase' | 'decrease';
+    action: "increase" | "decrease";
   }>;
 }
 
@@ -57,17 +57,22 @@ export const usePortfolio = (): UsePortfolioReturn => {
         totalChange: 2340,
         totalChangePercent: 1.9,
         allocation: [
-          { name: 'Stocks', percentage: 45, value: 56250, color: '#6366F1' },
-          { name: 'Bonds', percentage: 25, value: 31250, color: '#10B981' },
-          { name: 'Real Estate', percentage: 15, value: 18750, color: '#F59E0B' },
-          { name: 'Cash', percentage: 15, value: 18750, color: '#6B7280' },
+          { name: "Stocks", percentage: 45, value: 56250, color: "#6366F1" },
+          { name: "Bonds", percentage: 25, value: 31250, color: "#10B981" },
+          {
+            name: "Real Estate",
+            percentage: 15,
+            value: 18750,
+            color: "#F59E0B",
+          },
+          { name: "Cash", percentage: 15, value: 18750, color: "#6B7280" },
         ],
         assets: [],
         recommendations: [],
         rebalanceSuggestions: [],
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load portfolio');
+      setError(err instanceof Error ? err.message : "Failed to load portfolio");
     } finally {
       setIsLoading(false);
     }

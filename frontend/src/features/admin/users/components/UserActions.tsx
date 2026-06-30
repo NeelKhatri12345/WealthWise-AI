@@ -1,15 +1,21 @@
 interface UserActionsProps {
   userId: string;
-  currentStatus: 'active' | 'inactive' | 'banned';
+  currentStatus: "active" | "inactive" | "banned";
   onActivate: (id: string) => void;
   onBan: (id: string) => void;
   onDelete: (id: string) => void;
 }
 
-export const UserActions = ({ userId, currentStatus, onActivate, onBan, onDelete }: UserActionsProps) => {
+export const UserActions = ({
+  userId,
+  currentStatus,
+  onActivate,
+  onBan,
+  onDelete,
+}: UserActionsProps) => {
   return (
     <div className="flex items-center gap-2">
-      {currentStatus !== 'active' && (
+      {currentStatus !== "active" && (
         <button
           onClick={() => onActivate(userId)}
           className="rounded-lg bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700 hover:bg-green-100 transition-colors"
@@ -17,7 +23,7 @@ export const UserActions = ({ userId, currentStatus, onActivate, onBan, onDelete
           Activate
         </button>
       )}
-      {currentStatus !== 'banned' && (
+      {currentStatus !== "banned" && (
         <button
           onClick={() => onBan(userId)}
           className="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100 transition-colors"

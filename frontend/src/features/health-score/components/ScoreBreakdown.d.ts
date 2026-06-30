@@ -1,11 +1,13 @@
 interface ScoreFactor {
-    name: string;
-    score: number;
-    maxScore: number;
-    description: string;
+  name: string;
+  score: number;
+  maxScore: number;
+  description: string;
 }
 interface ScoreBreakdownProps {
-    factors: ScoreFactor[];
+  factors: ScoreFactor[];
 }
-export declare const ScoreBreakdown: ({ factors }: ScoreBreakdownProps) => import("react").JSX.Element;
+export declare const ScoreBreakdown: ({
+  factors,
+}: ScoreBreakdownProps) => import("react").JSX.Element;
 export {};

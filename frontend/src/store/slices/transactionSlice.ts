@@ -1,4 +1,8 @@
-import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
+import {
+  createSlice,
+  createAsyncThunk,
+  type PayloadAction,
+} from "@reduxjs/toolkit";
 
 export interface Transaction {
   id: string;
@@ -6,7 +10,7 @@ export interface Transaction {
   description: string;
   amount: number;
   category: string;
-  type: 'credit' | 'debit';
+  type: "credit" | "debit";
   merchant?: string;
   tags?: string[];
 }
@@ -14,13 +18,13 @@ export interface Transaction {
 export interface TransactionFilters {
   search: string;
   category: string;
-  type: 'all' | 'credit' | 'debit';
+  type: "all" | "credit" | "debit";
   dateFrom: string;
   dateTo: string;
   amountMin: number | null;
   amountMax: number | null;
-  sortBy: 'date' | 'amount' | 'category';
-  sortOrder: 'asc' | 'desc';
+  sortBy: "date" | "amount" | "category";
+  sortOrder: "asc" | "desc";
 }
 
 export interface Pagination {
@@ -49,15 +53,15 @@ export interface TransactionState {
 const initialState: TransactionState = {
   transactions: [],
   filters: {
-    search: '',
-    category: '',
-    type: 'all',
-    dateFrom: '',
-    dateTo: '',
+    search: "",
+    category: "",
+    type: "all",
+    dateFrom: "",
+    dateTo: "",
     amountMin: null,
     amountMax: null,
-    sortBy: 'date',
-    sortOrder: 'desc',
+    sortBy: "date",
+    sortOrder: "desc",
   },
   pagination: {
     page: 1,
@@ -71,14 +75,13 @@ const initialState: TransactionState = {
 };
 
 export const fetchTransactions = createAsyncThunk(
-  'transactions/fetchTransactions',
+  "transactions/fetchTransactions",
   async (_, { getState, rejectWithValue }) => {
     try {
       const state = getState() as { transactions: TransactionState };
       const { filters, pagination } = state.transactions;
-      const { transactionApi } = await import(
-        '../../services/api/transaction.api'
-      );
+      const { transactionApi } =
+        await import("../../services/api/transaction.api");
       return await transactionApi.getTransactions({
         ...filters,
         page: pagination.page,
@@ -87,31 +90,30 @@ export const fetchTransactions = createAsyncThunk(
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       return rejectWithValue(
-        error.response?.data?.message ?? 'Failed to fetch transactions'
+        error.response?.data?.message ?? "Failed to fetch transactions",
       );
     }
-  }
+  },
 );
 
 export const fetchCategories = createAsyncThunk(
-  'transactions/fetchCategories',
+  "transactions/fetchCategories",
   async (_, { rejectWithValue }) => {
     try {
-      const { transactionApi } = await import(
-        '../../services/api/transaction.api'
-      );
+      const { transactionApi } =
+        await import("../../services/api/transaction.api");
       return await transactionApi.getCategories();
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       return rejectWithValue(
-        error.response?.data?.message ?? 'Failed to fetch categories'
+        error.response?.data?.message ?? "Failed to fetch categories",
       );
     }
-  }
+  },
 );
 
 const transactionSlice = createSlice({
-  name: 'transactions',
+  name: "transactions",
   initialState,
   reducers: {
     setFilters(state, action: PayloadAction<Partial<TransactionFilters>>) {

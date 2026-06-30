@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
 export interface RiskFactor {
   name: string;
@@ -9,7 +9,7 @@ export interface RiskFactor {
 
 export interface RiskProfile {
   score: number;
-  level: 'low' | 'moderate' | 'high' | 'very_high';
+  level: "low" | "moderate" | "high" | "very_high";
   summary: string;
   lastUpdated: string;
 }
@@ -39,10 +39,10 @@ const initialState: RiskProfileState = {
 };
 
 export const fetchRiskProfile = createAsyncThunk(
-  'riskProfile/fetchProfile',
+  "riskProfile/fetchProfile",
   async (_, { rejectWithValue }) => {
     try {
-      const { riskApi } = await import('../../services/api/risk.api');
+      const { riskApi } = await import("../../services/api/risk.api");
       const [profile, factors, history] = await Promise.all([
         riskApi.getRiskProfile(),
         riskApi.getRiskFactors(),
@@ -52,32 +52,32 @@ export const fetchRiskProfile = createAsyncThunk(
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       return rejectWithValue(
-        error.response?.data?.message ?? 'Failed to fetch risk profile'
+        error.response?.data?.message ?? "Failed to fetch risk profile",
       );
     }
-  }
+  },
 );
 
 export const submitAssessment = createAsyncThunk(
-  'riskProfile/submitAssessment',
+  "riskProfile/submitAssessment",
   async (
     answers: { questionId: string; answer: string }[],
-    { rejectWithValue }
+    { rejectWithValue },
   ) => {
     try {
-      const { riskApi } = await import('../../services/api/risk.api');
+      const { riskApi } = await import("../../services/api/risk.api");
       return await riskApi.submitAssessment(answers);
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       return rejectWithValue(
-        error.response?.data?.message ?? 'Failed to submit assessment'
+        error.response?.data?.message ?? "Failed to submit assessment",
       );
     }
-  }
+  },
 );
 
 const riskProfileSlice = createSlice({
-  name: 'riskProfile',
+  name: "riskProfile",
   initialState,
   reducers: {
     clearRiskError(state) {

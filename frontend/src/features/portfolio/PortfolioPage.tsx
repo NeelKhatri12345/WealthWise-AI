@@ -4,8 +4,8 @@ import {
   AssetCard,
   PortfolioSummary,
   RebalanceAlert,
-} from './components';
-import { usePortfolio } from './hooks';
+} from "./components";
+import { usePortfolio } from "./hooks";
 
 export const PortfolioPage = () => {
   const { data, isLoading, error } = usePortfolio();
@@ -21,7 +21,7 @@ export const PortfolioPage = () => {
   if (error || !data) {
     return (
       <div className="rounded-lg bg-red-50 p-4 text-red-700">
-        <p>{error ?? 'Failed to load portfolio'}</p>
+        <p>{error ?? "Failed to load portfolio"}</p>
       </div>
     );
   }
@@ -51,7 +51,9 @@ export const PortfolioPage = () => {
 
       {data.assets.length > 0 && (
         <div>
-          <h2 className="mb-4 text-lg font-semibold text-gray-900">Your Assets</h2>
+          <h2 className="mb-4 text-lg font-semibold text-gray-900">
+            Your Assets
+          </h2>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {data.assets.map((asset) => (
               <AssetCard key={asset.name} {...asset} />

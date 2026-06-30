@@ -1,9 +1,11 @@
 interface ActiveUsersPoint {
-    time: string;
-    count: number;
+  time: string;
+  count: number;
 }
 interface ActiveUsersChartProps {
-    data: ActiveUsersPoint[];
+  data: ActiveUsersPoint[];
 }
-export declare const ActiveUsersChart: ({ data }: ActiveUsersChartProps) => import("react").JSX.Element;
+export declare const ActiveUsersChart: ({
+  data,
+}: ActiveUsersChartProps) => import("react").JSX.Element;
 export {};

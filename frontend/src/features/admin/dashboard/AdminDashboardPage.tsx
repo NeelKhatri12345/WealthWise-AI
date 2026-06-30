@@ -1,5 +1,11 @@
-import { SystemOverview, UserGrowthChart, ActiveUsersChart, RevenueChart, RecentActivity } from './components';
-import { useAdminDashboard } from './hooks';
+import {
+  SystemOverview,
+  UserGrowthChart,
+  ActiveUsersChart,
+  RevenueChart,
+  RecentActivity,
+} from "./components";
+import { useAdminDashboard } from "./hooks";
 
 export const AdminDashboardPage = () => {
   const { data, isLoading, error } = useAdminDashboard();
@@ -15,7 +21,7 @@ export const AdminDashboardPage = () => {
   if (error || !data) {
     return (
       <div className="rounded-lg bg-red-50 p-4 text-red-700">
-        <p>{error ?? 'Failed to load admin dashboard'}</p>
+        <p>{error ?? "Failed to load admin dashboard"}</p>
       </div>
     );
   }
@@ -24,7 +30,9 @@ export const AdminDashboardPage = () => {
     <div className="space-y-6 p-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-        <p className="mt-1 text-sm text-gray-600">System overview and key metrics</p>
+        <p className="mt-1 text-sm text-gray-600">
+          System overview and key metrics
+        </p>
       </div>
 
       <SystemOverview stats={data.systemStats} />

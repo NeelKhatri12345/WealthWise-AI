@@ -22,4 +22,5 @@ export interface FileValidation {
   errors: string[];
 }
 
-export type UploadStatus = "idle" | "uploading" | "processing" | "success" | "error";
+export type UploadStatus =
+  "idle" | "uploading" | "processing" | "success" | "error";

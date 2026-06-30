@@ -1,4 +1,4 @@
-export { DashboardPage } from './DashboardPage';
+export { DashboardPage } from "./DashboardPage";
 export {
   WelcomeCard,
   QuickStats,
@@ -6,5 +6,5 @@ export {
   HealthScoreWidget,
   RiskProfileWidget,
   SpendingChart,
-} from './components';
-export { useDashboardData } from './hooks';
+} from "./components";
+export { useDashboardData } from "./hooks";

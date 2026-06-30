@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 interface AdminSettingsData {
   maintenanceMode: boolean;
@@ -7,7 +7,7 @@ interface AdminSettingsData {
     key: string;
     label: string;
     value: string;
-    type: 'text' | 'number' | 'select';
+    type: "text" | "number" | "select";
     options?: string[];
     description?: string;
   }>;
@@ -15,7 +15,7 @@ interface AdminSettingsData {
     lastBackup?: string;
     nextScheduled?: string;
     frequency: string;
-    status: 'success' | 'in-progress' | 'failed' | 'none';
+    status: "success" | "in-progress" | "failed" | "none";
   };
 }
 
@@ -44,19 +44,39 @@ export const useAdminSettings = (): UseAdminSettingsReturn => {
       setData({
         maintenanceMode: false,
         configs: [
-          { key: 'max_upload_size', label: 'Max Upload Size (MB)', value: '10', type: 'number', description: 'Maximum file size for uploads' },
-          { key: 'ocr_provider', label: 'OCR Provider', value: 'azure', type: 'select', options: ['azure', 'google', 'tesseract'], description: 'OCR service provider' },
-          { key: 'ai_model', label: 'AI Model', value: 'gemini-pro', type: 'select', options: ['gemini-pro', 'gpt-4', 'claude-3'], description: 'AI model for financial coaching' },
+          {
+            key: "max_upload_size",
+            label: "Max Upload Size (MB)",
+            value: "10",
+            type: "number",
+            description: "Maximum file size for uploads",
+          },
+          {
+            key: "ocr_provider",
+            label: "OCR Provider",
+            value: "azure",
+            type: "select",
+            options: ["azure", "google", "tesseract"],
+            description: "OCR service provider",
+          },
+          {
+            key: "ai_model",
+            label: "AI Model",
+            value: "gemini-pro",
+            type: "select",
+            options: ["gemini-pro", "gpt-4", "claude-3"],
+            description: "AI model for financial coaching",
+          },
         ],
         backup: {
-          lastBackup: '2024-01-15 03:00 AM',
-          nextScheduled: '2024-01-16 03:00 AM',
-          frequency: 'daily',
-          status: 'success',
+          lastBackup: "2024-01-15 03:00 AM",
+          nextScheduled: "2024-01-16 03:00 AM",
+          frequency: "daily",
+          status: "success",
         },
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load settings');
+      setError(err instanceof Error ? err.message : "Failed to load settings");
     } finally {
       setIsLoading(false);
     }
@@ -87,10 +107,23 @@ export const useAdminSettings = (): UseAdminSettingsReturn => {
 
   const updateBackupFrequency = async (frequency: string) => {
     await new Promise((resolve) => setTimeout(resolve, 300));
-    setData((prev) => (prev ? { ...prev, backup: { ...prev.backup, frequency } } : prev));
+    setData((prev) =>
+      prev ? { ...prev, backup: { ...prev.backup, frequency } } : prev,
+    );
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-  return { data, isLoading, error, toggleMaintenance, updateConfig, saveConfigs, triggerBackup, updateBackupFrequency };
+  return {
+    data,
+    isLoading,
+    error,
+    toggleMaintenance,
+    updateConfig,
+    saveConfigs,
+    triggerBackup,
+    updateBackupFrequency,
+  };
 };

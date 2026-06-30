@@ -1,10 +1,10 @@
-import axiosInstance, { type ApiResponse } from './axiosInstance';
+import axiosInstance, { type ApiResponse } from "./axiosInstance";
 
 export interface NotificationResponse {
   id: string;
   title: string;
   message: string;
-  type: 'info' | 'success' | 'warning' | 'error';
+  type: "info" | "success" | "warning" | "error";
   read: boolean;
   createdAt: string;
   actionUrl?: string;
@@ -21,9 +21,10 @@ export interface NotificationPreferencesResponse {
 
 export const notificationApi = {
   async getNotifications(): Promise<NotificationResponse[]> {
-    const { data } = await axiosInstance.get<
-      ApiResponse<NotificationResponse[]>
-    >('/notifications');
+    const { data } =
+      await axiosInstance.get<ApiResponse<NotificationResponse[]>>(
+        "/notifications",
+      );
     return data.data;
   },
 
@@ -32,22 +33,22 @@ export const notificationApi = {
   },
 
   async markAllRead(): Promise<void> {
-    await axiosInstance.patch('/notifications/read-all');
+    await axiosInstance.patch("/notifications/read-all");
   },
 
   async getPreferences(): Promise<NotificationPreferencesResponse> {
     const { data } = await axiosInstance.get<
       ApiResponse<NotificationPreferencesResponse>
-    >('/notifications/preferences');
+    >("/notifications/preferences");
     return data.data;
   },
 
   async updatePreferences(
-    prefs: Partial<NotificationPreferencesResponse>
+    prefs: Partial<NotificationPreferencesResponse>,
   ): Promise<NotificationPreferencesResponse> {
     const { data } = await axiosInstance.patch<
       ApiResponse<NotificationPreferencesResponse>
-    >('/notifications/preferences', prefs);
+    >("/notifications/preferences", prefs);
     return data.data;
   },
 };

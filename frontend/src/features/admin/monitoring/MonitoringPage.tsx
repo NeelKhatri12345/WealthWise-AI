@@ -1,5 +1,11 @@
-import { ApiMonitor, SystemMonitor, OcrMonitor, UploadMonitor, ErrorLog } from './components';
-import { useMonitoring } from './hooks';
+import {
+  ApiMonitor,
+  SystemMonitor,
+  OcrMonitor,
+  UploadMonitor,
+  ErrorLog,
+} from "./components";
+import { useMonitoring } from "./hooks";
 
 export const MonitoringPage = () => {
   const { data, isLoading, error, refetch } = useMonitoring();
@@ -15,7 +21,7 @@ export const MonitoringPage = () => {
   if (error || !data) {
     return (
       <div className="rounded-lg bg-red-50 p-4 text-red-700">
-        <p>{error ?? 'Failed to load monitoring data'}</p>
+        <p>{error ?? "Failed to load monitoring data"}</p>
       </div>
     );
   }
@@ -24,8 +30,12 @@ export const MonitoringPage = () => {
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">System Monitoring</h1>
-          <p className="mt-1 text-sm text-gray-600">Real-time system health and performance</p>
+          <h1 className="text-2xl font-bold text-gray-900">
+            System Monitoring
+          </h1>
+          <p className="mt-1 text-sm text-gray-600">
+            Real-time system health and performance
+          </p>
         </div>
         <button
           onClick={refetch}

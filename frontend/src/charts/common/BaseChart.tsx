@@ -1,10 +1,10 @@
-import React, { useRef, useEffect } from 'react';
-import Highcharts from 'highcharts';
-import HighchartsReact from 'highcharts-react-official';
-import 'highcharts/highcharts-more';
-import 'highcharts/modules/solid-gauge';
-import 'highcharts/modules/treemap';
-import { mergeWithDefaults } from './chartDefaults';
+import React, { useRef, useEffect } from "react";
+import Highcharts from "highcharts";
+import HighchartsReact from "highcharts-react-official";
+import "highcharts/highcharts-more";
+import "highcharts/modules/solid-gauge";
+import "highcharts/modules/treemap";
+import { mergeWithDefaults } from "./chartDefaults";
 
 export interface BaseChartProps {
   options: Highcharts.Options;
@@ -21,7 +21,7 @@ const BaseChart: React.FC<BaseChartProps> = ({
   height = 400,
   loading = false,
   error = null,
-  className = '',
+  className = "",
 }) => {
   const chartRef = useRef<HighchartsReact.RefObject>(null);
 
@@ -29,7 +29,7 @@ const BaseChart: React.FC<BaseChartProps> = ({
     const chart = chartRef.current?.chart;
     if (chart) {
       if (loading) {
-        chart.showLoading('Loading data...');
+        chart.showLoading("Loading data...");
       } else {
         chart.hideLoading();
       }
@@ -40,8 +40,8 @@ const BaseChart: React.FC<BaseChartProps> = ({
     const handleResize = () => {
       chartRef.current?.chart?.reflow();
     };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   if (error) {

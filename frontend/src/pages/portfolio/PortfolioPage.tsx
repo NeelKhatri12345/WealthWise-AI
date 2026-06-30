@@ -11,7 +11,9 @@ export default function PortfolioPage() {
         description="AI-powered investment suggestions based on your profile"
       />
       <div className="card">
-        <p className="text-sm text-wealth-muted">Portfolio recommendations placeholder</p>
+        <p className="text-sm text-wealth-muted">
+          Portfolio recommendations placeholder
+        </p>
       </div>
     </div>
   );

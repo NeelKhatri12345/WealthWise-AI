@@ -1,6 +1,6 @@
-import React from 'react';
-import BaseChart from '../common/BaseChart';
-import { getScoreGaugeOptions, type ScoreGaugeData } from './chartOptions';
+import React from "react";
+import BaseChart from "../common/BaseChart";
+import { getScoreGaugeOptions, type ScoreGaugeData } from "./chartOptions";
 
 interface ScoreGaugeChartProps {
   data: ScoreGaugeData;

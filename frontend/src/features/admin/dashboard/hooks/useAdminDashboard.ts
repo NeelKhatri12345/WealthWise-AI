@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 interface AdminDashboardData {
   systemStats: Array<{
     label: string;
     value: string | number;
-    status: 'healthy' | 'warning' | 'critical';
+    status: "healthy" | "warning" | "critical";
   }>;
   userGrowth: Array<{ date: string; newUsers: number; totalUsers: number }>;
   activeUsers: Array<{ time: string; count: number }>;
@@ -14,7 +14,7 @@ interface AdminDashboardData {
     action: string;
     user: string;
     timestamp: string;
-    type: 'user' | 'system' | 'security';
+    type: "user" | "system" | "security";
   }>;
 }
 
@@ -38,10 +38,10 @@ export const useAdminDashboard = (): UseAdminDashboardReturn => {
       await new Promise((resolve) => setTimeout(resolve, 500));
       setData({
         systemStats: [
-          { label: 'Total Users', value: 1245, status: 'healthy' },
-          { label: 'Active Today', value: 342, status: 'healthy' },
-          { label: 'API Uptime', value: '99.9%', status: 'healthy' },
-          { label: 'Error Rate', value: '0.2%', status: 'healthy' },
+          { label: "Total Users", value: 1245, status: "healthy" },
+          { label: "Active Today", value: 342, status: "healthy" },
+          { label: "API Uptime", value: "99.9%", status: "healthy" },
+          { label: "Error Rate", value: "0.2%", status: "healthy" },
         ],
         userGrowth: [],
         activeUsers: [],
@@ -49,13 +49,17 @@ export const useAdminDashboard = (): UseAdminDashboardReturn => {
         recentActivity: [],
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load admin dashboard');
+      setError(
+        err instanceof Error ? err.message : "Failed to load admin dashboard",
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   return { data, isLoading, error, refetch: fetchData };
 };

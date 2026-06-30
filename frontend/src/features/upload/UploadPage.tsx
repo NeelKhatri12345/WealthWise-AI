@@ -1,6 +1,11 @@
-import { useState } from 'react';
-import { FileDropzone, UploadProgress, UploadHistory, StatementPreview } from './components';
-import { useFileUpload } from './hooks';
+import { useState } from "react";
+import {
+  FileDropzone,
+  UploadProgress,
+  UploadHistory,
+  StatementPreview,
+} from "./components";
+import { useFileUpload } from "./hooks";
 
 export const UploadPage = () => {
   const { upload, progress, status, error, reset } = useFileUpload();
@@ -24,7 +29,7 @@ export const UploadPage = () => {
 
       <FileDropzone onFilesSelected={handleFilesSelected} />
 
-      {currentFile && status !== 'idle' && (
+      {currentFile && status !== "idle" && (
         <UploadProgress
           fileName={currentFile.name}
           progress={progress}
@@ -34,7 +39,7 @@ export const UploadPage = () => {
         />
       )}
 
-      {status === 'completed' && (
+      {status === "completed" && (
         <StatementPreview
           bankName="Sample Bank"
           transactions={[]}

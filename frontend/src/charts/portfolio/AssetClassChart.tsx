@@ -1,6 +1,6 @@
-import React from 'react';
-import BaseChart from '../common/BaseChart';
-import { getAssetClassOptions, type AssetClassItem } from './chartOptions';
+import React from "react";
+import BaseChart from "../common/BaseChart";
+import { getAssetClassOptions, type AssetClassItem } from "./chartOptions";
 
 interface AssetClassChartProps {
   data: AssetClassItem[];

@@ -5,8 +5,8 @@ import {
   HealthScoreWidget,
   RiskProfileWidget,
   SpendingChart,
-} from './components';
-import { useDashboardData } from './hooks';
+} from "./components";
+import { useDashboardData } from "./hooks";
 
 export const DashboardPage = () => {
   const { data, isLoading, error } = useDashboardData();
@@ -31,25 +31,25 @@ export const DashboardPage = () => {
 
   const quickStats = [
     {
-      label: 'Total Balance',
-      value: `$${data.stats?.totalBalance.toLocaleString() ?? '0'}`,
+      label: "Total Balance",
+      value: `$${data.stats?.totalBalance.toLocaleString() ?? "0"}`,
       change: 5.2,
       icon: <span className="text-lg">$</span>,
     },
     {
-      label: 'Monthly Income',
-      value: `$${data.stats?.monthlyIncome.toLocaleString() ?? '0'}`,
+      label: "Monthly Income",
+      value: `$${data.stats?.monthlyIncome.toLocaleString() ?? "0"}`,
       change: 2.1,
       icon: <span className="text-lg">&uarr;</span>,
     },
     {
-      label: 'Monthly Expenses',
-      value: `$${data.stats?.monthlyExpenses.toLocaleString() ?? '0'}`,
+      label: "Monthly Expenses",
+      value: `$${data.stats?.monthlyExpenses.toLocaleString() ?? "0"}`,
       change: -3.4,
       icon: <span className="text-lg">&darr;</span>,
     },
     {
-      label: 'Savings Rate',
+      label: "Savings Rate",
       value: `${data.stats?.savingsRate ?? 0}%`,
       change: 1.8,
       icon: <span className="text-lg">%</span>,

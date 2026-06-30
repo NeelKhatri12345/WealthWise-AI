@@ -1,6 +1,6 @@
-import React from 'react';
-import BaseChart from '../common/BaseChart';
-import { getRiskGaugeOptions, type RiskGaugeData } from './chartOptions';
+import React from "react";
+import BaseChart from "../common/BaseChart";
+import { getRiskGaugeOptions, type RiskGaugeData } from "./chartOptions";
 
 interface RiskGaugeChartProps {
   data: RiskGaugeData;

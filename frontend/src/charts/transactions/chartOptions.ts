@@ -1,6 +1,6 @@
-import Highcharts from 'highcharts';
-import { CHART_COLORS } from '../common/chartColors';
-import { currencyAxisFormatter, formatCurrency } from '../common/chartUtils';
+import Highcharts from "highcharts";
+import { CHART_COLORS } from "../common/chartColors";
+import { currencyAxisFormatter, formatCurrency } from "../common/chartUtils";
 
 export interface MonthlyTrendData {
   categories: string[];
@@ -9,19 +9,19 @@ export interface MonthlyTrendData {
 }
 
 export function getMonthlyTrendOptions(
-  data: MonthlyTrendData
+  data: MonthlyTrendData,
 ): Highcharts.Options {
   return {
-    chart: { type: 'line' },
+    chart: { type: "line" },
     title: { text: undefined },
     xAxis: { categories: data.categories, crosshair: true },
     yAxis: [
       {
-        title: { text: 'Amount' },
+        title: { text: "Amount" },
         labels: { formatter: currencyAxisFormatter },
       },
       {
-        title: { text: 'Transactions' },
+        title: { text: "Transactions" },
         opposite: true,
       },
     ],
@@ -32,7 +32,7 @@ export function getMonthlyTrendOptions(
         let s = `<b>${points[0]?.x}</b>`;
         points.forEach((p: Highcharts.Point) => {
           const val =
-            p.series.name === 'Amount'
+            p.series.name === "Amount"
               ? formatCurrency(p.y ?? 0)
               : String(p.y ?? 0);
           s += `<br/><span style="color:${p.color}">\u25CF</span> ${p.series.name}: <b>${val}</b>`;
@@ -42,19 +42,19 @@ export function getMonthlyTrendOptions(
     },
     series: [
       {
-        name: 'Amount',
-        type: 'line',
+        name: "Amount",
+        type: "line",
         data: data.amounts,
         color: CHART_COLORS.primary,
         yAxis: 0,
       },
       {
-        name: 'Transactions',
-        type: 'line',
+        name: "Transactions",
+        type: "line",
         data: data.counts,
         color: CHART_COLORS.secondary,
         yAxis: 1,
-        dashStyle: 'ShortDash',
+        dashStyle: "ShortDash",
       },
     ],
   };
@@ -67,30 +67,32 @@ export interface CategoryPieItem {
 }
 
 export function getCategoryPieOptions(
-  data: CategoryPieItem[]
+  data: CategoryPieItem[],
 ): Highcharts.Options {
   return {
-    chart: { type: 'pie' },
+    chart: { type: "pie" },
     title: { text: undefined },
     tooltip: {
       pointFormat:
-        '<b>{point.percentage:.1f}%</b><br/>Amount: <b>₹{point.y:,.0f}</b>',
+        "<b>{point.percentage:.1f}%</b><br/>Amount: <b>₹{point.y:,.0f}</b>",
     },
     plotOptions: {
       pie: {
         dataLabels: {
-          format: '<b>{point.name}</b>: ₹{point.y:,.0f}',
+          format: "<b>{point.name}</b>: ₹{point.y:,.0f}",
         },
       },
     },
     series: [
       {
-        name: 'Category',
-        type: 'pie',
+        name: "Category",
+        type: "pie",
         data: data.map((item, i) => ({
           name: item.name,
           y: item.value,
-          color: item.color ?? CHART_COLORS.categorical[i % CHART_COLORS.categorical.length],
+          color:
+            item.color ??
+            CHART_COLORS.categorical[i % CHART_COLORS.categorical.length],
         })),
       },
     ],
@@ -103,10 +105,10 @@ export interface DailySpendingData {
 }
 
 export function getDailySpendingOptions(
-  data: DailySpendingData
+  data: DailySpendingData,
 ): Highcharts.Options {
   return {
-    chart: { type: 'column' },
+    chart: { type: "column" },
     title: { text: undefined },
     xAxis: {
       categories: data.categories,
@@ -114,7 +116,7 @@ export function getDailySpendingOptions(
       labels: { rotation: -45 },
     },
     yAxis: {
-      title: { text: 'Amount' },
+      title: { text: "Amount" },
       labels: { formatter: currencyAxisFormatter },
     },
     tooltip: {
@@ -131,8 +133,8 @@ export function getDailySpendingOptions(
     },
     series: [
       {
-        name: 'Daily Spending',
-        type: 'column',
+        name: "Daily Spending",
+        type: "column",
         data: data.amounts,
         color: CHART_COLORS.primary,
       },

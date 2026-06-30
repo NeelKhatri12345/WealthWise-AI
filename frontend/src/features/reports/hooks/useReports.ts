@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 interface Report {
   id: string;
@@ -6,15 +6,19 @@ interface Report {
   type: string;
   dateRange: string;
   generatedAt: string;
-  status: 'ready' | 'generating' | 'failed';
+  status: "ready" | "generating" | "failed";
 }
 
 interface UseReportsReturn {
   reports: Report[];
   isLoading: boolean;
   error: string | null;
-  generateReport: (data: { type: string; dateFrom: string; dateTo: string }) => Promise<void>;
-  downloadReport: (id: string, format: 'pdf' | 'csv') => Promise<void>;
+  generateReport: (data: {
+    type: string;
+    dateFrom: string;
+    dateTo: string;
+  }) => Promise<void>;
+  downloadReport: (id: string, format: "pdf" | "csv") => Promise<void>;
   refetch: () => void;
 }
 
@@ -31,20 +35,24 @@ export const useReports = (): UseReportsReturn => {
       await new Promise((resolve) => setTimeout(resolve, 500));
       setReports([]);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load reports');
+      setError(err instanceof Error ? err.message : "Failed to load reports");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const generateReport = async (data: { type: string; dateFrom: string; dateTo: string }) => {
+  const generateReport = async (data: {
+    type: string;
+    dateFrom: string;
+    dateTo: string;
+  }) => {
     // TODO: Replace with actual API call
     await new Promise((resolve) => setTimeout(resolve, 2000));
     void data;
     await fetchReports();
   };
 
-  const downloadReport = async (id: string, format: 'pdf' | 'csv') => {
+  const downloadReport = async (id: string, format: "pdf" | "csv") => {
     // TODO: Replace with actual API call
     await new Promise((resolve) => setTimeout(resolve, 500));
     void id;
@@ -55,5 +63,12 @@ export const useReports = (): UseReportsReturn => {
     fetchReports();
   }, []);
 
-  return { reports, isLoading, error, generateReport, downloadReport, refetch: fetchReports };
+  return {
+    reports,
+    isLoading,
+    error,
+    generateReport,
+    downloadReport,
+    refetch: fetchReports,
+  };
 };

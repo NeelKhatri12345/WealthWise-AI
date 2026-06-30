@@ -1,10 +1,24 @@
-export declare function formatCurrency(value: number, currency?: string, compact?: boolean): string;
-export declare function formatPercentage(value: number, decimals?: number): string;
+export declare function formatCurrency(
+  value: number,
+  currency?: string,
+  compact?: boolean,
+): string;
+export declare function formatPercentage(
+  value: number,
+  decimals?: number,
+): string;
 export declare function formatDate(dateStr: string, pattern?: string): string;
 export declare function formatDateForAxis(dateStr: string): string;
 export declare function formatMonthYear(dateStr: string): string;
 export declare function currencyAxisFormatter(): string;
 export declare function percentageAxisFormatter(): string;
 export declare function currencyTooltipFormatter(value: number): string;
-export declare function generateDateCategories(startDate: string, count: number, interval?: 'day' | 'month'): string[];
-export declare function getResponsiveHeight(baseHeight: number, minHeight?: number): number;
+export declare function generateDateCategories(
+  startDate: string,
+  count: number,
+  interval?: "day" | "month",
+): string[];
+export declare function getResponsiveHeight(
+  baseHeight: number,
+  minHeight?: number,
+): number;

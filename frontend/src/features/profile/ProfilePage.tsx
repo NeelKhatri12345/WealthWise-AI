@@ -1,8 +1,21 @@
-import { ProfileHeader, ProfileForm, SecuritySettings, AccountDeletion } from './components';
-import { useProfile } from './hooks';
+import {
+  ProfileHeader,
+  ProfileForm,
+  SecuritySettings,
+  AccountDeletion,
+} from "./components";
+import { useProfile } from "./hooks";
 
 export const ProfilePage = () => {
-  const { profile, isLoading, error, updateProfile, changePassword, toggle2FA, deleteAccount } = useProfile();
+  const {
+    profile,
+    isLoading,
+    error,
+    updateProfile,
+    changePassword,
+    toggle2FA,
+    deleteAccount,
+  } = useProfile();
 
   if (isLoading) {
     return (
@@ -15,7 +28,7 @@ export const ProfilePage = () => {
   if (error || !profile) {
     return (
       <div className="rounded-lg bg-red-50 p-4 text-red-700">
-        <p>{error ?? 'Failed to load profile'}</p>
+        <p>{error ?? "Failed to load profile"}</p>
       </div>
     );
   }
@@ -24,7 +37,9 @@ export const ProfilePage = () => {
     <div className="mx-auto max-w-3xl space-y-6 p-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Profile</h1>
-        <p className="mt-1 text-sm text-gray-600">Manage your account settings</p>
+        <p className="mt-1 text-sm text-gray-600">
+          Manage your account settings
+        </p>
       </div>
 
       <ProfileHeader
@@ -35,7 +50,12 @@ export const ProfilePage = () => {
       />
 
       <ProfileForm
-        defaultValues={{ name: profile.name, email: profile.email, phone: profile.phone, bio: profile.bio }}
+        defaultValues={{
+          name: profile.name,
+          email: profile.email,
+          phone: profile.phone,
+          bio: profile.bio,
+        }}
         onSubmit={updateProfile}
       />
 

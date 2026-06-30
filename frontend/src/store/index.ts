@@ -1,6 +1,6 @@
-import { configureStore } from '@reduxjs/toolkit';
-import { useDispatch, useSelector } from 'react-redux';
-import type { TypedUseSelectorHook } from 'react-redux';
+import { configureStore } from "@reduxjs/toolkit";
+import { useDispatch, useSelector } from "react-redux";
+import type { TypedUseSelectorHook } from "react-redux";
 
 import {
   authReducer,
@@ -14,9 +14,9 @@ import {
   notificationReducer,
   adminReducer,
   uiReducer,
-} from './slices';
-import { apiMiddleware } from './middleware/api.middleware';
-import { loggerMiddleware } from './middleware/logger.middleware';
+} from "./slices";
+import { apiMiddleware } from "./middleware/api.middleware";
+import { loggerMiddleware } from "./middleware/logger.middleware";
 
 export const store = configureStore({
   reducer: {
@@ -35,8 +35,8 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
-        ignoredActions: ['upload/uploadFile/pending'],
-        ignoredPaths: ['upload.currentFile'],
+        ignoredActions: ["upload/uploadFile/pending"],
+        ignoredPaths: ["upload.currentFile"],
       },
     }).concat(apiMiddleware, loggerMiddleware),
   devTools: import.meta.env.DEV,
@@ -48,4 +48,4 @@ export type AppDispatch = typeof store.dispatch;
 export const useAppDispatch: () => AppDispatch = useDispatch;
 export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
 
-export * from './slices';
+export * from "./slices";

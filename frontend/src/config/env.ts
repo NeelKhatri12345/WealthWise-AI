@@ -19,7 +19,8 @@ if (import.meta.env.PROD) {
 }
 
 export const env = {
-  API_BASE_URL: import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000/api/v1",
+  API_BASE_URL:
+    import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000/api/v1",
   APP_NAME: import.meta.env.VITE_APP_NAME ?? "WealthWise AI",
   APP_VERSION: import.meta.env.VITE_APP_VERSION ?? "0.1.0",
   IS_DEV: import.meta.env.DEV,

@@ -31,7 +31,11 @@ export function FormCheckbox<T extends FieldValues>({
         <label htmlFor={name} className="text-sm text-gray-700">
           {label}
         </label>
-        {error && <p className="text-xs text-wealth-danger">{error.message as string}</p>}
+        {error && (
+          <p className="text-xs text-wealth-danger">
+            {error.message as string}
+          </p>
+        )}
       </div>
     </div>
   );

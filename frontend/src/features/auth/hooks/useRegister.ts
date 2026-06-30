@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 
 interface RegisterData {
   name: string;
@@ -28,7 +28,7 @@ export const useRegister = (): UseRegisterReturn => {
       void data;
       setIsSuccess(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed');
+      setError(err instanceof Error ? err.message : "Registration failed");
     } finally {
       setIsLoading(false);
     }

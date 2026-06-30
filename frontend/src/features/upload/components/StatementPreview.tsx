@@ -2,7 +2,7 @@ interface ParsedTransaction {
   date: string;
   description: string;
   amount: number;
-  type: 'credit' | 'debit';
+  type: "credit" | "debit";
 }
 
 interface StatementPreviewProps {
@@ -25,7 +25,9 @@ export const StatementPreview = ({
   return (
     <div className="rounded-xl bg-white shadow-sm border border-gray-100">
       <div className="border-b border-gray-100 px-6 py-4">
-        <h3 className="text-lg font-semibold text-gray-900">Statement Preview</h3>
+        <h3 className="text-lg font-semibold text-gray-900">
+          Statement Preview
+        </h3>
         <div className="mt-1 flex gap-4 text-sm text-gray-500">
           {bankName && <span>Bank: {bankName}</span>}
           {accountNumber && <span>Account: ****{accountNumber.slice(-4)}</span>}
@@ -37,9 +39,15 @@ export const StatementPreview = ({
         <table className="w-full text-sm">
           <thead className="sticky top-0 bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Amount</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Date
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Description
+              </th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                Amount
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -47,8 +55,11 @@ export const StatementPreview = ({
               <tr key={idx} className="hover:bg-gray-50">
                 <td className="px-6 py-3 text-gray-600">{txn.date}</td>
                 <td className="px-6 py-3 text-gray-900">{txn.description}</td>
-                <td className={`px-6 py-3 text-right font-medium ${txn.type === 'credit' ? 'text-green-600' : 'text-red-600'}`}>
-                  {txn.type === 'credit' ? '+' : '-'}${Math.abs(txn.amount).toFixed(2)}
+                <td
+                  className={`px-6 py-3 text-right font-medium ${txn.type === "credit" ? "text-green-600" : "text-red-600"}`}
+                >
+                  {txn.type === "credit" ? "+" : "-"}$
+                  {Math.abs(txn.amount).toFixed(2)}
                 </td>
               </tr>
             ))}

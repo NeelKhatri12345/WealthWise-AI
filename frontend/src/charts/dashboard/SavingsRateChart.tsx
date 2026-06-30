@@ -1,6 +1,6 @@
-import React from 'react';
-import BaseChart from '../common/BaseChart';
-import { getSavingsRateOptions, type SavingsRateData } from './chartOptions';
+import React from "react";
+import BaseChart from "../common/BaseChart";
+import { getSavingsRateOptions, type SavingsRateData } from "./chartOptions";
 
 interface SavingsRateChartProps {
   data: SavingsRateData;

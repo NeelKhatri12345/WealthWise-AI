@@ -1,6 +1,6 @@
-import Highcharts from 'highcharts';
-import { CHART_COLORS } from '../common/chartColors';
-import { currencyAxisFormatter, formatCurrency } from '../common/chartUtils';
+import Highcharts from "highcharts";
+import { CHART_COLORS } from "../common/chartColors";
+import { currencyAxisFormatter, formatCurrency } from "../common/chartUtils";
 
 export interface AllocationItem {
   name: string;
@@ -9,31 +9,33 @@ export interface AllocationItem {
 }
 
 export function getAllocationPieOptions(
-  data: AllocationItem[]
+  data: AllocationItem[],
 ): Highcharts.Options {
   return {
-    chart: { type: 'pie' },
+    chart: { type: "pie" },
     title: { text: undefined },
     tooltip: {
       pointFormat:
-        '<b>{point.percentage:.1f}%</b><br/>Value: <b>₹{point.y:,.0f}</b>',
+        "<b>{point.percentage:.1f}%</b><br/>Value: <b>₹{point.y:,.0f}</b>",
     },
     plotOptions: {
       pie: {
-        innerSize: '50%',
+        innerSize: "50%",
         dataLabels: {
-          format: '<b>{point.name}</b><br/>{point.percentage:.1f}%',
+          format: "<b>{point.name}</b><br/>{point.percentage:.1f}%",
         },
       },
     },
     series: [
       {
-        name: 'Allocation',
-        type: 'pie',
+        name: "Allocation",
+        type: "pie",
         data: data.map((item, i) => ({
           name: item.name,
           y: item.value,
-          color: item.color ?? CHART_COLORS.categorical[i % CHART_COLORS.categorical.length],
+          color:
+            item.color ??
+            CHART_COLORS.categorical[i % CHART_COLORS.categorical.length],
         })),
       },
     ],
@@ -47,12 +49,12 @@ export interface PerformanceLineData {
 }
 
 export function getPerformanceLineOptions(
-  data: PerformanceLineData
+  data: PerformanceLineData,
 ): Highcharts.Options {
   const series: Highcharts.SeriesOptionsType[] = [
     {
-      name: 'Portfolio',
-      type: 'line',
+      name: "Portfolio",
+      type: "line",
       data: data.portfolio,
       color: CHART_COLORS.primary,
       lineWidth: 2.5,
@@ -61,21 +63,21 @@ export function getPerformanceLineOptions(
 
   if (data.benchmark) {
     series.push({
-      name: 'Benchmark',
-      type: 'line',
+      name: "Benchmark",
+      type: "line",
       data: data.benchmark,
       color: CHART_COLORS.text.muted,
-      dashStyle: 'ShortDash',
+      dashStyle: "ShortDash",
       lineWidth: 1.5,
     });
   }
 
   return {
-    chart: { type: 'line' },
+    chart: { type: "line" },
     title: { text: undefined },
     xAxis: { categories: data.categories },
     yAxis: {
-      title: { text: 'Value' },
+      title: { text: "Value" },
       labels: { formatter: currencyAxisFormatter },
     },
     tooltip: {
@@ -100,27 +102,29 @@ export interface AssetClassItem {
 }
 
 export function getAssetClassOptions(
-  data: AssetClassItem[]
+  data: AssetClassItem[],
 ): Highcharts.Options {
   return {
-    chart: { type: 'treemap' },
+    chart: { type: "treemap" },
     title: { text: undefined },
     colorAxis: {
       minColor: CHART_COLORS.primaryLight,
       maxColor: CHART_COLORS.primaryDark,
     },
     tooltip: {
-      pointFormat: '<b>{point.name}</b>: ₹{point.value:,.0f}',
+      pointFormat: "<b>{point.name}</b>: ₹{point.value:,.0f}",
     },
     series: [
       {
-        name: 'Asset Classes',
-        type: 'treemap',
-        layoutAlgorithm: 'squarified',
+        name: "Asset Classes",
+        type: "treemap",
+        layoutAlgorithm: "squarified",
         data: data.map((item, i) => ({
           name: item.name,
           value: item.value,
-          color: item.color ?? CHART_COLORS.categorical[i % CHART_COLORS.categorical.length],
+          color:
+            item.color ??
+            CHART_COLORS.categorical[i % CHART_COLORS.categorical.length],
           colorValue: item.value,
         })),
       },
@@ -134,21 +138,19 @@ export interface RebalanceData {
   target: number[];
 }
 
-export function getRebalanceOptions(
-  data: RebalanceData
-): Highcharts.Options {
+export function getRebalanceOptions(data: RebalanceData): Highcharts.Options {
   return {
-    chart: { type: 'bar' },
+    chart: { type: "bar" },
     title: { text: undefined },
     xAxis: { categories: data.categories },
     yAxis: {
-      title: { text: 'Allocation (%)' },
-      labels: { format: '{value}%' },
+      title: { text: "Allocation (%)" },
+      labels: { format: "{value}%" },
       max: 100,
     },
     tooltip: {
       shared: true,
-      valueSuffix: '%',
+      valueSuffix: "%",
     },
     plotOptions: {
       bar: {
@@ -159,14 +161,14 @@ export function getRebalanceOptions(
     },
     series: [
       {
-        name: 'Current',
-        type: 'bar',
+        name: "Current",
+        type: "bar",
         data: data.current,
         color: CHART_COLORS.primary,
       },
       {
-        name: 'Target',
-        type: 'bar',
+        name: "Target",
+        type: "bar",
         data: data.target,
         color: CHART_COLORS.secondary,
       },

@@ -1,6 +1,6 @@
-import React from 'react';
-import BaseChart from '../common/BaseChart';
-import { getRiskTrendOptions, type RiskTrendData } from './chartOptions';
+import React from "react";
+import BaseChart from "../common/BaseChart";
+import { getRiskTrendOptions, type RiskTrendData } from "./chartOptions";
 
 interface RiskTrendChartProps {
   data: RiskTrendData;

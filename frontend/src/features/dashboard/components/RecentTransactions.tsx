@@ -4,7 +4,7 @@ interface Transaction {
   amount: number;
   category: string;
   date: string;
-  type: 'credit' | 'debit';
+  type: "credit" | "debit";
 }
 
 interface RecentTransactionsProps {
@@ -12,11 +12,16 @@ interface RecentTransactionsProps {
   onViewAll?: () => void;
 }
 
-export const RecentTransactions = ({ transactions, onViewAll }: RecentTransactionsProps) => {
+export const RecentTransactions = ({
+  transactions,
+  onViewAll,
+}: RecentTransactionsProps) => {
   return (
     <div className="rounded-xl bg-white p-6 shadow-sm border border-gray-100">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">Recent Transactions</h3>
+        <h3 className="text-lg font-semibold text-gray-900">
+          Recent Transactions
+        </h3>
         {onViewAll && (
           <button
             onClick={onViewAll}
@@ -43,16 +48,21 @@ export const RecentTransactions = ({ transactions, onViewAll }: RecentTransactio
                   {txn.category.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-900">{txn.description}</p>
-                  <p className="text-xs text-gray-500">{txn.category} &middot; {txn.date}</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    {txn.description}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {txn.category} &middot; {txn.date}
+                  </p>
                 </div>
               </div>
               <span
                 className={`text-sm font-semibold ${
-                  txn.type === 'credit' ? 'text-green-600' : 'text-red-600'
+                  txn.type === "credit" ? "text-green-600" : "text-red-600"
                 }`}
               >
-                {txn.type === 'credit' ? '+' : '-'}${Math.abs(txn.amount).toLocaleString()}
+                {txn.type === "credit" ? "+" : "-"}$
+                {Math.abs(txn.amount).toLocaleString()}
               </span>
             </div>
           ))

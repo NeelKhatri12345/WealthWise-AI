@@ -7,4 +7,6 @@ export interface SidebarContextValue {
   close: () => void;
 }
 
-export const SidebarContext = createContext<SidebarContextValue | undefined>(undefined);
+export const SidebarContext = createContext<SidebarContextValue | undefined>(
+  undefined,
+);

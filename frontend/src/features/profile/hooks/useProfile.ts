@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 interface UserProfile {
   name: string;
@@ -15,7 +15,10 @@ interface UseProfileReturn {
   isLoading: boolean;
   error: string | null;
   updateProfile: (data: Partial<UserProfile>) => Promise<void>;
-  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  changePassword: (
+    currentPassword: string,
+    newPassword: string,
+  ) => Promise<void>;
   toggle2FA: (enabled: boolean) => Promise<void>;
   deleteAccount: () => Promise<void>;
 }
@@ -32,13 +35,13 @@ export const useProfile = (): UseProfileReturn => {
       // TODO: Replace with actual API call
       await new Promise((resolve) => setTimeout(resolve, 500));
       setProfile({
-        name: 'John Doe',
-        email: 'john@example.com',
-        memberSince: 'January 2024',
+        name: "John Doe",
+        email: "john@example.com",
+        memberSince: "January 2024",
         twoFactorEnabled: false,
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load profile');
+      setError(err instanceof Error ? err.message : "Failed to load profile");
     } finally {
       setIsLoading(false);
     }
@@ -58,7 +61,9 @@ export const useProfile = (): UseProfileReturn => {
   const toggle2FA = async (enabled: boolean) => {
     // TODO: Replace with actual API call
     await new Promise((resolve) => setTimeout(resolve, 500));
-    setProfile((prev) => (prev ? { ...prev, twoFactorEnabled: enabled } : prev));
+    setProfile((prev) =>
+      prev ? { ...prev, twoFactorEnabled: enabled } : prev,
+    );
   };
 
   const deleteAccount = async () => {
@@ -70,5 +75,13 @@ export const useProfile = (): UseProfileReturn => {
     fetchProfile();
   }, []);
 
-  return { profile, isLoading, error, updateProfile, changePassword, toggle2FA, deleteAccount };
+  return {
+    profile,
+    isLoading,
+    error,
+    updateProfile,
+    changePassword,
+    toggle2FA,
+    deleteAccount,
+  };
 };

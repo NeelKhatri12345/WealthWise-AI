@@ -1,6 +1,6 @@
-import React from 'react';
-import BaseChart from '../common/BaseChart';
-import { getRiskFactorOptions, type RiskFactorData } from './chartOptions';
+import React from "react";
+import BaseChart from "../common/BaseChart";
+import { getRiskFactorOptions, type RiskFactorData } from "./chartOptions";
 
 interface RiskFactorChartProps {
   data: RiskFactorData;

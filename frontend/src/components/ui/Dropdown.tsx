@@ -23,8 +23,10 @@ export interface DropdownItem {
   disabled?: boolean;
 }
 
-export interface DropdownProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, "onSelect"> {
+export interface DropdownProps extends Omit<
+  HTMLAttributes<HTMLDivElement>,
+  "onSelect"
+> {
   /** The element that opens the menu when activated */
   trigger: ReactNode;
   /** Menu items */
@@ -178,7 +180,15 @@ export const Dropdown = forwardRef<HTMLDivElement, DropdownProps>(
             break;
         }
       },
-      [activeIndex, close, focusFirst, focusLast, focusNext, focusPrev, selectItem],
+      [
+        activeIndex,
+        close,
+        focusFirst,
+        focusLast,
+        focusNext,
+        focusPrev,
+        selectItem,
+      ],
     );
 
     // ----- Merge refs (container: external forwardRef + clickOutside ref) -----
@@ -186,16 +196,23 @@ export const Dropdown = forwardRef<HTMLDivElement, DropdownProps>(
     const mergedContainerRef = useCallback(
       (node: HTMLDivElement | null) => {
         // Assign to useClickOutside ref
-        (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+        (
+          containerRef as React.MutableRefObject<HTMLDivElement | null>
+        ).current = node;
         // Assign to forwarded ref
         if (typeof ref === "function") ref(node);
-        else if (ref) (ref as React.MutableRefObject<HTMLDivElement | null>).current = node;
+        else if (ref)
+          (ref as React.MutableRefObject<HTMLDivElement | null>).current = node;
       },
       [ref, containerRef],
     );
 
     return (
-      <div ref={mergedContainerRef} className="relative inline-block" {...props}>
+      <div
+        ref={mergedContainerRef}
+        className="relative inline-block"
+        {...props}
+      >
         {/* Trigger button */}
         <button
           ref={triggerRef}
