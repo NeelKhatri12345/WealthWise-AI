@@ -17,9 +17,7 @@ api_v1_router = APIRouter()
 
 api_v1_router.include_router(auth_router, prefix="/auth", tags=["Authentication"])
 api_v1_router.include_router(user_router, prefix="/users", tags=["Users"])
-api_v1_router.include_router(
-    dashboard_router, prefix="/dashboard", tags=["Dashboard"]
-)
+api_v1_router.include_router(dashboard_router, prefix="/dashboard", tags=["Dashboard"])
 api_v1_router.include_router(
     statement_router, prefix="/statements", tags=["Statements"]
 )

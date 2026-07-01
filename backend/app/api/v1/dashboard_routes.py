@@ -34,7 +34,9 @@ async def get_dashboard_summary(
     service: DashboardService = Depends(get_dashboard_service),
 ):
     summary = await service.get_summary(current_user.id)
-    return APIResponse(success=True, message="Dashboard summary retrieved", data=summary)
+    return APIResponse(
+        success=True, message="Dashboard summary retrieved", data=summary
+    )
 
 
 @router.get(

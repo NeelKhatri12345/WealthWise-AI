@@ -134,7 +134,9 @@ class DashboardService:
             if row["transaction_type"] == "debit":
                 current_debits += amt
                 cat = row["category"] or "Other"
-                categories_current[cat] = categories_current.get(cat, Decimal("0")) + amt
+                categories_current[cat] = (
+                    categories_current.get(cat, Decimal("0")) + amt
+                )
 
         # Previous month aggregates for comparison
         prev_date = today.replace(day=1) - timedelta(days=1)
