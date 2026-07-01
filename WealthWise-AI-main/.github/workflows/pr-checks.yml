@@ -1,0 +1,144 @@
+name: Pull Request Checks
+
+on:
+  pull_request:
+    branches: [main, develop]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # PR Metadata Validation
+  # ─────────────────────────────────────────────────────────────────────────────
+  pr-validation:
+    name: PR Validation
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+
+    steps:
+      - name: Validate PR title (Conventional Commits)
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            perf
+            test
+            chore
+            ci
+            build
+          scopes: |
+            backend
+            frontend
+            api
+            auth
+            ocr
+            ai
+            db
+            deploy
+            docs
+
+      - name: Check PR has description
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.pull_request.body;
+            if (!body || body.trim().length < 50) {
+              core.setFailed('PR description is too short. Please describe what this PR does (minimum 50 characters).');
+            }
+
+      - name: Check PR size (lines changed)
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const additions = pr.additions;
+            const deletions = pr.deletions;
+            const total = additions + deletions;
+            
+            console.log(`PR size: +${additions} -${deletions} (${total} total)`);
+            
+            if (total > 1000) {
+              core.warning(`⚠️ Large PR detected (${total} lines changed). Consider splitting into smaller PRs.`);
+            }
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Auto-label PRs based on changed files
+  # ─────────────────────────────────────────────────────────────────────────────
+  auto-label:
+    name: Auto Label
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Add labels based on changed files
+        uses: actions/labeler@v5
+        with:
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+          configuration-path: .github/labeler.yml
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Post PR summary comment
+  # ─────────────────────────────────────────────────────────────────────────────
+  pr-summary:
+    name: Post PR Summary
+    runs-on: ubuntu-latest
+    if: github.event.action == 'opened'
+    permissions:
+      pull-requests: write
+
+    steps:
+      - name: Post PR checklist comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = `## 🔍 PR Review Checklist
+            
+            Please ensure the following before merging:
+            
+            ### Code Quality
+            - [ ] Code follows existing patterns and conventions
+            - [ ] No hardcoded secrets or credentials
+            - [ ] All new functions/classes have docstrings
+            - [ ] Complex logic has inline comments
+            
+            ### Testing
+            - [ ] New features have unit tests
+            - [ ] New API endpoints have integration tests
+            - [ ] Coverage does not decrease
+            
+            ### Security
+            - [ ] No SQL injection vulnerabilities
+            - [ ] Input validation is present
+            - [ ] Authentication/authorization is correct
+            - [ ] No sensitive data in logs
+            
+            ### Database
+            - [ ] New migrations are backward-compatible
+            - [ ] Migrations are reversible (downgrade works)
+            - [ ] Indexes added for new query patterns
+            
+            ### Documentation
+            - [ ] API changes reflected in docs/api/api_reference.md
+            - [ ] README updated if setup steps changed
+            - [ ] Architectural changes documented
+            
+            ---
+            _This checklist was auto-generated. Check items as you review._`;
+            
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: body
+            });

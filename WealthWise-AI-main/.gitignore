@@ -1,0 +1,61 @@
+# WealthWise AI — .gitignore
+
+# ── Python ───────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+
+# ── Secrets & Environment ─────────────────────────────────────────────────────
+.env
+*.env
+!.env.example
+!.env.test
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+*.log
+app/logs/
+logs/
+
+# ── IDE ───────────────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+
+# ── Testing & Coverage ────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# ── Docker ────────────────────────────────────────────────────────────────────
+# (docker-compose.override.yml may contain local overrides)
+docker-compose.override.yml
+
+# ── Alembic ───────────────────────────────────────────────────────────────────
+# Keep versions/ directory tracked
+alembic/versions/*.pyc
+
+# ── ML Models (large binary files — store in DVC or model registry) ───────────
+*.pkl
+*.joblib
+*.h5
+*.onnx
+
+# Large datasets
+analytics/data/raw/internship-data/
+
+# Exported datasets
+analytics/data/exports/*.csv
+analytics/data/exports/*.xlsx
+
+# Large archives
+*.zip

@@ -1,0 +1,162 @@
+version: "3.9"
+
+# ──────────────────────────────────────────────────────────────────────────────
+# WealthWise AI — Development Docker Compose
+# Services: FastAPI API, PostgreSQL, Redis, MinIO, pgAdmin
+# ──────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── FastAPI Application ──────────────────────────────────────────────────────
+  api:
+    build:
+      context: ./backend
+      target: runtime
+      dockerfile: Dockerfile
+    container_name: wealthwise_api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    volumes:
+      # Hot reload: mount source code in development
+      - ./backend:/app
+      # Persist logs outside container
+      - api_logs:/app/app/logs
+      # Mount ML model files from root project
+      - ./risk_profile_model.pkl:/app/app/ml_models/risk_profile_model.pkl:ro
+      - ./risk_label_encoder.pkl:/app/app/ml_models/risk_label_encoder.pkl:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: >
+      uvicorn app.main:app
+      --host 0.0.0.0
+      --port 8000
+      --reload
+      --reload-dir app
+      --log-config /dev/null
+    networks:
+      - wealthwise_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # ── PostgreSQL 16 ─────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: wealthwise_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: wealthwise_db
+      POSTGRES_USER: wealthwise_user
+      POSTGRES_PASSWORD: devpassword123
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wealthwise_user -d wealthwise_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - wealthwise_net
+
+  # ── Redis 7 ───────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: wealthwise_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --save 60 1 --loglevel warning
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - wealthwise_net
+
+  # ── MinIO (S3-compatible local storage) ───────────────────────────────────
+  minio:
+    image: minio/minio:latest
+    container_name: wealthwise_minio
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+      - "9001:9001"    # MinIO Console UI
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - wealthwise_net
+
+  # ── MinIO bucket setup (runs once) ────────────────────────────────────────
+  minio_setup:
+    image: minio/mc:latest
+    container_name: wealthwise_minio_setup
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+        mc alias set myminio http://minio:9000 minioadmin minioadmin123;
+        mc mb --ignore-existing myminio/wealthwise-statements;
+        mc anonymous set none myminio/wealthwise-statements;
+        echo 'MinIO bucket ready';
+      "
+    networks:
+      - wealthwise_net
+
+  # ── pgAdmin (DB GUI) ──────────────────────────────────────────────────────
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: wealthwise_pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@wealthwise.ai
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - wealthwise_net
+
+# ── Volumes ───────────────────────────────────────────────────────────────────
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  minio_data:
+    driver: local
+  api_logs:
+    driver: local
+
+# ── Networks ──────────────────────────────────────────────────────────────────
+networks:
+  wealthwise_net:
+    driver: bridge
+    name: wealthwise_network

@@ -1,0 +1,80 @@
+# ── WealthWise AI — Backend Tooling Configuration ──────────────────────────────
+# Single source of truth for Black, isort, mypy, and pytest.
+# CI and local development MUST resolve to identical formatting via this file.
+
+# ── Black ─────────────────────────────────────────────────────────────────────
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+    \.git
+  | \.venv
+  | venv
+  | env
+  | __pycache__
+  | \.mypy_cache
+  | \.pytest_cache
+  | \.ruff_cache
+  | build
+  | dist
+  | alembic/versions
+)/
+'''
+
+# ── isort ─────────────────────────────────────────────────────────────────────
+[tool.isort]
+profile = "black"
+line_length = 88
+known_first_party = ["app"]
+combine_as_imports = true
+force_sort_within_sections = true
+skip_gitignore = true
+skip_glob = [
+    "alembic/versions/*",
+    ".venv/*",
+    "venv/*",
+    "build/*",
+    "dist/*",
+]
+
+# ── mypy ──────────────────────────────────────────────────────────────────────
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+no_strict_optional = true
+plugins = ["pydantic.mypy"]
+exclude = [
+    "alembic/versions/",
+    "\\.venv/",
+    "build/",
+    "dist/",
+]
+
+# ── pytest ────────────────────────────────────────────────────────────────────
+[tool.pytest.ini_options]
+# pythonpath = ["."] adds backend/ (the pyproject.toml rootdir) to sys.path
+# so `from app.core...` resolves both locally and in CI without sys.path hacks
+# or `pip install -e .`. Native pytest 7+ feature.
+pythonpath = ["."]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--strict-markers",
+    "-ra",
+]
+markers = [
+    "integration: marks tests requiring real services (database, redis)",
+    "unit: marks fast isolated unit tests",
+]
+
+# ── build-system ──────────────────────────────────────────────────────────────
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
