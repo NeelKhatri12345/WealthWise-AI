@@ -1,23 +1,31 @@
 """
 WealthWise AI - Statement Service
 
-Orchestrates the full statement lifecycle:
-1. Validate uploaded file (type, size, magic bytes)
-2. Upload to S3 / MinIO
-3. Create DB record (PENDING)
-4. Trigger background processing pipeline:
-   OCR → Transaction extraction → Feature engineering → Analytics
+Orchestrates the statement upload lifecycle (storage only — no OCR/parsing):
+  1. Read file content
+  2. Validate: size limit (10 MB), extension, magic bytes
+  3. Generate a unique MinIO object key  (UUID-prefixed, collision-free)
+  4. Upload file bytes to MinIO / S3
+  5. Persist metadata record in PostgreSQL (status=PENDING)
+  6. Return immediately — downstream processing is handled separately
+
+Supported formats: PDF, PNG, JPG, JPEG
 """
 
+from pathlib import PurePosixPath
 from typing import Sequence
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from fastapi import UploadFile
 
-from app.clients.ocr_client import OCRClient
 from app.clients.s3_client import S3Client
 from app.core.config import get_settings
-from app.core.constants import PDF_MAGIC_BYTES, SUPPORTED_EXTENSIONS
+from app.core.constants import (
+    JPEG_MAGIC_BYTES,
+    PDF_MAGIC_BYTES,
+    PNG_MAGIC_BYTES,
+    SUPPORTED_EXTENSIONS,
+)
 from app.core.logger import logger
 from app.enums.statement_status_enum import StatementStatusEnum
 from app.exceptions.custom_exceptions import (
@@ -26,7 +34,6 @@ from app.exceptions.custom_exceptions import (
     UnsupportedFileTypeException,
 )
 from app.repositories.statement_repository import StatementRepository
-from app.repositories.transaction_repository import TransactionRepository
 from app.schemas.statement_schema import (
     StatementStatusResponse,
     StatementUploadResponse,
@@ -34,62 +41,124 @@ from app.schemas.statement_schema import (
 
 settings = get_settings()
 
+# Mapping from extension → (magic_bytes, required_prefix_length)
+# Used to verify the file's actual bytes match the claimed type.
+_MAGIC_BYTE_MAP: dict[str, tuple[bytes, int]] = {
+    ".pdf": (PDF_MAGIC_BYTES, len(PDF_MAGIC_BYTES)),
+    ".png": (PNG_MAGIC_BYTES, len(PNG_MAGIC_BYTES)),
+    ".jpg": (JPEG_MAGIC_BYTES, len(JPEG_MAGIC_BYTES)),
+    ".jpeg": (JPEG_MAGIC_BYTES, len(JPEG_MAGIC_BYTES)),
+}
+
+# Extension → MIME type used when uploading to MinIO
+_EXTENSION_CONTENT_TYPE: dict[str, str] = {
+    ".pdf": "application/pdf",
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+}
+
+
+def _get_extension(filename: str) -> str:
+    """Return lower-cased file extension including the leading dot."""
+    return PurePosixPath(filename).suffix.lower()
+
+
+def _build_minio_key(user_id: UUID, original_filename: str, file_ext: str) -> str:
+    """
+    Build a collision-free MinIO object key.
+
+    Pattern:
+        statements/<user_id>/<uuid4><ext>
+
+    The UUID prefix guarantees uniqueness even when the same user uploads
+    the same file name multiple times.  The original file name is stored
+    separately in the ``file_name`` DB column for display purposes.
+    """
+    unique_id = uuid4()
+    return f"statements/{user_id}/{unique_id}{file_ext}"
+
 
 class StatementService:
 
     def __init__(
         self,
         statement_repo: StatementRepository,
-        transaction_repo: TransactionRepository,
         s3_client: S3Client,
-        ocr_client: OCRClient,
     ) -> None:
         self._statement_repo = statement_repo
-        self._transaction_repo = transaction_repo
         self._s3 = s3_client
-        self._ocr = ocr_client
+
+    # ── Public API ────────────────────────────────────────────────────────────
 
     async def upload_statement(
         self, file: UploadFile, user_id: UUID
     ) -> StatementUploadResponse:
         """
-        Validates and uploads a bank statement.
-        Returns immediately with PENDING status — processing is async.
+        Validate, store in MinIO, and persist metadata.
+
+        Returns a StatementUploadResponse with status=PENDING immediately.
+        No OCR or parsing is triggered here.
+
+        Raises:
+            FileTooLargeException (413)  – content exceeds MAX_FILE_SIZE_MB
+            UnsupportedFileTypeException (415) – bad extension or magic bytes
         """
-        # 1. Read file content
+        # 1. Read content (stream fully into memory; FastAPI UploadFile is async)
         content = await file.read()
 
-        # 2. Size validation
+        # 2. Size guard
         if len(content) > settings.max_file_size_bytes:
             raise FileTooLargeException(
-                f"File exceeds maximum size of {settings.MAX_FILE_SIZE_MB}MB"
+                f"File size {len(content):,} bytes exceeds the "
+                f"{settings.MAX_FILE_SIZE_MB} MB limit."
             )
 
-        # 3. File type validation (extension + magic bytes)
-        file_ext = self._get_extension(file.filename or "")
+        # 3. Extension validation
+        original_name = file.filename or "upload"
+        file_ext = _get_extension(original_name)
         if file_ext not in SUPPORTED_EXTENSIONS:
             raise UnsupportedFileTypeException(
-                f"Unsupported file type '{file_ext}'. Accepted: {SUPPORTED_EXTENSIONS}"
+                f"Extension '{file_ext}' is not supported. "
+                f"Accepted: {sorted(SUPPORTED_EXTENSIONS)}"
             )
 
-        # Magic byte check for PDFs (prevents MIME spoofing)
-        if file_ext == ".pdf" and not content.startswith(PDF_MAGIC_BYTES):
-            raise UnsupportedFileTypeException("File does not appear to be a valid PDF")
+        # 4. Magic-byte validation (prevents MIME / extension spoofing)
+        magic, length = _MAGIC_BYTE_MAP[file_ext]
+        if not content[:length].startswith(magic):
+            raise UnsupportedFileTypeException(
+                f"File content does not match the declared type '{file_ext}'. "
+                "Upload a valid PDF, PNG, JPG, or JPEG."
+            )
 
-        # 4. Upload to S3
-        s3_key = f"statements/{user_id}/{file.filename}"
-        await self._s3.upload_file(
-            key=s3_key,
-            data=content,
-            content_type=file.content_type or "application/octet-stream",
+        # 5. Build unique S3 key and resolve content type
+        minio_key = _build_minio_key(user_id, original_name, file_ext)
+        content_type = _EXTENSION_CONTENT_TYPE.get(
+            file_ext, "application/octet-stream"
         )
 
-        # 5. Create DB record
+        # 6. Upload to MinIO
+        await self._s3.upload_file(
+            key=minio_key,
+            data=content,
+            content_type=content_type,
+        )
+        logger.info(
+            "File uploaded to MinIO",
+            extra={
+                "user_id": str(user_id),
+                "key": minio_key,
+                "size_bytes": len(content),
+                "content_type": content_type,
+            },
+        )
+
+        # 7. Persist metadata (status=PENDING — no processing yet)
         statement = await self._statement_repo.create(
             {
                 "user_id": user_id,
-                "file_name": file.filename,
-                "file_path": s3_key,
+                "file_name": original_name,   # original display name
+                "file_path": minio_key,        # unique MinIO object key
                 "file_type": file_ext.lstrip("."),
                 "file_size_bytes": len(content),
                 "status": StatementStatusEnum.PENDING,
@@ -97,78 +166,17 @@ class StatementService:
         )
 
         logger.info(
-            "Statement uploaded",
-            extra={"statement_id": str(statement.id), "user_id": str(user_id)},
+            "Statement record created",
+            extra={
+                "statement_id": str(statement.id),
+                "user_id": str(user_id),
+                "status": StatementStatusEnum.PENDING.value,
+            },
         )
-
-        # 6. Enqueue background processing
-        # TODO: Replace with Celery/ARQ task when queue is configured
-        import asyncio
-
-        asyncio.create_task(self._process_statement(statement.id, content, file_ext))
 
         return StatementUploadResponse.model_validate(statement)
 
-    async def _process_statement(
-        self, statement_id: UUID, content: bytes, file_ext: str
-    ) -> None:
-        """
-        Background processing pipeline.
-        Runs after upload returns to client — non-blocking.
-        """
-        from app.database.session import AsyncSessionLocal
-
-        async with AsyncSessionLocal() as db:
-            # Fresh repo instances for background context
-            from app.repositories.statement_repository import StatementRepository
-            from app.repositories.transaction_repository import TransactionRepository
-
-            stmt_repo = StatementRepository(db)
-            txn_repo = TransactionRepository(db)
-
-            statement = await stmt_repo.get(statement_id)
-            if not statement:
-                return
-
-            try:
-                # Mark as processing
-                await stmt_repo.update_status(statement, StatementStatusEnum.PROCESSING)
-                await db.commit()
-
-                # OCR Extraction
-                if file_ext == ".pdf":
-                    raw_transactions = await self._ocr.extract_from_pdf(content)
-                else:
-                    raw_transactions = await self._ocr.extract_from_csv(content)
-
-                # Bulk insert transactions
-                for txn in raw_transactions:
-                    txn["user_id"] = statement.user_id
-                    txn["statement_id"] = statement_id
-                await txn_repo.bulk_create(raw_transactions)
-
-                # Mark complete
-                await stmt_repo.update_status(statement, StatementStatusEnum.COMPLETED)
-                await db.commit()
-
-                logger.info(
-                    "Statement processed successfully",
-                    extra={"statement_id": str(statement_id)},
-                )
-
-            except Exception as exc:
-                await db.rollback()
-                await stmt_repo.update_status(
-                    statement,
-                    StatementStatusEnum.FAILED,
-                    error_message=str(exc)[:500],
-                )
-                await db.commit()
-                logger.error(
-                    "Statement processing failed",
-                    extra={"statement_id": str(statement_id)},
-                    exc_info=exc,
-                )
+    # ── Read ──────────────────────────────────────────────────────────────────
 
     async def get_statements(
         self, user_id: UUID, skip: int = 0, limit: int = 20
@@ -179,22 +187,33 @@ class StatementService:
     async def get_statement_detail(
         self, statement_id: UUID, user_id: UUID
     ) -> StatementStatusResponse:
-        statement = await self._statement_repo.get_by_id_and_user(statement_id, user_id)
+        statement = await self._statement_repo.get_by_id_and_user(
+            statement_id, user_id
+        )
         if not statement:
             raise NotFoundException("Statement not found")
         return StatementStatusResponse.model_validate(statement)
 
+    # ── Delete ────────────────────────────────────────────────────────────────
+
     async def delete_statement(self, statement_id: UUID, user_id: UUID) -> None:
-        statement = await self._statement_repo.get_by_id_and_user(statement_id, user_id)
+        statement = await self._statement_repo.get_by_id_and_user(
+            statement_id, user_id
+        )
         if not statement:
             raise NotFoundException("Statement not found")
-        # Delete from S3
+
+        # Remove the file from MinIO first
         await self._s3.delete_file(statement.file_path)
-        # Delete from DB (cascade deletes transactions)
+
+        # Cascade deletes transactions via DB constraint
         await self._statement_repo.delete(statement)
 
-    @staticmethod
-    def _get_extension(filename: str) -> str:
-        from pathlib import PurePosixPath
-
-        return PurePosixPath(filename).suffix.lower()
+        logger.info(
+            "Statement deleted",
+            extra={
+                "statement_id": str(statement_id),
+                "user_id": str(user_id),
+                "minio_key": statement.file_path,
+            },
+        )

@@ -14,14 +14,15 @@ API_V1_PREFIX: Final[str] = "/api/v1"
 # ── File Upload ───────────────────────────────────────────────────────────────
 SUPPORTED_MIME_TYPES: Final[set[str]] = {
     "application/pdf",
-    "text/csv",
-    "application/vnd.ms-excel",
+    "image/png",
+    "image/jpeg",  # covers both jpg and jpeg
 }
-SUPPORTED_EXTENSIONS: Final[set[str]] = {".pdf", ".csv"}
+SUPPORTED_EXTENSIONS: Final[set[str]] = {".pdf", ".png", ".jpg", ".jpeg"}
 
-# Magic bytes for file type verification (prevents MIME spoofing)
+# Magic bytes for file-type verification (prevents MIME / extension spoofing)
 PDF_MAGIC_BYTES: Final[bytes] = b"%PDF"
-CSV_FALLBACK_CHECK: Final[str] = "text"  # CSV has no magic bytes
+PNG_MAGIC_BYTES: Final[bytes] = b"\x89PNG\r\n\x1a\n"
+JPEG_MAGIC_BYTES: Final[bytes] = b"\xff\xd8\xff"  # SOI marker common to all JPEG
 
 # ── Financial Health Score Thresholds ────────────────────────────────────────
 HEALTH_SCORE_EXCELLENT: Final[float] = 80.0

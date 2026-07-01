@@ -85,7 +85,11 @@ class Settings(BaseSettings):
 
     # ── File Upload ────────────────────────────────────────────────
     MAX_FILE_SIZE_MB: int = 10
-    ALLOWED_FILE_TYPES: List[str] = ["application/pdf", "text/csv"]
+    ALLOWED_FILE_TYPES: List[str] = [
+        "application/pdf",
+        "image/png",
+        "image/jpeg",
+    ]
 
     # ── CORS ───────────────────────────────────────────────────────
     ALLOWED_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:5173"]

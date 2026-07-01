@@ -9,6 +9,7 @@ from datetime import datetime
 from uuid import UUID
 
 from sqlalchemy import DateTime, Enum as SAEnum, ForeignKey, String, Text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base, TimestampMixin, UUIDMixin
@@ -34,6 +35,18 @@ class Statement(UUIDMixin, TimestampMixin, Base):
     )
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     processed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+    # ── Processing pipeline metadata ─────────────────────────────────────────
+    processing_metadata: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    processing_started_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    ocr_completed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    parsing_started_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
 

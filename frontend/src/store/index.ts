@@ -35,8 +35,11 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
-        ignoredActions: ["upload/uploadFile/pending"],
-        ignoredPaths: ["upload.currentFile"],
+        ignoredActions: [
+          "upload/uploadStatement/pending",
+          "upload/setSelectedFile",
+        ],
+        ignoredPaths: ["upload.selectedFile"],
       },
     }).concat(apiMiddleware, loggerMiddleware),
   devTools: import.meta.env.DEV,

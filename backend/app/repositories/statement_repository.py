@@ -1,6 +1,7 @@
 """WealthWise AI - Statement Repository"""
 
-from typing import Optional, Sequence
+from datetime import datetime
+from typing import Any, Optional, Sequence
 from uuid import UUID
 
 from sqlalchemy import select
@@ -51,17 +52,53 @@ class StatementRepository(BaseRepository[Statement]):
         status: StatementStatusEnum,
         error_message: Optional[str] = None,
     ) -> Statement:
-        data = {"status": status}
+        data: dict[str, Any] = {"status": status}
         if error_message is not None:
             data["error_message"] = error_message
         if status == StatementStatusEnum.COMPLETED:
-            from datetime import datetime, timezone
+            from datetime import timezone
 
             data["processed_at"] = datetime.now(timezone.utc)
         return await self.update(statement, data)
 
+    async def update_processing_state(
+        self,
+        statement: Statement,
+        *,
+        status: StatementStatusEnum,
+        error_message: Optional[str] = None,
+        processing_metadata: Optional[dict[str, Any]] = None,
+        processing_started_at: Optional[datetime] = None,
+        ocr_completed_at: Optional[datetime] = None,
+        parsing_started_at: Optional[datetime] = None,
+        processed_at: Optional[datetime] = None,
+    ) -> Statement:
+        """Apply a processing pipeline state change and related timestamps."""
+        data: dict[str, Any] = {"status": status}
+
+        if error_message is not None:
+            data["error_message"] = error_message
+        if processing_metadata is not None:
+            data["processing_metadata"] = processing_metadata
+        if processing_started_at is not None:
+            data["processing_started_at"] = processing_started_at
+        if ocr_completed_at is not None:
+            data["ocr_completed_at"] = ocr_completed_at
+        if parsing_started_at is not None:
+            data["parsing_started_at"] = parsing_started_at
+        if processed_at is not None:
+            data["processed_at"] = processed_at
+
+        return await self.update(statement, data)
+
     async def get_pending(self) -> Sequence[Statement]:
-        """Background processor poll — returns all unprocessed statements."""
-        stmt = select(Statement).where(Statement.status == StatementStatusEnum.PENDING)
+        """Background processor poll — legacy alias for queued statements."""
+        return await self.get_queued_for_processing()
+
+    async def get_queued_for_processing(self) -> Sequence[Statement]:
+        """Return statements waiting to enter the processing pipeline."""
+        stmt = select(Statement).where(
+            Statement.status.in_(StatementStatusEnum.queued_statuses())
+        )
         result = await self.db.execute(stmt)
         return result.scalars().all()

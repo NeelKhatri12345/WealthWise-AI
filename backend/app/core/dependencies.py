@@ -153,17 +153,22 @@ def get_user_service(db: AsyncSession = Depends(get_db)):
 
 
 def get_statement_service(db: AsyncSession = Depends(get_db)):
-    from app.clients.ocr_client import OCRClient
     from app.clients.s3_client import S3Client
     from app.repositories.statement_repository import StatementRepository
-    from app.repositories.transaction_repository import TransactionRepository
     from app.services.statement_service import StatementService
 
     return StatementService(
         statement_repo=StatementRepository(db),
-        transaction_repo=TransactionRepository(db),
         s3_client=S3Client(settings),
-        ocr_client=OCRClient(settings),
+    )
+
+
+def get_statement_processing_service(db: AsyncSession = Depends(get_db)):
+    from app.repositories.statement_repository import StatementRepository
+    from app.services.statement_processing_service import StatementProcessingService
+
+    return StatementProcessingService(
+        statement_repo=StatementRepository(db),
     )
 
 
