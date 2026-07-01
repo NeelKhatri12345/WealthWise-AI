@@ -207,6 +207,17 @@ def get_admin_service(db: AsyncSession = Depends(get_db)):
     )
 
 
+def get_dashboard_service(db: AsyncSession = Depends(get_db)):
+    from app.repositories.analytics_repository import AnalyticsRepository
+    from app.repositories.transaction_repository import TransactionRepository
+    from app.services.dashboard_service import DashboardService
+
+    return DashboardService(
+        transaction_repo=TransactionRepository(db),
+        analytics_repo=AnalyticsRepository(db),
+    )
+
+
 # ── Internal Helpers ──────────────────────────────────────────────────────────
 
 

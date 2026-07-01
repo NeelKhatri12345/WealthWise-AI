@@ -1,111 +1,250 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+/**
+ * WealthWise AI — Dashboard Redux Slice
+ *
+ * Granular loading/error state per section so each dashboard
+ * card can independently show skeleton/error/retry.
+ *
+ * State shape:
+ *   summary    → { data, loading, error }
+ *   transactions → { data[], loading, error }
+ *   insights   → { data[], loading, error }
+ *   notifications → { data[], loading, error }
+ */
 
-export interface DashboardStats {
-  totalBalance: number;
-  monthlyIncome: number;
-  monthlyExpense: number;
-  savingsRate: number;
-  healthScore: number;
-  transactionCount: number;
-}
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
-export interface RecentTransaction {
-  id: string;
-  date: string;
-  description: string;
-  amount: number;
-  category: string;
-  type: "credit" | "debit";
-}
+import type {
+  DashboardInsight,
+  DashboardNotification,
+  DashboardSummary,
+  DashboardTransaction,
+} from "@/services/api/dashboard.api";
+import type { RootState } from "@/store";
 
-export interface DashboardWidget {
-  id: string;
-  type: string;
-  title: string;
-  visible: boolean;
-  order: number;
-}
+// ---------------------------------------------------------------------------
+// Section state shape
+// ---------------------------------------------------------------------------
 
-export interface DashboardState {
-  stats: DashboardStats | null;
-  recentTransactions: RecentTransaction[];
-  widgets: DashboardWidget[];
+interface SectionState<T> {
+  data: T;
   loading: boolean;
   error: string | null;
 }
 
-const initialState: DashboardState = {
-  stats: null,
-  recentTransactions: [],
-  widgets: [],
+// ---------------------------------------------------------------------------
+// Root slice state
+// ---------------------------------------------------------------------------
+
+export interface DashboardState {
+  summary: SectionState<DashboardSummary | null>;
+  transactions: SectionState<DashboardTransaction[]>;
+  insights: SectionState<DashboardInsight[]>;
+  notifications: SectionState<DashboardNotification[]>;
+}
+
+const initialSection = <T>(empty: T): SectionState<T> => ({
+  data: empty,
   loading: false,
   error: null,
+});
+
+const initialState: DashboardState = {
+  summary: initialSection(null),
+  transactions: initialSection([]),
+  insights: initialSection([]),
+  notifications: initialSection([]),
 };
 
-export const fetchDashboardData = createAsyncThunk(
-  "dashboard/fetchData",
-  async (_, { rejectWithValue }) => {
-    try {
-      const { dashboardApi } = await import("../../services/api/dashboard.api");
-      const [stats, transactions, widgets] = await Promise.all([
-        dashboardApi.getDashboardStats(),
-        dashboardApi.getRecentTransactions(),
-        dashboardApi.getWidgets(),
-      ]);
-      return { stats, transactions, widgets };
-    } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      return rejectWithValue(
-        error.response?.data?.message ?? "Failed to fetch dashboard data",
-      );
-    }
+// ---------------------------------------------------------------------------
+// Async thunks
+// ---------------------------------------------------------------------------
+
+export const fetchDashboardSummary = createAsyncThunk<
+  DashboardSummary,
+  void,
+  { rejectValue: string }
+>("dashboard/fetchSummary", async (_, { rejectWithValue }) => {
+  try {
+    const { dashboardApi } = await import("@/services/api/dashboard.api");
+    return await dashboardApi.getSummary();
+  } catch (err: unknown) {
+    const e = err as { response?: { data?: { message?: string } } };
+    return rejectWithValue(e.response?.data?.message ?? "Failed to load summary");
+  }
+});
+
+export const fetchRecentTransactions = createAsyncThunk<
+  DashboardTransaction[],
+  void,
+  { rejectValue: string }
+>("dashboard/fetchTransactions", async (_, { rejectWithValue }) => {
+  try {
+    const { dashboardApi } = await import("@/services/api/dashboard.api");
+    return await dashboardApi.getRecentTransactions();
+  } catch (err: unknown) {
+    const e = err as { response?: { data?: { message?: string } } };
+    return rejectWithValue(e.response?.data?.message ?? "Failed to load transactions");
+  }
+});
+
+export const fetchDashboardInsights = createAsyncThunk<
+  DashboardInsight[],
+  void,
+  { rejectValue: string }
+>("dashboard/fetchInsights", async (_, { rejectWithValue }) => {
+  try {
+    const { dashboardApi } = await import("@/services/api/dashboard.api");
+    return await dashboardApi.getInsights();
+  } catch (err: unknown) {
+    const e = err as { response?: { data?: { message?: string } } };
+    return rejectWithValue(e.response?.data?.message ?? "Failed to load insights");
+  }
+});
+
+export const fetchDashboardNotifications = createAsyncThunk<
+  DashboardNotification[],
+  void,
+  { rejectValue: string }
+>("dashboard/fetchNotifications", async (_, { rejectWithValue }) => {
+  try {
+    const { dashboardApi } = await import("@/services/api/dashboard.api");
+    return await dashboardApi.getNotifications();
+  } catch (err: unknown) {
+    const e = err as { response?: { data?: { message?: string } } };
+    return rejectWithValue(
+      e.response?.data?.message ?? "Failed to load notifications",
+    );
+  }
+});
+
+/** Convenience thunk — dispatches all four in parallel. */
+export const fetchDashboardAll = createAsyncThunk<void, void>(
+  "dashboard/fetchAll",
+  async (_, { dispatch }) => {
+    await Promise.allSettled([
+      dispatch(fetchDashboardSummary()),
+      dispatch(fetchRecentTransactions()),
+      dispatch(fetchDashboardInsights()),
+      dispatch(fetchDashboardNotifications()),
+    ]);
   },
 );
 
-export const refreshStats = createAsyncThunk(
-  "dashboard/refreshStats",
-  async (_, { rejectWithValue }) => {
-    try {
-      const { dashboardApi } = await import("../../services/api/dashboard.api");
-      return await dashboardApi.getDashboardStats();
-    } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      return rejectWithValue(
-        error.response?.data?.message ?? "Failed to refresh stats",
-      );
-    }
-  },
-);
+// ---------------------------------------------------------------------------
+// Slice
+// ---------------------------------------------------------------------------
 
 const dashboardSlice = createSlice({
   name: "dashboard",
   initialState,
   reducers: {
-    clearDashboardError(state) {
-      state.error = null;
+    clearSummaryError(state) {
+      state.summary.error = null;
+    },
+    clearTransactionsError(state) {
+      state.transactions.error = null;
+    },
+    clearInsightsError(state) {
+      state.insights.error = null;
+    },
+    clearNotificationsError(state) {
+      state.notifications.error = null;
+    },
+    resetDashboard() {
+      return initialState;
     },
   },
   extraReducers: (builder) => {
+    // Summary
     builder
-      .addCase(fetchDashboardData.pending, (state) => {
-        state.loading = true;
-        state.error = null;
+      .addCase(fetchDashboardSummary.pending, (state) => {
+        state.summary.loading = true;
+        state.summary.error = null;
       })
-      .addCase(fetchDashboardData.fulfilled, (state, action) => {
-        state.loading = false;
-        state.stats = action.payload.stats;
-        state.recentTransactions = action.payload.transactions;
-        state.widgets = action.payload.widgets;
+      .addCase(fetchDashboardSummary.fulfilled, (state, action) => {
+        state.summary.loading = false;
+        state.summary.data = action.payload;
       })
-      .addCase(fetchDashboardData.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
+      .addCase(fetchDashboardSummary.rejected, (state, action) => {
+        state.summary.loading = false;
+        state.summary.error = action.payload ?? "Unknown error";
+      });
+
+    // Transactions
+    builder
+      .addCase(fetchRecentTransactions.pending, (state) => {
+        state.transactions.loading = true;
+        state.transactions.error = null;
       })
-      .addCase(refreshStats.fulfilled, (state, action) => {
-        state.stats = action.payload;
+      .addCase(fetchRecentTransactions.fulfilled, (state, action) => {
+        state.transactions.loading = false;
+        state.transactions.data = action.payload;
+      })
+      .addCase(fetchRecentTransactions.rejected, (state, action) => {
+        state.transactions.loading = false;
+        state.transactions.error = action.payload ?? "Unknown error";
+      });
+
+    // Insights
+    builder
+      .addCase(fetchDashboardInsights.pending, (state) => {
+        state.insights.loading = true;
+        state.insights.error = null;
+      })
+      .addCase(fetchDashboardInsights.fulfilled, (state, action) => {
+        state.insights.loading = false;
+        state.insights.data = action.payload;
+      })
+      .addCase(fetchDashboardInsights.rejected, (state, action) => {
+        state.insights.loading = false;
+        state.insights.error = action.payload ?? "Unknown error";
+      });
+
+    // Notifications
+    builder
+      .addCase(fetchDashboardNotifications.pending, (state) => {
+        state.notifications.loading = true;
+        state.notifications.error = null;
+      })
+      .addCase(fetchDashboardNotifications.fulfilled, (state, action) => {
+        state.notifications.loading = false;
+        state.notifications.data = action.payload;
+      })
+      .addCase(fetchDashboardNotifications.rejected, (state, action) => {
+        state.notifications.loading = false;
+        state.notifications.error = action.payload ?? "Unknown error";
       });
   },
 });
 
-export const { clearDashboardError } = dashboardSlice.actions;
+export const {
+  clearSummaryError,
+  clearTransactionsError,
+  clearInsightsError,
+  clearNotificationsError,
+  resetDashboard,
+} = dashboardSlice.actions;
+
 export default dashboardSlice.reducer;
+
+// ---------------------------------------------------------------------------
+// Selectors
+// ---------------------------------------------------------------------------
+
+export const selectDashboardSummary = (state: RootState) =>
+  state.dashboard.summary;
+
+export const selectDashboardTransactions = (state: RootState) =>
+  state.dashboard.transactions;
+
+export const selectDashboardInsights = (state: RootState) =>
+  state.dashboard.insights;
+
+export const selectDashboardNotifications = (state: RootState) =>
+  state.dashboard.notifications;
+
+export const selectIsDashboardLoading = (state: RootState) =>
+  state.dashboard.summary.loading ||
+  state.dashboard.transactions.loading ||
+  state.dashboard.insights.loading ||
+  state.dashboard.notifications.loading;

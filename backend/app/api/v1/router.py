@@ -5,6 +5,7 @@ from fastapi import APIRouter
 from app.api.v1.admin_routes import router as admin_router
 from app.api.v1.ai_coach_routes import router as ai_coach_router
 from app.api.v1.auth_routes import router as auth_router
+from app.api.v1.dashboard_routes import router as dashboard_router
 from app.api.v1.health_score_routes import router as health_score_router
 from app.api.v1.portfolio_routes import router as portfolio_router
 from app.api.v1.risk_profile_routes import router as risk_profile_router
@@ -16,6 +17,9 @@ api_v1_router = APIRouter()
 
 api_v1_router.include_router(auth_router, prefix="/auth", tags=["Authentication"])
 api_v1_router.include_router(user_router, prefix="/users", tags=["Users"])
+api_v1_router.include_router(
+    dashboard_router, prefix="/dashboard", tags=["Dashboard"]
+)
 api_v1_router.include_router(
     statement_router, prefix="/statements", tags=["Statements"]
 )
