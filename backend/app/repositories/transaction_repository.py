@@ -26,6 +26,17 @@ class TransactionRepository(BaseRepository[Transaction]):
         result = await self.db.execute(stmt)
         return result.scalars().all()
 
+    async def get_categories(self, user_id: UUID) -> list[str]:
+        """Return distinct non-null category values for a user, sorted alphabetically."""
+        stmt = (
+            select(Transaction.category)
+            .where(Transaction.user_id == user_id, Transaction.category.isnot(None))
+            .distinct()
+            .order_by(Transaction.category.asc())
+        )
+        result = await self.db.execute(stmt)
+        return [row[0] for row in result.all()]
+
     async def get_by_user_filtered(
         self,
         user_id: UUID,

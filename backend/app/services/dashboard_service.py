@@ -71,7 +71,7 @@ class DashboardService:
                     break
 
         # Approximate total balance from latest transaction's balance field
-        latest_txns = await self._txn_repo.get_by_user_filtered(
+        latest_txns, _ = await self._txn_repo.get_by_user_filtered(
             user_id=user_id, limit=1
         )
         total_balance = Decimal("0")
@@ -98,7 +98,7 @@ class DashboardService:
         self, user_id: UUID, limit: int = 7
     ) -> list[DashboardTransactionResponse]:
         """Return the latest N transactions formatted for dashboard display."""
-        txns: Sequence[Transaction] = await self._txn_repo.get_by_user_filtered(
+        txns, _ = await self._txn_repo.get_by_user_filtered(
             user_id=user_id, limit=limit
         )
         return [

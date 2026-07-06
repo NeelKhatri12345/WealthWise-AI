@@ -117,7 +117,10 @@ class ColorConsoleFormatter(logging.Formatter):
         prefix = f"{color}[{record.levelname}]{self.RESET}"
         request_id = getattr(record, "request_id", "")
         rid = f" [{request_id[:8]}]" if request_id else ""
-        return f"{prefix}{rid} {record.name}: {record.getMessage()}"
+        base = f"{prefix}{rid} {record.name}: {record.getMessage()}"
+        if record.exc_info:
+            base += "\n" + self.formatException(record.exc_info)
+        return base
 
 
 def _build_rotating_handler(

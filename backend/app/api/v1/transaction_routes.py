@@ -82,6 +82,23 @@ async def list_transactions(
     )
 
 @router.get(
+    "/categories",
+    response_model=APIResponse[List[str]],
+    summary="Get distinct transaction categories for the current user",
+)
+async def list_categories(
+    current_user=Depends(get_current_active_user),
+    repo: TransactionRepository = Depends(get_transaction_repository),
+):
+    categories = await repo.get_categories(current_user.id)
+    return APIResponse(
+        success=True,
+        message="Categories retrieved",
+        data=categories,
+    )
+
+
+@router.get(
     "/{transaction_id}",
     response_model=APIResponse[TransactionResponse],
     summary="Get transaction by ID",
@@ -143,7 +160,7 @@ async def delete_transaction(
     if not transaction or transaction.user_id != current_user.id:
         raise NotFoundException("Transaction not found")
     
-    await repo.delete(transaction_id)
+    await repo.delete(transaction)
     return APIResponse(success=True, message="Transaction deleted")
 
 @router.patch(

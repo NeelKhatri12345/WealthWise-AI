@@ -20,8 +20,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Copy and install Python dependencies to /install prefix
 COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip==24.3.1 \
-    && pip install --no-cache-dir --prefix=/install -r requirements.txt
+RUN pip install --default-timeout=300 --no-cache-dir --upgrade pip==24.3.1 \
+    && pip install --default-timeout=300 --no-cache-dir --prefix=/install -r requirements.txt
 
 # ── Stage 2: Production Runtime ───────────────────────────────────────────────
 FROM python:3.13-slim AS runtime

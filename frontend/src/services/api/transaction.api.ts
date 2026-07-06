@@ -75,12 +75,18 @@ export const transactionApi = {
         ([, v]) => v !== "" && v !== null && v !== undefined && v !== "all",
       ),
     );
-    const { data } = await axiosInstance.get<
-      PaginatedResponse<RawTransaction>
-    >("/transactions", { params: cleanParams });
+    const { data } = await axiosInstance.get<any>(
+      "/transactions",
+      { params: cleanParams }
+    );
     return {
-      ...data,
       data: data.data.map(mapTransaction),
+      pagination: {
+        page: data.meta.page,
+        pageSize: data.meta.page_size,
+        total: data.meta.total,
+        totalPages: data.meta.total_pages,
+      },
     };
   },
 
@@ -92,10 +98,15 @@ export const transactionApi = {
   },
 
   async getCategories(): Promise<CategoryResponse[]> {
-    const { data } = await axiosInstance.get<ApiResponse<CategoryResponse[]>>(
+    const { data } = await axiosInstance.get<any>(
       "/transactions/categories",
     );
-    return data.data;
+    return data.data.map((c: string) => ({
+      id: c,
+      name: c,
+      icon: "tag",
+      color: "#6b7280",
+    }));
   },
 
   async searchTransactions(query: string): Promise<TransactionResponse[]> {
