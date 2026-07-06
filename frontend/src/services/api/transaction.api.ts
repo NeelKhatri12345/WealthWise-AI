@@ -55,6 +55,8 @@ export interface TransactionQueryParams {
   sortOrder?: string;
   page?: number;
   pageSize?: number;
+  statementId?: string;
+  merchant?: string;
 }
 
 export interface CategoryResponse {
@@ -128,5 +130,48 @@ export const transactionApi = {
     await axiosInstance.put(`/transactions/statement/${statementId}/sync`, {
       transactions: rawTransactions,
     });
+  },
+
+  async updateTransaction(
+    id: string,
+    data: Partial<TransactionResponse>,
+  ): Promise<TransactionResponse> {
+    const payload: any = {
+      ...data,
+      transaction_type: data.type,
+    };
+    delete payload.type;
+    delete payload.confidenceScore;
+    
+    const { data: resData } = await axiosInstance.put<ApiResponse<RawTransaction>>(
+      `/transactions/${id}`,
+      payload,
+    );
+    return mapTransaction(resData.data);
+  },
+
+  async deleteTransaction(id: string): Promise<void> {
+    await axiosInstance.delete(`/transactions/${id}`);
+  },
+
+  async bulkUpdateCategory(
+    transactionIds: string[],
+    category: string,
+  ): Promise<{ updatedCount: number }> {
+    const { data } = await axiosInstance.patch<ApiResponse<{ updated_count: number }>>(
+      "/transactions/bulk/category",
+      { transaction_ids: transactionIds, category },
+    );
+    return { updatedCount: data.data.updated_count };
+  },
+
+  async bulkDeleteTransactions(
+    transactionIds: string[],
+  ): Promise<{ deletedCount: number }> {
+    const { data } = await axiosInstance.delete<ApiResponse<{ deleted_count: number }>>(
+      "/transactions/bulk/delete",
+      { data: { transaction_ids: transactionIds } },
+    );
+    return { deletedCount: data.data.deleted_count };
   },
 };

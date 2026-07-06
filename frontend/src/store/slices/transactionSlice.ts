@@ -23,8 +23,10 @@ export interface TransactionFilters {
   dateTo: string;
   amountMin: number | null;
   amountMax: number | null;
-  sortBy: "date" | "amount" | "category";
+  sortBy: string;
   sortOrder: "asc" | "desc";
+  statementId: string;
+  merchant: string;
 }
 
 export interface Pagination {
@@ -46,6 +48,7 @@ export interface TransactionState {
   filters: TransactionFilters;
   pagination: Pagination;
   categories: Category[];
+  selectedIds: string[];
   loading: boolean;
   error: string | null;
 }
@@ -62,6 +65,8 @@ const initialState: TransactionState = {
     amountMax: null,
     sortBy: "date",
     sortOrder: "desc",
+    statementId: "",
+    merchant: "",
   },
   pagination: {
     page: 1,
@@ -70,6 +75,7 @@ const initialState: TransactionState = {
     totalPages: 0,
   },
   categories: [],
+  selectedIds: [],
   loading: false,
   error: null,
 };
@@ -112,6 +118,75 @@ export const fetchCategories = createAsyncThunk(
   },
 );
 
+export const updateTransactionThunk = createAsyncThunk(
+  "transactions/update",
+  async (
+    { id, data }: { id: string; data: Partial<Transaction> },
+    { rejectWithValue },
+  ) => {
+    try {
+      const { transactionApi } = await import("../../services/api/transaction.api");
+      return await transactionApi.updateTransaction(id, data);
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      return rejectWithValue(
+        error.response?.data?.message ?? "Failed to update transaction",
+      );
+    }
+  },
+);
+
+export const deleteTransactionThunk = createAsyncThunk(
+  "transactions/delete",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const { transactionApi } = await import("../../services/api/transaction.api");
+      await transactionApi.deleteTransaction(id);
+      return id;
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      return rejectWithValue(
+        error.response?.data?.message ?? "Failed to delete transaction",
+      );
+    }
+  },
+);
+
+export const bulkUpdateCategoryThunk = createAsyncThunk(
+  "transactions/bulkUpdateCategory",
+  async (
+    { transactionIds, category }: { transactionIds: string[]; category: string },
+    { rejectWithValue },
+  ) => {
+    try {
+      const { transactionApi } = await import("../../services/api/transaction.api");
+      await transactionApi.bulkUpdateCategory(transactionIds, category);
+      return { transactionIds, category };
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      return rejectWithValue(
+        error.response?.data?.message ?? "Failed to bulk update categories",
+      );
+    }
+  },
+);
+
+export const bulkDeleteTransactionsThunk = createAsyncThunk(
+  "transactions/bulkDelete",
+  async (transactionIds: string[], { rejectWithValue }) => {
+    try {
+      const { transactionApi } = await import("../../services/api/transaction.api");
+      await transactionApi.bulkDeleteTransactions(transactionIds);
+      return transactionIds;
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      return rejectWithValue(
+        error.response?.data?.message ?? "Failed to bulk delete transactions",
+      );
+    }
+  },
+);
+
 const transactionSlice = createSlice({
   name: "transactions",
   initialState,
@@ -119,6 +194,7 @@ const transactionSlice = createSlice({
     setFilters(state, action: PayloadAction<Partial<TransactionFilters>>) {
       state.filters = { ...state.filters, ...action.payload };
       state.pagination.page = 1;
+      state.selectedIds = [];
     },
     setPage(state, action: PayloadAction<number>) {
       state.pagination.page = action.payload;
@@ -126,6 +202,22 @@ const transactionSlice = createSlice({
     resetFilters(state) {
       state.filters = initialState.filters;
       state.pagination.page = 1;
+      state.selectedIds = [];
+    },
+    toggleSelection(state, action: PayloadAction<string>) {
+      const index = state.selectedIds.indexOf(action.payload);
+      if (index >= 0) {
+        state.selectedIds.splice(index, 1);
+      } else {
+        state.selectedIds.push(action.payload);
+      }
+    },
+    selectAll(state, action: PayloadAction<boolean>) {
+      if (action.payload) {
+        state.selectedIds = state.transactions.map((t) => t.id);
+      } else {
+        state.selectedIds = [];
+      }
     },
   },
   extraReducers: (builder) => {
@@ -145,9 +237,31 @@ const transactionSlice = createSlice({
       })
       .addCase(fetchCategories.fulfilled, (state, action) => {
         state.categories = action.payload;
+      })
+      .addCase(updateTransactionThunk.fulfilled, (state, action) => {
+        const index = state.transactions.findIndex(t => t.id === action.payload.id);
+        if (index >= 0) {
+          state.transactions[index] = action.payload as any; // Cast as transaction types mismatch slightly due to interface duplicating
+        }
+      })
+      .addCase(deleteTransactionThunk.fulfilled, (state, action) => {
+        state.transactions = state.transactions.filter(t => t.id !== action.payload);
+        state.selectedIds = state.selectedIds.filter(id => id !== action.payload);
+      })
+      .addCase(bulkUpdateCategoryThunk.fulfilled, (state, action) => {
+        const { transactionIds, category } = action.payload;
+        state.transactions = state.transactions.map(t => 
+          transactionIds.includes(t.id) ? { ...t, category } : t
+        );
+        state.selectedIds = [];
+      })
+      .addCase(bulkDeleteTransactionsThunk.fulfilled, (state, action) => {
+        const deletedIds = action.payload;
+        state.transactions = state.transactions.filter(t => !deletedIds.includes(t.id));
+        state.selectedIds = [];
       });
   },
 });
 
-export const { setFilters, setPage, resetFilters } = transactionSlice.actions;
+export const { setFilters, setPage, resetFilters, toggleSelection, selectAll } = transactionSlice.actions;
 export default transactionSlice.reducer;

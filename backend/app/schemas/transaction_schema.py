@@ -25,14 +25,33 @@ class TransactionResponse(BaseModel):
 
 
 class TransactionFilterRequest(BaseModel):
+    search: Optional[str] = None
+    statement_id: Optional[UUID] = None
     date_from: Optional[date] = None
     date_to: Optional[date] = None
     category: Optional[str] = None
     transaction_type: Optional[str] = None
     min_amount: Optional[Decimal] = None
     max_amount: Optional[Decimal] = None
+    sort_by: Optional[str] = None
+    sort_order: Optional[str] = None
     page: int = 1
     page_size: int = 20
+
+class TransactionUpdateRequest(BaseModel):
+    date: Optional[date] = None
+    description: Optional[str] = None
+    amount: Optional[Decimal] = None
+    transaction_type: Optional[str] = None
+    category: Optional[str] = None
+    merchant: Optional[str] = None
+
+class BulkCategoryUpdateRequest(BaseModel):
+    transaction_ids: list[UUID]
+    category: str
+
+class BulkDeleteRequest(BaseModel):
+    transaction_ids: list[UUID]
 
 
 class MonthlySummary(BaseModel):

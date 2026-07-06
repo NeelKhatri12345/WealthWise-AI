@@ -14,8 +14,15 @@ from app.core.dependencies import (
     get_statement_repository,
 )
 from app.repositories.transaction_repository import TransactionRepository
-from app.schemas.base_schema import APIResponse
-from app.schemas.transaction_schema import MonthlySummary, TransactionResponse, TransactionSyncRequest
+from app.schemas.base_schema import APIResponse, PaginatedResponse, PaginationMeta
+from app.schemas.transaction_schema import (
+    MonthlySummary, 
+    TransactionResponse, 
+    TransactionSyncRequest,
+    TransactionUpdateRequest,
+    BulkCategoryUpdateRequest,
+    BulkDeleteRequest
+)
 from app.services.transaction_parser_service import TransactionParserService
 from app.repositories.statement_repository import StatementRepository
 
@@ -24,32 +31,155 @@ router = APIRouter()
 
 @router.get(
     "/",
-    response_model=APIResponse[List[TransactionResponse]],
+    response_model=PaginatedResponse[TransactionResponse],
     summary="List transactions with optional filters",
 )
 async def list_transactions(
-    skip: int = Query(default=0, ge=0),
-    limit: int = Query(default=20, ge=1, le=100),
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100),
+    search: Optional[str] = Query(default=None),
+    statement_id: Optional[UUID] = Query(default=None),
     date_from: Optional[date] = Query(default=None),
     date_to: Optional[date] = Query(default=None),
     category: Optional[str] = Query(default=None),
     transaction_type: Optional[str] = Query(default=None, pattern="^(debit|credit)$"),
+    min_amount: Optional[Decimal] = Query(default=None),
+    max_amount: Optional[Decimal] = Query(default=None),
+    sort_by: Optional[str] = Query(default="date"),
+    sort_order: Optional[str] = Query(default="desc", pattern="^(asc|desc)$"),
     current_user=Depends(get_current_active_user),
     repo: TransactionRepository = Depends(get_transaction_repository),
 ):
-    transactions = await repo.get_by_user_filtered(
+    skip = (page - 1) * page_size
+    transactions, total_count = await repo.get_by_user_filtered(
         user_id=current_user.id,
         skip=skip,
-        limit=limit,
+        limit=page_size,
+        search=search,
+        statement_id=statement_id,
         date_from=date_from,
         date_to=date_to,
         category=category,
         transaction_type=transaction_type,
+        min_amount=min_amount,
+        max_amount=max_amount,
+        sort_by=sort_by,
+        sort_order=sort_order,
     )
-    return APIResponse(
+    
+    total_pages = (total_count + page_size - 1) // page_size if total_count > 0 else 0
+
+    return PaginatedResponse(
         success=True,
         message="Transactions retrieved",
         data=[TransactionResponse.model_validate(t) for t in transactions],
+        meta=PaginationMeta(
+            total=total_count,
+            page=page,
+            page_size=page_size,
+            total_pages=total_pages,
+        )
+    )
+
+@router.get(
+    "/{transaction_id}",
+    response_model=APIResponse[TransactionResponse],
+    summary="Get transaction by ID",
+)
+async def get_transaction(
+    transaction_id: UUID,
+    current_user=Depends(get_current_active_user),
+    repo: TransactionRepository = Depends(get_transaction_repository),
+):
+    from app.exceptions.custom_exceptions import NotFoundException
+    transaction = await repo.get(transaction_id)
+    if not transaction or transaction.user_id != current_user.id:
+        raise NotFoundException("Transaction not found")
+    
+    return APIResponse(
+        success=True,
+        message="Transaction retrieved",
+        data=TransactionResponse.model_validate(transaction),
+    )
+
+@router.put(
+    "/{transaction_id}",
+    response_model=APIResponse[TransactionResponse],
+    summary="Update a transaction",
+)
+async def update_transaction(
+    transaction_id: UUID,
+    payload: TransactionUpdateRequest,
+    current_user=Depends(get_current_active_user),
+    repo: TransactionRepository = Depends(get_transaction_repository),
+):
+    from app.exceptions.custom_exceptions import NotFoundException
+    transaction = await repo.get(transaction_id)
+    if not transaction or transaction.user_id != current_user.id:
+        raise NotFoundException("Transaction not found")
+    
+    update_data = payload.model_dump(exclude_unset=True)
+    if update_data:
+        transaction = await repo.update(transaction, update_data)
+        
+    return APIResponse(
+        success=True,
+        message="Transaction updated",
+        data=TransactionResponse.model_validate(transaction),
+    )
+
+@router.delete(
+    "/{transaction_id}",
+    response_model=APIResponse[None],
+    summary="Delete a transaction",
+)
+async def delete_transaction(
+    transaction_id: UUID,
+    current_user=Depends(get_current_active_user),
+    repo: TransactionRepository = Depends(get_transaction_repository),
+):
+    from app.exceptions.custom_exceptions import NotFoundException
+    transaction = await repo.get(transaction_id)
+    if not transaction or transaction.user_id != current_user.id:
+        raise NotFoundException("Transaction not found")
+    
+    await repo.delete(transaction_id)
+    return APIResponse(success=True, message="Transaction deleted")
+
+@router.patch(
+    "/bulk/category",
+    response_model=APIResponse[dict],
+    summary="Bulk update categories",
+)
+async def bulk_update_category(
+    payload: BulkCategoryUpdateRequest,
+    current_user=Depends(get_current_active_user),
+    repo: TransactionRepository = Depends(get_transaction_repository),
+):
+    updated_count = await repo.bulk_update_categories(
+        current_user.id, payload.transaction_ids, payload.category
+    )
+    return APIResponse(
+        success=True,
+        message=f"{updated_count} transactions updated",
+        data={"updated_count": updated_count},
+    )
+
+@router.delete(
+    "/bulk/delete",
+    response_model=APIResponse[dict],
+    summary="Bulk delete transactions",
+)
+async def bulk_delete_transactions(
+    payload: BulkDeleteRequest,
+    current_user=Depends(get_current_active_user),
+    repo: TransactionRepository = Depends(get_transaction_repository),
+):
+    deleted_count = await repo.bulk_delete(current_user.id, payload.transaction_ids)
+    return APIResponse(
+        success=True,
+        message=f"{deleted_count} transactions deleted",
+        data={"deleted_count": deleted_count},
     )
 
 

@@ -31,14 +31,30 @@ class TransactionRepository(BaseRepository[Transaction]):
         user_id: UUID,
         skip: int = 0,
         limit: int = 20,
+        search: Optional[str] = None,
+        statement_id: Optional[UUID] = None,
         date_from: Optional[date] = None,
         date_to: Optional[date] = None,
         category: Optional[str] = None,
         transaction_type: Optional[str] = None,
         min_amount: Optional[Decimal] = None,
         max_amount: Optional[Decimal] = None,
-    ) -> Sequence[Transaction]:
+        sort_by: Optional[str] = None,
+        sort_order: Optional[str] = None,
+    ) -> tuple[Sequence[Transaction], int]:
+        from sqlalchemy import or_
         conditions = [Transaction.user_id == user_id]
+        
+        if search:
+            search_term = f"%{search}%"
+            conditions.append(
+                or_(
+                    Transaction.description.ilike(search_term),
+                    Transaction.merchant.ilike(search_term),
+                )
+            )
+        if statement_id:
+            conditions.append(Transaction.statement_id == statement_id)
         if date_from:
             conditions.append(Transaction.date >= date_from)
         if date_to:
@@ -52,15 +68,23 @@ class TransactionRepository(BaseRepository[Transaction]):
         if max_amount is not None:
             conditions.append(Transaction.amount <= max_amount)
 
-        stmt = (
-            select(Transaction)
-            .where(and_(*conditions))
-            .order_by(Transaction.date.desc())
-            .offset(skip)
-            .limit(limit)
-        )
+        # Count total
+        count_stmt = select(func.count(Transaction.id)).where(and_(*conditions))
+        total_count = (await self.db.execute(count_stmt)).scalar() or 0
+
+        # Build query
+        stmt = select(Transaction).where(and_(*conditions))
+        
+        # Sorting
+        sort_col = getattr(Transaction, sort_by) if sort_by and hasattr(Transaction, sort_by) else Transaction.date
+        if sort_order == "asc":
+            stmt = stmt.order_by(sort_col.asc())
+        else:
+            stmt = stmt.order_by(sort_col.desc())
+
+        stmt = stmt.offset(skip).limit(limit)
         result = await self.db.execute(stmt)
-        return result.scalars().all()
+        return result.scalars().all(), total_count
 
     async def get_monthly_aggregates(
         self, user_id: UUID, year: int, month: int
@@ -110,3 +134,23 @@ class TransactionRepository(BaseRepository[Transaction]):
         await self.delete_by_statement(statement_id)
         if records:
             await self.bulk_create(records)
+
+    async def bulk_update_categories(self, user_id: UUID, transaction_ids: list[UUID], new_category: str) -> int:
+        from sqlalchemy import update
+        stmt = (
+            update(Transaction)
+            .where(Transaction.user_id == user_id, Transaction.id.in_(transaction_ids))
+            .values(category=new_category)
+        )
+        result = await self.db.execute(stmt)
+        await self.db.flush()
+        return result.rowcount or 0
+
+    async def bulk_delete(self, user_id: UUID, transaction_ids: list[UUID]) -> int:
+        stmt = (
+            delete(Transaction)
+            .where(Transaction.user_id == user_id, Transaction.id.in_(transaction_ids))
+        )
+        result = await self.db.execute(stmt)
+        await self.db.flush()
+        return result.rowcount or 0
