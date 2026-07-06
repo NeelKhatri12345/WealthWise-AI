@@ -12,6 +12,35 @@ export interface TransactionResponse {
   type: "credit" | "debit";
   merchant?: string;
   tags?: string[];
+  confidenceScore?: number;
+}
+
+interface RawTransaction {
+  id: string;
+  date: string;
+  description: string;
+  amount: string | number;
+  category: string | null;
+  transaction_type: "credit" | "debit";
+  merchant?: string | null;
+  tags?: string[];
+  confidence_score?: string | number | null;
+}
+
+function mapTransaction(raw: RawTransaction): TransactionResponse {
+  return {
+    id: raw.id,
+    date: raw.date,
+    description: raw.description,
+    amount: typeof raw.amount === "string" ? parseFloat(raw.amount) : raw.amount,
+    category: raw.category || "Uncategorized",
+    type: raw.transaction_type,
+    merchant: raw.merchant || undefined,
+    tags: raw.tags || [],
+    confidenceScore: raw.confidence_score != null 
+      ? (typeof raw.confidence_score === "string" ? parseFloat(raw.confidence_score) : raw.confidence_score) 
+      : undefined,
+  };
 }
 
 export interface TransactionQueryParams {
@@ -45,16 +74,19 @@ export const transactionApi = {
       ),
     );
     const { data } = await axiosInstance.get<
-      PaginatedResponse<TransactionResponse>
+      PaginatedResponse<RawTransaction>
     >("/transactions", { params: cleanParams });
-    return data;
+    return {
+      ...data,
+      data: data.data.map(mapTransaction),
+    };
   },
 
   async getTransactionById(id: string): Promise<TransactionResponse> {
-    const { data } = await axiosInstance.get<ApiResponse<TransactionResponse>>(
+    const { data } = await axiosInstance.get<ApiResponse<RawTransaction>>(
       `/transactions/${id}`,
     );
-    return data.data;
+    return mapTransaction(data.data);
   },
 
   async getCategories(): Promise<CategoryResponse[]> {
@@ -66,8 +98,35 @@ export const transactionApi = {
 
   async searchTransactions(query: string): Promise<TransactionResponse[]> {
     const { data } = await axiosInstance.get<
-      ApiResponse<TransactionResponse[]>
+      ApiResponse<RawTransaction[]>
     >("/transactions/search", { params: { q: query } });
-    return data.data;
+    return data.data.map(mapTransaction);
+  },
+
+  async getTransactionsByStatement(
+    statementId: string,
+  ): Promise<TransactionResponse[]> {
+    const { data } = await axiosInstance.get<
+      ApiResponse<RawTransaction[]>
+    >(`/transactions/statement/${statementId}`);
+    return data.data.map(mapTransaction);
+  },
+
+  async syncTransactions(
+    statementId: string,
+    transactions: Partial<TransactionResponse>[],
+  ): Promise<void> {
+    const rawTransactions = transactions.map((t) => ({
+      date: t.date,
+      description: t.description,
+      amount: t.amount,
+      transaction_type: t.type,
+      category: t.category,
+      merchant: t.merchant,
+      confidence_score: t.confidenceScore,
+    }));
+    await axiosInstance.put(`/transactions/statement/${statementId}/sync`, {
+      transactions: rawTransactions,
+    });
   },
 };

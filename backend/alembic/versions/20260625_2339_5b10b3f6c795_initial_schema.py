@@ -37,8 +37,8 @@ def upgrade() -> None:
     sa.Column('is_active', sa.Boolean(), nullable=False),
     sa.Column('is_verified', sa.Boolean(), nullable=False),
     sa.Column('role_id', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.ForeignKeyConstraint(['role_id'], ['roles.id'], ondelete='RESTRICT'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -51,7 +51,7 @@ def upgrade() -> None:
     sa.Column('message', sa.Text(), nullable=False),
     sa.Column('tokens_used', sa.Integer(), nullable=True),
     sa.Column('model_version', sa.String(length=50), nullable=True),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -67,8 +67,8 @@ def upgrade() -> None:
     sa.Column('status', sa.Enum('PENDING', 'PROCESSING', 'COMPLETED', 'FAILED', name='statementstatusenum', create_constraint=True), nullable=False),
     sa.Column('error_message', sa.Text(), nullable=True),
     sa.Column('processed_at', sa.DateTime(timezone=True), nullable=True),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -83,8 +83,8 @@ def upgrade() -> None:
     sa.Column('expense_ratio', sa.Numeric(precision=5, scale=2), nullable=True),
     sa.Column('debt_ratio', sa.Numeric(precision=5, scale=2), nullable=True),
     sa.Column('investment_score', sa.Numeric(precision=5, scale=2), nullable=True),
-    sa.Column('score_breakdown', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
-    sa.Column('calculated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('score_breakdown', sa.JSON().with_variant(postgresql.JSONB(astext_type=sa.Text()), 'postgresql'), nullable=True),
+    sa.Column('calculated_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.ForeignKeyConstraint(['statement_id'], ['statements.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
@@ -97,8 +97,8 @@ def upgrade() -> None:
     sa.Column('risk_level', sa.Enum('CONSERVATIVE', 'MODERATE', 'AGGRESSIVE', 'VERY_AGGRESSIVE', name='riskprofileenum', create_constraint=True), nullable=False),
     sa.Column('risk_score', sa.Numeric(precision=5, scale=2), nullable=False),
     sa.Column('confidence', sa.Numeric(precision=5, scale=4), nullable=True),
-    sa.Column('feature_inputs', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
-    sa.Column('calculated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('feature_inputs', sa.JSON().with_variant(postgresql.JSONB(astext_type=sa.Text()), 'postgresql'), nullable=True),
+    sa.Column('calculated_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.ForeignKeyConstraint(['statement_id'], ['statements.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
@@ -115,8 +115,8 @@ def upgrade() -> None:
     sa.Column('category', sa.String(length=100), nullable=True),
     sa.Column('merchant', sa.String(length=255), nullable=True),
     sa.Column('balance', sa.Numeric(precision=15, scale=2), nullable=True),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.ForeignKeyConstraint(['statement_id'], ['statements.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
@@ -129,10 +129,10 @@ def upgrade() -> None:
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('user_id', sa.Uuid(), nullable=False),
     sa.Column('risk_profile_id', sa.Uuid(), nullable=False),
-    sa.Column('recommendations', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+    sa.Column('recommendations', sa.JSON().with_variant(postgresql.JSONB(astext_type=sa.Text()), 'postgresql'), nullable=True),
     sa.Column('rebalance_frequency', sa.String(length=20), nullable=False),
-    sa.Column('narrative', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
-    sa.Column('generated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('narrative', sa.JSON().with_variant(postgresql.JSONB(astext_type=sa.Text()), 'postgresql'), nullable=True),
+    sa.Column('generated_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.ForeignKeyConstraint(['risk_profile_id'], ['risk_profiles.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
@@ -146,9 +146,9 @@ def upgrade() -> None:
     op.execute(
         """
         INSERT INTO roles (id, name, description) VALUES
-            (gen_random_uuid(), 'ADMIN', 'Administrator with full access'),
-            (gen_random_uuid(), 'USER', 'Standard application user'),
-            (gen_random_uuid(), 'ANALYST', 'Read-only analytics access')
+            ('11111111111111111111111111111111', 'ADMIN', 'Administrator with full access'),
+            ('22222222222222222222222222222222', 'USER', 'Standard application user'),
+            ('33333333333333333333333333333333', 'ANALYST', 'Read-only analytics access')
         """
     )
 

@@ -149,7 +149,11 @@ class TransactionParserService:
                 extra={"statement_id": str(statement.id), "error": error_msg},
                 exc_info=exc,
             )
+            # Clear any aborted transaction state (e.g., failed bulk insert)
+            await self._transaction_repo.db.rollback()
+            # Persist the failure state immediately
             await self._processing_service.mark_failed(statement.id, error_message=error_msg)
+            await self._transaction_repo.db.commit()
             raise
 
     # ── Helpers ────────────────────────────────────────────────────────────────

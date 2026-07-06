@@ -56,3 +56,17 @@ class ParseStatementResponse(BaseModel):
     skipped_lines: int
     parser_name: str
     average_confidence: Optional[float] = None
+
+
+class TransactionSyncItem(BaseModel):
+    date: date
+    description: str
+    amount: Decimal
+    transaction_type: str
+    category: Optional[str] = None
+    merchant: Optional[str] = None
+    confidence_score: Optional[Decimal] = None
+
+
+class TransactionSyncRequest(BaseModel):
+    transactions: list[TransactionSyncItem]

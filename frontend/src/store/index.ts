@@ -14,6 +14,7 @@ import {
   notificationReducer,
   adminReducer,
   uiReducer,
+  statementReviewReducer,
 } from "./slices";
 import { apiMiddleware } from "./middleware/api.middleware";
 import { loggerMiddleware } from "./middleware/logger.middleware";
@@ -31,6 +32,7 @@ export const store = configureStore({
     notifications: notificationReducer,
     admin: adminReducer,
     ui: uiReducer,
+    statementReview: statementReviewReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

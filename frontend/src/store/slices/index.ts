@@ -30,3 +30,6 @@ export * from "./adminSlice";
 
 export { default as uiReducer } from "./uiSlice";
 export * from "./uiSlice";
+
+export { default as statementReviewReducer } from "./statementReviewSlice";
+export * from "./statementReviewSlice";

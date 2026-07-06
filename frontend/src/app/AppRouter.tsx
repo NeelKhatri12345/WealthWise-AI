@@ -18,6 +18,7 @@ const DashboardPage = React.lazy(
   () => import("@/pages/dashboard/DashboardPage"),
 );
 const UploadPage = React.lazy(() => import("@/pages/upload/UploadPage"));
+const StatementReviewPage = React.lazy(() => import("@/pages/upload/StatementReviewPage"));
 const TransactionsPage = React.lazy(
   () => import("@/pages/transactions/TransactionsPage"),
 );
@@ -67,6 +68,7 @@ export function AppRouter() {
               <Route path={ROUTES.HOME} element={<DashboardPage />} />
               <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
               <Route path={ROUTES.UPLOAD} element={<UploadPage />} />
+              <Route path={ROUTES.STATEMENT_REVIEW} element={<StatementReviewPage />} />
               <Route
                 path={ROUTES.TRANSACTIONS}
                 element={<TransactionsPage />}

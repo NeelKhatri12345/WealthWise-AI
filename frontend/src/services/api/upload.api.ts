@@ -162,4 +162,21 @@ export const uploadService = {
   async deleteStatement(id: string): Promise<void> {
     await axiosInstance.delete(`/statements/${id}`);
   },
+
+  /**
+   * Re-run the transaction parser for a statement.
+   */
+  async reparseStatement(id: string): Promise<void> {
+    await axiosInstance.post(`/statements/${id}/processing/reparse`);
+  },
+
+  /**
+   * Mark statement processing as complete.
+   */
+  async completeStatement(id: string): Promise<StatementDetail> {
+    const { data } = await axiosInstance.post<ApiResponse<RawStatementDetail>>(
+      `/statements/${id}/processing/complete`,
+    );
+    return mapStatementDetail(data.data);
+  },
 };

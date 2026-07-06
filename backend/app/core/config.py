@@ -86,15 +86,22 @@ class Settings(BaseSettings):
 
     # ── File Upload ────────────────────────────────────────────────
     MAX_FILE_SIZE_MB: int = 10
-    ALLOWED_FILE_TYPES: List[str] = [
+    ALLOWED_FILE_TYPES: List[str] | str = [
         "application/pdf",
         "image/png",
         "image/jpeg",
     ]
 
+    @field_validator("ALLOWED_FILE_TYPES", mode="before")
+    @classmethod
+    def parse_file_types(cls, v):
+        if isinstance(v, str):
+            return [ft.strip() for ft in v.split(",")]
+        return v
+
     # ── CORS ───────────────────────────────────────────────────────
-    ALLOWED_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:5173"]
-    ALLOWED_HOSTS: List[str] = ["localhost", "127.0.0.1", "wealthwise.ai"]
+    ALLOWED_ORIGINS: List[str] | str = ["http://localhost:3000", "http://localhost:5173"]
+    ALLOWED_HOSTS: List[str] | str = ["localhost", "127.0.0.1", "wealthwise.ai"]
 
     @field_validator("ALLOWED_ORIGINS", mode="before")
     @classmethod

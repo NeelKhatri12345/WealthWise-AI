@@ -66,6 +66,11 @@ class TransactionRepository(BaseRepository[Transaction]):
         self, user_id: UUID, year: int, month: int
     ) -> dict:
         """Aggregate credits, debits, and category totals for a month."""
+        start_date = date(year, month, 1)
+        next_month = month % 12 + 1
+        next_year = year + 1 if month == 12 else year
+        end_date = date(next_year, next_month, 1)
+
         stmt = (
             select(
                 Transaction.transaction_type,
@@ -75,8 +80,8 @@ class TransactionRepository(BaseRepository[Transaction]):
             )
             .where(
                 Transaction.user_id == user_id,
-                func.extract("year", Transaction.date) == year,
-                func.extract("month", Transaction.date) == month,
+                Transaction.date >= start_date,
+                Transaction.date < end_date,
             )
             .group_by(Transaction.transaction_type, Transaction.category)
         )
@@ -86,7 +91,11 @@ class TransactionRepository(BaseRepository[Transaction]):
 
     async def bulk_create(self, records: list[dict]) -> None:
         """Efficient bulk insert of extracted transactions."""
-        self.db.add_all([Transaction(**r) for r in records])
+        from sqlalchemy.dialects.postgresql import insert
+        stmt = insert(Transaction).values(records).on_conflict_do_nothing(
+            constraint="uq_transaction_identity"
+        )
+        await self.db.execute(stmt)
         await self.db.flush()
 
     async def delete_by_statement(self, statement_id: UUID) -> int:
@@ -95,3 +104,9 @@ class TransactionRepository(BaseRepository[Transaction]):
         result = await self.db.execute(stmt)
         await self.db.flush()
         return result.rowcount or 0
+
+    async def sync_statement_transactions(self, statement_id: UUID, records: list[dict]) -> None:
+        """Replace all transactions for a statement with the given records."""
+        await self.delete_by_statement(statement_id)
+        if records:
+            await self.bulk_create(records)

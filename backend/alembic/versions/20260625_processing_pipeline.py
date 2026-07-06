@@ -21,17 +21,19 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     # Extend PostgreSQL enum with new lifecycle values (lowercase, matching Python enum).
-    op.execute("ALTER TYPE statementstatusenum ADD VALUE IF NOT EXISTS 'uploaded'")
-    op.execute("ALTER TYPE statementstatusenum ADD VALUE IF NOT EXISTS 'ocr_completed'")
-    op.execute("ALTER TYPE statementstatusenum ADD VALUE IF NOT EXISTS 'parsing'")
+    bind = op.get_bind()
+    if bind.engine.name == 'postgresql':
+        op.execute("ALTER TYPE statementstatusenum ADD VALUE IF NOT EXISTS 'uploaded'")
+        op.execute("ALTER TYPE statementstatusenum ADD VALUE IF NOT EXISTS 'ocr_completed'")
+        op.execute("ALTER TYPE statementstatusenum ADD VALUE IF NOT EXISTS 'parsing'")
     # Legacy rows may still use uppercase names from the initial migration.
-    op.execute("ALTER TYPE statementstatusenum ADD VALUE IF NOT EXISTS 'pending'")
+        op.execute("ALTER TYPE statementstatusenum ADD VALUE IF NOT EXISTS 'pending'")
 
     op.add_column(
         "statements",
         sa.Column(
             "processing_metadata",
-            postgresql.JSONB(astext_type=sa.Text()),
+            sa.JSON().with_variant(postgresql.JSONB(astext_type=sa.Text()), 'postgresql'),
             nullable=True,
         ),
     )

@@ -9,7 +9,7 @@ from datetime import date
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import Date, ForeignKey, Index, Numeric, String
+from sqlalchemy import Date, ForeignKey, Index, Numeric, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base, TimestampMixin, UUIDMixin
@@ -45,6 +45,7 @@ class Transaction(UUIDMixin, TimestampMixin, Base):
     __table_args__ = (
         Index("ix_transactions_user_date", "user_id", "date"),
         Index("ix_transactions_user_category", "user_id", "category"),
+        UniqueConstraint("user_id", "date", "amount", "description", name="uq_transaction_identity"),
     )
 
     def __repr__(self) -> str:

@@ -11,11 +11,13 @@ from app.core.dependencies import (
     get_current_active_user,
     get_transaction_parser_service,
     get_transaction_repository,
+    get_statement_repository,
 )
 from app.repositories.transaction_repository import TransactionRepository
 from app.schemas.base_schema import APIResponse
-from app.schemas.transaction_schema import MonthlySummary, TransactionResponse
+from app.schemas.transaction_schema import MonthlySummary, TransactionResponse, TransactionSyncRequest
 from app.services.transaction_parser_service import TransactionParserService
+from app.repositories.statement_repository import StatementRepository
 
 router = APIRouter()
 
@@ -69,6 +71,35 @@ async def get_transactions_by_statement(
         message=f"{len(transactions)} transaction(s) retrieved",
         data=[TransactionResponse.model_validate(t) for t in transactions],
     )
+
+
+@router.put(
+    "/statement/{statement_id}/sync",
+    response_model=APIResponse[None],
+    summary="Sync all transactions for a statement",
+)
+async def sync_statement_transactions(
+    statement_id: UUID,
+    payload: TransactionSyncRequest,
+    current_user=Depends(get_current_active_user),
+    repo: TransactionRepository = Depends(get_transaction_repository),
+    stmt_repo: StatementRepository = Depends(get_statement_repository),
+):
+    from app.exceptions.custom_exceptions import NotFoundException
+    statement = await stmt_repo.get(statement_id)
+    if not statement or statement.user_id != current_user.id:
+        raise NotFoundException("Statement not found")
+
+    records = [
+        {
+            "user_id": current_user.id,
+            "statement_id": statement_id,
+            **item.model_dump()
+        }
+        for item in payload.transactions
+    ]
+    await repo.sync_statement_transactions(statement_id, records)
+    return APIResponse(success=True, message="Transactions synced successfully")
 
 
 @router.get(
