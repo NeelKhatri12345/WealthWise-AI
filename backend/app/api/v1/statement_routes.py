@@ -9,11 +9,12 @@ GET  /{id}          → Get a single statement's status and metadata
 DELETE /{id}        → Delete a statement and its associated transactions
 
 Processing pipeline (admin / worker):
-POST /{id}/processing/start
-POST /{id}/processing/ocr-completed
-POST /{id}/processing/parsing
-POST /{id}/processing/complete
-POST /{id}/processing/fail
+POST /{id}/processing/start          → Transition to PROCESSING
+POST /{id}/processing/run-ocr        → Full OCR step: download → extract → OCR_COMPLETED
+POST /{id}/processing/ocr-completed  → Manually record OCR result (manual flow)
+POST /{id}/processing/parsing        → Transition to PARSING
+POST /{id}/processing/complete       → Transition to COMPLETED
+POST /{id}/processing/fail           → Transition to FAILED
 """
 
 from typing import List
@@ -25,6 +26,7 @@ from app.core.constants import SUPPORTED_MIME_TYPES
 from app.core.dependencies import (
     get_admin_user,
     get_current_active_user,
+    get_ocr_orchestration_service,
     get_statement_processing_service,
     get_statement_service,
 )
@@ -36,6 +38,7 @@ from app.schemas.statement_schema import (
     StatementStatusResponse,
     StatementUploadResponse,
 )
+from app.services.ocr_orchestration_service import OCROrchestrationService
 from app.services.statement_processing_service import StatementProcessingService
 from app.services.statement_service import StatementService
 
@@ -160,6 +163,61 @@ async def start_statement_processing(
 ):
     result = await service.start_processing(statement_id)
     return APIResponse(success=True, message="Processing started", data=result)
+
+
+@router.post(
+    "/{statement_id}/processing/run-ocr",
+    response_model=APIResponse[StatementStatusResponse],
+    status_code=202,
+    summary="Run full OCR pipeline",
+    description=(
+        "Executes the complete OCR step for a queued statement in one call. "
+        "Transitions: UPLOADED/PENDING → PROCESSING → OCR_COMPLETED (success) "
+        "or FAILED (error). Admin / worker only."
+    ),
+)
+async def run_statement_ocr(
+    statement_id: UUID,
+    _admin=Depends(get_admin_user),
+    ocr_service: OCROrchestrationService = Depends(get_ocr_orchestration_service),
+    processing_service: StatementProcessingService = Depends(
+        get_statement_processing_service
+    ),
+    statement_service=Depends(get_statement_service),
+):
+    """
+    Single-call OCR endpoint for background workers.
+
+    Internally:
+      1. start_processing()       → status = PROCESSING
+      2. S3Client.download_file() → fetch raw bytes from MinIO
+      3. OCRProvider.extract()    → run EasyOCR (or configured provider)
+      4. mark_ocr_completed()     → status = OCR_COMPLETED, metadata persisted
+
+    On any exception after step 1:
+      mark_failed()               → status = FAILED, error_message persisted
+
+    Returns the final StatementStatusResponse (OCR_COMPLETED or FAILED).
+    The response always reflects the committed DB state.
+    """
+    # 1. Transition to PROCESSING (validates legal state transition).
+    await processing_service.start_processing(statement_id)
+
+    # 2–4. Download → OCR → persist metadata → mark OCR_COMPLETED (or FAILED on error).
+    #      run_ocr() swallows the exception only after recording FAILED; it re-raises
+    #      so the HTTP layer can propagate a 500 if needed.  We intentionally let it
+    #      propagate here so the client knows something went wrong.
+    await ocr_service.run_ocr(statement_id)
+
+    # Return the current statement state after the pipeline step.
+    result = await statement_service.get_statement_detail(
+        statement_id, _admin.id
+    )
+    return APIResponse(
+        success=True,
+        message="OCR pipeline completed successfully.",
+        data=result,
+    )
 
 
 @router.post(

@@ -6,7 +6,8 @@ Manages the statement lifecycle after upload:
   FAILED may be reached from any non-terminal state.
 
 This service is invoked by background workers or admin processing endpoints.
-It does not perform OCR or parsing itself — it only records state transitions.
+It owns state-machine transitions and exposes run_ocr() as a convenience
+entry point that coordinates PROCESSING → OCR_COMPLETED via OCROrchestrationService.
 """
 
 from datetime import datetime, timezone
@@ -17,13 +18,19 @@ from app.core.logger import logger
 from app.enums.statement_status_enum import StatementStatusEnum
 from app.exceptions.custom_exceptions import NotFoundException, ValidationException
 from app.models.statement import Statement
+from app.ocr.base import OCRProvider
 from app.repositories.statement_repository import StatementRepository
 from app.schemas.statement_schema import StatementStatusResponse
 
 
 class StatementProcessingService:
-    def __init__(self, statement_repo: StatementRepository) -> None:
+    def __init__(
+        self,
+        statement_repo: StatementRepository,
+        ocr_provider: OCRProvider,
+    ) -> None:
         self._statement_repo = statement_repo
+        self._ocr_provider = ocr_provider
 
     # ── State transitions ─────────────────────────────────────────────────────
 
@@ -134,6 +141,46 @@ class StatementProcessingService:
             },
         )
         return StatementStatusResponse.model_validate(updated)
+
+    # ── OCR orchestration entry point ────────────────────────────────────────
+
+    async def run_ocr(self, statement_id: UUID) -> None:
+        """
+        Convenience entry point: transitions statement to PROCESSING then
+        executes the full OCR step via OCROrchestrationService.
+
+        Transitions:
+            UPLOADED/PENDING → PROCESSING → OCR_COMPLETED  (success)
+            UPLOADED/PENDING → PROCESSING → FAILED          (error)
+
+        This is used by internal callers that already hold both the processing
+        service and an S3Client.  The HTTP layer should prefer calling
+        processing_service.start_processing() then ocr_service.run_ocr()
+        directly so each service is injected independently via DI.
+
+        Args:
+            statement_id: UUID of the statement to process.
+
+        Raises:
+            NotFoundException:  If the statement does not exist.
+            ValidationException: If the transition is not valid.
+            Exception: Propagated from OCR on failure (after FAILED is recorded).
+        """
+        from app.clients.s3_client import S3Client
+        from app.core.config import get_settings
+        from app.services.ocr_orchestration_service import OCROrchestrationService
+
+        # Transition to PROCESSING first.
+        await self.start_processing(statement_id)
+
+        # Build a local S3Client from settings (same pattern as DI factory).
+        orchestrator = OCROrchestrationService(
+            statement_repo=self._statement_repo,
+            processing_service=self,
+            s3_client=S3Client(get_settings()),
+            ocr_provider=self._ocr_provider,
+        )
+        await orchestrator.run_ocr(statement_id)
 
     # ── Internal helpers ────────────────────────────────────────────────────────
 

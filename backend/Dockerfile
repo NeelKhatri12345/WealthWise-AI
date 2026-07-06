@@ -74,5 +74,4 @@ CMD ["uvicorn", "app.main:app", \
      "--workers", "4", \
      "--loop", "uvloop", \
      "--http", "httptools", \
-     "--log-config", "/dev/null", \
      "--no-access-log"]

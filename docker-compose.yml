@@ -38,7 +38,6 @@ services:
       --port 8000
       --reload
       --reload-dir app
-      --log-config /dev/null
     networks:
       - wealthwise_net
     healthcheck:

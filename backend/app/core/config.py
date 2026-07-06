@@ -18,7 +18,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     """
     Central configuration for WealthWise AI.
-    Groups: Application, Database, JWT, Redis, Gemini, S3, Rate Limiting, CORS.
+    Groups: Application, Database, JWT, Redis, Gemini, S3, Rate Limiting, CORS, OCR.
     """
 
     model_config = SettingsConfigDict(
@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     )
 
     # ── Application ────────────────────────────────────────────────
+
     APP_NAME: str = "WealthWise AI"
     APP_ENV: str = Field(
         default="development", pattern="^(development|staging|production)$"
@@ -108,6 +109,23 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             return [host.strip() for host in v.split(",")]
         return v
+
+    # ── OCR ────────────────────────────────────────────────────────
+    # Which OCR engine to use.  Routed by OCRFactory.
+    # Supported: "easyocr" | "paddleocr" | "aws_textract" | "azure_ocr"
+    OCR_PROVIDER: str = "easyocr"
+
+    # Comma-separated EasyOCR language codes (e.g. "en" or "en,hi").
+    # Only the active provider reads this; other providers may ignore it.
+    OCR_LANGUAGE: str = "en"
+
+    # Enable CUDA GPU acceleration for EasyOCR / PaddleOCR.
+    # Set to False in CPU-only or containerised environments.
+    OCR_GPU: bool = False
+
+    # Minimum confidence score [0.0, 1.0] for a text block to be kept.
+    # Blocks below this threshold are discarded before building OCRResult.
+    OCR_CONFIDENCE_THRESHOLD: float = Field(default=0.5, ge=0.0, le=1.0)
 
     @property
     def max_file_size_bytes(self) -> int:

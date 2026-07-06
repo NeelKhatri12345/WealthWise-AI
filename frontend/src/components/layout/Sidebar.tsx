@@ -12,6 +12,7 @@ const navItems = [
   { label: "AI Coach", path: ROUTES.AI_COACH },
   { label: "Reports", path: ROUTES.REPORTS },
   { label: "Notifications", path: ROUTES.NOTIFICATIONS },
+  { label: "Profile", path: ROUTES.PROFILE },
 ];
 
 export function Sidebar() {

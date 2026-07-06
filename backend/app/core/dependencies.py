@@ -13,6 +13,7 @@ Providers:
 - get_*_service()           → service instances (with injected repos)
 """
 
+from functools import lru_cache
 from typing import AsyncGenerator
 from uuid import UUID
 
@@ -162,16 +163,6 @@ def get_statement_service(db: AsyncSession = Depends(get_db)):
         s3_client=S3Client(settings),
     )
 
-
-def get_statement_processing_service(db: AsyncSession = Depends(get_db)):
-    from app.repositories.statement_repository import StatementRepository
-    from app.services.statement_processing_service import StatementProcessingService
-
-    return StatementProcessingService(
-        statement_repo=StatementRepository(db),
-    )
-
-
 def get_analytics_service(db: AsyncSession = Depends(get_db)):
     from app.repositories.analytics_repository import AnalyticsRepository
     from app.services.analytics_service import AnalyticsService
@@ -220,6 +211,94 @@ def get_dashboard_service(db: AsyncSession = Depends(get_db)):
     return DashboardService(
         transaction_repo=TransactionRepository(db),
         analytics_repo=AnalyticsRepository(db),
+    )
+
+
+# ── OCR Dependencies ──────────────────────────────────────────────────────────
+
+
+@lru_cache(maxsize=1)
+def _ocr_provider_singleton():
+    """
+    Process-level singleton for the OCR provider.
+
+    EasyOCR's Reader loads model weights on first initialisation, which can
+    take several seconds.  Caching ensures this cost is paid once at startup
+    (or on first OCR call) and not repeated for every HTTP request.
+
+    lru_cache on a module-level function is the idiomatic Python singleton
+    pattern that survives FastAPI's dependency scope model without requiring
+    a global variable.
+    """
+    from app.ocr.factory import OCRFactory
+
+    return OCRFactory.create(settings)
+
+
+def get_ocr_provider():
+    """
+    Returns the cached singleton OCRProvider for the configured engine.
+
+    Delegates to _ocr_provider_singleton() so the provider is shared across
+    all requests in the process lifetime.
+
+    Usage in a route or service:
+        from app.core.dependencies import get_ocr_provider
+        from app.ocr.base import OCRProvider
+
+        def my_service(ocr: OCRProvider = Depends(get_ocr_provider)):
+            ...
+    """
+    return _ocr_provider_singleton()
+
+
+def get_statement_processing_service(
+    db: AsyncSession = Depends(get_db),
+):
+    from app.repositories.statement_repository import StatementRepository
+    from app.services.statement_processing_service import StatementProcessingService
+
+    return StatementProcessingService(
+        statement_repo=StatementRepository(db),
+        ocr_provider=get_ocr_provider(),
+    )
+
+
+def get_ocr_orchestration_service(db: AsyncSession = Depends(get_db)):
+    """
+    Constructs OCROrchestrationService with all required collaborators.
+
+    Wires together:
+      - StatementRepository    — raw statement access
+      - StatementProcessingService — pipeline state transitions
+      - S3Client               — MinIO file download
+      - OCRProvider            — text extraction (via factory)
+
+    Usage in a route or worker:
+        from app.core.dependencies import get_ocr_orchestration_service
+        from app.services.ocr_orchestration_service import OCROrchestrationService
+
+        async def my_worker(
+            ocr_svc: OCROrchestrationService = Depends(get_ocr_orchestration_service)
+        ):
+            await ocr_svc.run_ocr(statement_id)
+    """
+    from app.clients.s3_client import S3Client
+    from app.repositories.statement_repository import StatementRepository
+    from app.services.ocr_orchestration_service import OCROrchestrationService
+    from app.services.statement_processing_service import StatementProcessingService
+
+    statement_repo = StatementRepository(db)
+    processing_service = StatementProcessingService(
+        statement_repo=statement_repo,
+        ocr_provider=get_ocr_provider(),
+    )
+
+    return OCROrchestrationService(
+        statement_repo=statement_repo,
+        processing_service=processing_service,
+        s3_client=S3Client(settings),
+        ocr_provider=get_ocr_provider(),
     )
 
 
