@@ -5,7 +5,7 @@ from decimal import Decimal
 from typing import Optional, Sequence
 from uuid import UUID
 
-from sqlalchemy import and_, func, select
+from sqlalchemy import and_, delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.transaction import Transaction
@@ -88,3 +88,10 @@ class TransactionRepository(BaseRepository[Transaction]):
         """Efficient bulk insert of extracted transactions."""
         self.db.add_all([Transaction(**r) for r in records])
         await self.db.flush()
+
+    async def delete_by_statement(self, statement_id: UUID) -> int:
+        """Remove all transactions for a statement (used before re-parsing)."""
+        stmt = delete(Transaction).where(Transaction.statement_id == statement_id)
+        result = await self.db.execute(stmt)
+        await self.db.flush()
+        return result.rowcount or 0

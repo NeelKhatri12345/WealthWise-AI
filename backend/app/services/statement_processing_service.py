@@ -142,6 +142,42 @@ class StatementProcessingService:
         )
         return StatementStatusResponse.model_validate(updated)
 
+    async def force_reparse(self, statement_id: UUID) -> StatementStatusResponse:
+        """
+        Force a statement back into PARSING regardless of its current status,
+        as long as OCR has already completed at least once.
+
+        This is the one intentional exception to the forward-only state
+        machine above: it exists solely to support re-running the transaction
+        parser (e.g. after a parser bug fix) on a statement that already
+        reached COMPLETED or FAILED. The OCR stages are untouched — only the
+        parsing/persist step is redone by the caller (TransactionParserService).
+        """
+        statement = await self._get_or_raise(statement_id)
+        allowed = {
+            StatementStatusEnum.OCR_COMPLETED,
+            StatementStatusEnum.PARSING,
+            StatementStatusEnum.COMPLETED,
+            StatementStatusEnum.FAILED,
+        }
+        if statement.status not in allowed:
+            raise ValidationException(
+                f"Cannot re-run parser: statement must have completed OCR first "
+                f"(status={statement.status.value})"
+            )
+
+        updated = await self._statement_repo.update_processing_state(
+            statement,
+            status=StatementStatusEnum.PARSING,
+            parsing_started_at=datetime.now(timezone.utc),
+            error_message=None,
+        )
+        logger.info(
+            "Statement parsing force-restarted (re-run)",
+            extra={"statement_id": str(statement_id)},
+        )
+        return StatementStatusResponse.model_validate(updated)
+
     # ── OCR orchestration entry point ────────────────────────────────────────
 
     async def run_ocr(self, statement_id: UUID) -> None:

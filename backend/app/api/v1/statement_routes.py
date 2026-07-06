@@ -13,6 +13,8 @@ POST /{id}/processing/start          → Transition to PROCESSING
 POST /{id}/processing/run-ocr        → Full OCR step: download → extract → OCR_COMPLETED
 POST /{id}/processing/ocr-completed  → Manually record OCR result (manual flow)
 POST /{id}/processing/parsing        → Transition to PARSING
+POST /{id}/processing/parse          → Run transaction parser (OCR_COMPLETED → COMPLETED)
+POST /{id}/processing/reparse        → Re-run transaction parser (replaces transactions)
 POST /{id}/processing/complete       → Transition to COMPLETED
 POST /{id}/processing/fail           → Transition to FAILED
 """
@@ -29,6 +31,7 @@ from app.core.dependencies import (
     get_ocr_orchestration_service,
     get_statement_processing_service,
     get_statement_service,
+    get_transaction_parser_service,
 )
 from app.exceptions.custom_exceptions import UnsupportedFileTypeException
 from app.schemas.base_schema import APIResponse
@@ -38,9 +41,11 @@ from app.schemas.statement_schema import (
     StatementStatusResponse,
     StatementUploadResponse,
 )
+from app.schemas.transaction_schema import ParseStatementResponse
 from app.services.ocr_orchestration_service import OCROrchestrationService
 from app.services.statement_processing_service import StatementProcessingService
 from app.services.statement_service import StatementService
+from app.services.transaction_parser_service import TransactionParserService
 
 router = APIRouter()
 
@@ -252,6 +257,47 @@ async def mark_statement_parsing(
 ):
     result = await service.mark_parsing(statement_id)
     return APIResponse(success=True, message="Parsing started", data=result)
+
+
+@router.post(
+    "/{statement_id}/processing/parse",
+    response_model=APIResponse[ParseStatementResponse],
+    status_code=202,
+    summary="Parse a statement's OCR text into transactions",
+    description=(
+        "Runs the transaction parser against the statement's OCR raw text and "
+        "persists the resulting transactions. Statement must currently be "
+        "OCR_COMPLETED. Transitions: OCR_COMPLETED → PARSING → COMPLETED "
+        "(success) or FAILED (error). Admin / worker only."
+    ),
+)
+async def parse_statement(
+    statement_id: UUID,
+    _admin=Depends(get_admin_user),
+    service: TransactionParserService = Depends(get_transaction_parser_service),
+):
+    result = await service.parse_statement(statement_id)
+    return APIResponse(success=True, message="Statement parsed successfully", data=result)
+
+
+@router.post(
+    "/{statement_id}/processing/reparse",
+    response_model=APIResponse[ParseStatementResponse],
+    status_code=202,
+    summary="Re-run the transaction parser for a statement",
+    description=(
+        "Re-parses a statement that has already completed OCR (e.g. after a "
+        "parser fix), replacing any previously parsed transactions. Valid "
+        "from OCR_COMPLETED, PARSING, COMPLETED, or FAILED. Admin / worker only."
+    ),
+)
+async def reparse_statement(
+    statement_id: UUID,
+    _admin=Depends(get_admin_user),
+    service: TransactionParserService = Depends(get_transaction_parser_service),
+):
+    result = await service.reparse_statement(statement_id)
+    return APIResponse(success=True, message="Statement re-parsed successfully", data=result)
 
 
 @router.post(

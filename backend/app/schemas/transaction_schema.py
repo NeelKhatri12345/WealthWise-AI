@@ -7,6 +7,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
+from app.enums.statement_status_enum import StatementStatusEnum
+
 
 class TransactionResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -19,6 +21,7 @@ class TransactionResponse(BaseModel):
     category: Optional[str] = None
     merchant: Optional[str] = None
     balance: Optional[Decimal] = None
+    confidence_score: Optional[Decimal] = None
 
 
 class TransactionFilterRequest(BaseModel):
@@ -40,3 +43,16 @@ class MonthlySummary(BaseModel):
     net_flow: Decimal
     transaction_count: int
     top_categories: list[dict]
+
+
+class ParseStatementResponse(BaseModel):
+    """Returned after a (re-)parse run completes successfully."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    statement_id: UUID
+    status: StatementStatusEnum
+    transactions_created: int
+    skipped_lines: int
+    parser_name: str
+    average_confidence: Optional[float] = None

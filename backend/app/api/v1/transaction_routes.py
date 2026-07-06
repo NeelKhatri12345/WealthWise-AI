@@ -3,13 +3,19 @@
 from datetime import date
 from decimal import Decimal
 from typing import List, Optional
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
 
-from app.core.dependencies import get_current_active_user, get_transaction_repository
+from app.core.dependencies import (
+    get_current_active_user,
+    get_transaction_parser_service,
+    get_transaction_repository,
+)
 from app.repositories.transaction_repository import TransactionRepository
 from app.schemas.base_schema import APIResponse
 from app.schemas.transaction_schema import MonthlySummary, TransactionResponse
+from app.services.transaction_parser_service import TransactionParserService
 
 router = APIRouter()
 
@@ -41,6 +47,26 @@ async def list_transactions(
     return APIResponse(
         success=True,
         message="Transactions retrieved",
+        data=[TransactionResponse.model_validate(t) for t in transactions],
+    )
+
+
+@router.get(
+    "/statement/{statement_id}",
+    response_model=APIResponse[List[TransactionResponse]],
+    summary="Get parsed transactions for a statement",
+)
+async def get_transactions_by_statement(
+    statement_id: UUID,
+    current_user=Depends(get_current_active_user),
+    service: TransactionParserService = Depends(get_transaction_parser_service),
+):
+    transactions = await service.get_transactions_for_statement(
+        statement_id, current_user.id
+    )
+    return APIResponse(
+        success=True,
+        message=f"{len(transactions)} transaction(s) retrieved",
         data=[TransactionResponse.model_validate(t) for t in transactions],
     )
 

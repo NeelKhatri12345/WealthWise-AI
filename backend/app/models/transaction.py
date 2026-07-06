@@ -34,6 +34,7 @@ class Transaction(UUIDMixin, TimestampMixin, Base):
     category: Mapped[str | None] = mapped_column(String(100), nullable=True)
     merchant: Mapped[str | None] = mapped_column(String(255), nullable=True)
     balance: Mapped[Decimal | None] = mapped_column(Numeric(15, 2), nullable=True)
+    confidence_score: Mapped[Decimal | None] = mapped_column(Numeric(4, 3), nullable=True)
 
     # Relationships
     statement: Mapped["Statement"] = relationship(

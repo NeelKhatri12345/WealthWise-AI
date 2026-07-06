@@ -302,6 +302,42 @@ def get_ocr_orchestration_service(db: AsyncSession = Depends(get_db)):
     )
 
 
+# ── Transaction Parser Dependencies ──────────────────────────────────────────
+
+
+def get_transaction_parser():
+    """
+    Returns the configured TransactionParser implementation.
+
+    Business logic depends only on the TransactionParser abstraction
+    (app.parsers.base.TransactionParser) — swap the concrete class here to
+    change parsing strategy without touching callers.
+    """
+    from app.parsers.regex_parser import RegexTransactionParser
+
+    return RegexTransactionParser()
+
+
+def get_transaction_parser_service(db: AsyncSession = Depends(get_db)):
+    from app.repositories.statement_repository import StatementRepository
+    from app.repositories.transaction_repository import TransactionRepository
+    from app.services.statement_processing_service import StatementProcessingService
+    from app.services.transaction_parser_service import TransactionParserService
+
+    statement_repo = StatementRepository(db)
+    processing_service = StatementProcessingService(
+        statement_repo=statement_repo,
+        ocr_provider=get_ocr_provider(),
+    )
+
+    return TransactionParserService(
+        statement_repo=statement_repo,
+        transaction_repo=TransactionRepository(db),
+        processing_service=processing_service,
+        parser=get_transaction_parser(),
+    )
+
+
 # ── Internal Helpers ──────────────────────────────────────────────────────────
 
 
