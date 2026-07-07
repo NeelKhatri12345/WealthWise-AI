@@ -85,21 +85,22 @@ class TransactionParserService:
     # ── Core parse + persist ──────────────────────────────────────────────────
 
     async def _run(self, statement: Statement) -> ParseStatementResponse:
+        statement_id = statement.id
         raw_text = (statement.processing_metadata or {}).get("raw_text")
         if not raw_text or not raw_text.strip():
             error_msg = "No OCR text available to parse. Run OCR first."
-            await self._processing_service.mark_failed(statement.id, error_message=error_msg)
+            await self._processing_service.mark_failed(statement_id, error_message=error_msg)
             raise ValidationException(error_msg)
 
         try:
             result = self._parser.parse(raw_text)
             deduped = self._deduplicate(result.transactions)
 
-            await self._transaction_repo.delete_by_statement(statement.id)
+            await self._transaction_repo.delete_by_statement(statement_id)
 
             records = [
                 {
-                    "statement_id": statement.id,
+                    "statement_id": statement_id,
                     "user_id": statement.user_id,
                     "date": t.date,
                     "description": t.description,
@@ -111,10 +112,37 @@ class TransactionParserService:
                 }
                 for t in deduped
             ]
-            if records:
-                await self._transaction_repo.bulk_create(records)
+            for idx, t in enumerate(deduped):
+                desc_len = len(t.description) if t.description else 0
+                merch_len = len(t.merchant) if t.merchant else 0
+                ref_len = len(getattr(t, "reference_number", "")) if getattr(t, "reference_number", None) else 0
+                cat_len = len(getattr(t, "category", "")) if getattr(t, "category", None) else 0
+                
+                logger.info(
+                    f"Transaction {idx}: desc_len={desc_len}, merchant_len={merch_len}, "
+                    f"reference_number_len={ref_len}, category_len={cat_len}"
+                )
+                
+                fields_to_check = {
+                    "description": t.description,
+                    "merchant": t.merchant,
+                    "reference_number": getattr(t, "reference_number", None),
+                    "category": getattr(t, "category", None),
+                }
+                for field_name, val in fields_to_check.items():
+                    if val and len(str(val)) > 255:
+                        logger.info(
+                            f"EXCEEDS 255 - Index {idx}, Field: {field_name}, Length: {len(str(val))}, "
+                            f"Value (first 200 chars): {str(val)[:200]}"
+                        )
 
-            status_response = await self._processing_service.mark_completed(statement.id)
+            if records:
+                logger.info("Starting database insert")
+                await self._transaction_repo.bulk_create(records)
+                logger.info("Insert completed")
+
+            status_response = await self._processing_service.mark_completed(statement_id)
+            logger.info("Statement marked completed")
 
             average_confidence = (
                 round(sum(t.confidence for t in deduped) / len(deduped), 2)
@@ -125,7 +153,7 @@ class TransactionParserService:
             logger.info(
                 "Transaction parsing completed",
                 extra={
-                    "statement_id": str(statement.id),
+                    "statement_id": str(statement_id),
                     "parser": result.parser_name,
                     "transactions_created": len(records),
                     "skipped_lines": result.skipped_lines,
@@ -133,7 +161,7 @@ class TransactionParserService:
             )
 
             return ParseStatementResponse(
-                statement_id=statement.id,
+                statement_id=statement_id,
                 status=status_response.status,
                 transactions_created=len(records),
                 skipped_lines=result.skipped_lines,
@@ -143,16 +171,20 @@ class TransactionParserService:
         except ValidationException:
             raise
         except Exception as exc:
+            # Log the original database exception immediately
+            logger.exception("Original transaction parsing database exception")
+            
+            # Clear any aborted transaction state (e.g., failed bulk insert) immediately
+            await self._transaction_repo.db.rollback()
+            
             error_msg = f"[{type(exc).__name__}] {exc}"
             logger.error(
                 "Transaction parsing failed",
-                extra={"statement_id": str(statement.id), "error": error_msg},
+                extra={"statement_id": str(statement_id), "error": error_msg},
                 exc_info=exc,
             )
-            # Clear any aborted transaction state (e.g., failed bulk insert)
-            await self._transaction_repo.db.rollback()
-            # Persist the failure state immediately
-            await self._processing_service.mark_failed(statement.id, error_message=error_msg)
+            # Persist the failure state immediately using statement_id to avoid ORM greenlet issues
+            await self._processing_service.mark_failed(statement_id, error_message=error_msg)
             await self._transaction_repo.db.commit()
             raise
 

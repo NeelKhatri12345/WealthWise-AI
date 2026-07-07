@@ -22,7 +22,7 @@ POST /{id}/processing/fail           → Transition to FAILED
 from typing import List
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, File, Query, UploadFile
+from fastapi import APIRouter, Depends, File, Query, UploadFile, BackgroundTasks
 
 from app.core.constants import SUPPORTED_MIME_TYPES
 from app.core.dependencies import (
@@ -53,6 +53,60 @@ router = APIRouter()
 _ACCEPTED_FORMATS = "PDF, PNG, JPG, JPEG"
 
 
+async def _process_statement_background_task(statement_id: UUID) -> None:
+    from app.database.session import AsyncSessionLocal
+    from app.core.config import get_settings
+    from app.core.logger import logger
+    from app.core.dependencies import get_ocr_provider, get_transaction_parser
+    from app.clients.s3_client import S3Client
+    from app.repositories.statement_repository import StatementRepository
+    from app.repositories.transaction_repository import TransactionRepository
+
+    settings = get_settings()
+    ocr_provider = get_ocr_provider()
+    parser = get_transaction_parser()
+    
+    async with AsyncSessionLocal() as session:
+        try:
+            # Reconstruct dependencies for the background session
+            statement_repo = StatementRepository(session)
+            transaction_repo = TransactionRepository(session)
+            
+            processing_service = StatementProcessingService(statement_repo, ocr_provider)
+            ocr_service = OCROrchestrationService(
+                statement_repo=statement_repo,
+                processing_service=processing_service,
+                s3_client=S3Client(settings),
+                ocr_provider=ocr_provider
+            )
+            transaction_parser_service = TransactionParserService(
+                statement_repo=statement_repo,
+                transaction_repo=transaction_repo,
+                processing_service=processing_service,
+                parser=parser
+            )
+            
+            # 1. OCR (PENDING -> PROCESSING -> OCR_COMPLETED)
+            await processing_service.start_processing(statement_id)
+            await ocr_service.run_ocr(statement_id)
+            await session.commit()
+            
+            # 2. Parsing (OCR_COMPLETED -> PARSING -> COMPLETED)
+            await transaction_parser_service.parse_statement(statement_id)
+            await session.commit()
+            
+        except Exception as exc:
+            logger.error("Background processing failed", extra={"statement_id": str(statement_id)}, exc_info=exc)
+            await session.rollback()
+            try:
+                # Need fresh state to mark failed
+                await processing_service.mark_failed(statement_id, error_message=str(exc))
+                await session.commit()
+            except Exception as fail_exc:
+                logger.error("Could not record failure state", extra={"statement_id": str(statement_id)}, exc_info=fail_exc)
+                await session.rollback()
+
+
 @router.post(
     "/upload",
     response_model=APIResponse[StatementUploadResponse],
@@ -61,10 +115,11 @@ _ACCEPTED_FORMATS = "PDF, PNG, JPG, JPEG"
     description=(
         "Accepts a bank statement image or PDF (PDF, PNG, JPG, JPEG — max 10 MB). "
         "The file is stored in MinIO and a metadata record is created with "
-        "``status=pending``. No OCR or parsing is triggered by this endpoint."
+        "``status=pending``. Background processing is immediately triggered."
     ),
 )
 async def upload_statement(
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(
         ...,
         description=f"Bank statement file. Accepted: {_ACCEPTED_FORMATS}. Max: 10 MB.",
@@ -97,6 +152,7 @@ async def upload_statement(
         )
 
     result = await service.upload_statement(file, current_user.id)
+    background_tasks.add_task(_process_statement_background_task, result.id)
     return APIResponse(
         success=True,
         message="Statement uploaded successfully. It will be processed shortly.",

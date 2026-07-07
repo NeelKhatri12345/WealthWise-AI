@@ -28,7 +28,12 @@ class Statement(UUIDMixin, TimestampMixin, Base):
     file_size_bytes: Mapped[int | None] = mapped_column(nullable=True)
 
     status: Mapped[StatementStatusEnum] = mapped_column(
-        SAEnum(StatementStatusEnum, name="statementstatusenum", create_constraint=True),
+        SAEnum(
+            StatementStatusEnum,
+            name="statementstatusenum",
+            create_constraint=True,
+            values_callable=lambda obj: [e.value for e in obj],
+        ),
         default=StatementStatusEnum.PENDING,
         nullable=False,
         index=True,

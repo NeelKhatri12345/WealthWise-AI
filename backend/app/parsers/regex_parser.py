@@ -42,7 +42,7 @@ _DATE_PATTERNS: list[re.Pattern] = [
 # Patterns at index < _HIGH_CONFIDENCE_DATE_COUNT are numeric/unambiguous.
 _HIGH_CONFIDENCE_DATE_COUNT = 3
 
-_AMOUNT_PATTERN = re.compile(r"\(?-?\$?\s?(?:\d{1,3}(?:,\d{3})+|\d+)\.\d{2}\)?")
+_AMOUNT_PATTERN = re.compile(r"\(?-?(?:Rs\.?|₹|\$)?\s?[\d,]+\.\d{2}\)?", re.IGNORECASE)
 
 _DEBIT_KEYWORDS = (
     "debit",
@@ -52,6 +52,9 @@ _DEBIT_KEYWORDS = (
     "atm",
     " dr",
     "payment to",
+    "bbps",
+    "nach",
+    "cash withdrawal",
 )
 _CREDIT_KEYWORDS = (
     "credit",
@@ -60,10 +63,13 @@ _CREDIT_KEYWORDS = (
     "transfer in",
     " cr",
     "interest paid",
+    "interest credit",
+    "cash deposit",
 )
 _MERCHANT_NOISE = re.compile(
     r"\b(POS|DEBIT CARD PURCHASE|ACH|RECURRING|PAYMENT|WITHDRAWAL|DEPOSIT|"
-    r"TRANSFER|PURCHASE)\b.*$",
+    r"TRANSFER|PURCHASE|UPI|IMPS|NEFT|RTGS|NACH|BBPS|CHEQUE|CASH WITHDRAWAL|"
+    r"CASH DEPOSIT)\b.*$",
     re.IGNORECASE,
 )
 
@@ -73,24 +79,56 @@ _MIN_LINE_LENGTH = 6
 class RegexTransactionParser(TransactionParser):
     """Default regex/heuristic-based transaction parser."""
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        logger.info("Using RegexTransactionParser")
+
     @property
     def parser_name(self) -> str:
         return "regex"
 
     def parse(self, raw_text: str) -> ParsingResult:
+        logger.info("Starting RegexTransactionParser.parse()")
         lines = [ln.strip() for ln in raw_text.replace("\f", "\n").splitlines()]
         total_lines = len(lines)
+        logger.info(f"RegexTransactionParser: total OCR lines = {total_lines}")
 
         transactions: list[ParsedTransaction] = []
         skipped = 0
 
+        # Group lines into transaction blocks
+        blocks: list[str] = []
+        current_block: list[str] = []
+        
         for line in lines:
-            if len(line) < _MIN_LINE_LENGTH or not any(c.isdigit() for c in line):
-                if line:
-                    skipped += 1
+            if not line:
+                continue
+                
+            # Check if line looks like the start of a transaction block
+            is_start = False
+            for pattern in _DATE_PATTERNS:
+                if pattern.search(line):
+                    is_start = True
+                    break
+                    
+            if is_start:
+                if current_block:
+                    blocks.append(" ".join(current_block))
+                current_block = [line]
+            elif current_block:
+                current_block.append(line)
+            else:
+                skipped += 1
+                
+        if current_block:
+            blocks.append(" ".join(current_block))
+
+        for block_text in blocks:
+            if len(block_text) < _MIN_LINE_LENGTH or not any(c.isdigit() for c in block_text):
+                skipped += 1
                 continue
 
-            parsed = self._parse_line(line)
+            parsed = self._parse_line(block_text)
             if parsed is None:
                 skipped += 1
                 continue
@@ -105,6 +143,9 @@ class RegexTransactionParser(TransactionParser):
                 "skipped_lines": skipped,
             },
         )
+        logger.info(f"RegexTransactionParser: Total blocks created: {len(blocks)}")
+        logger.info(f"RegexTransactionParser: Total transactions parsed: {len(transactions)}")
+        logger.info(f"RegexTransactionParser: Total skipped: {skipped}")
 
         return ParsingResult(
             transactions=transactions,
@@ -190,7 +231,7 @@ class RegexTransactionParser(TransactionParser):
             negative = cleaned.startswith("-") or (
                 cleaned.startswith("(") and cleaned.endswith(")")
             )
-            cleaned = cleaned.replace("$", "").replace(",", "").replace(" ", "")
+            cleaned = cleaned.replace("$", "").replace("Rs.", "").replace("Rs", "").replace("₹", "").replace(",", "").replace(" ", "")
             cleaned = cleaned.strip("()").lstrip("-")
             try:
                 return Decimal(cleaned), negative

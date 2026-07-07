@@ -35,6 +35,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     tesseract-ocr-eng \
     libmagic1 \
     curl \
+    poppler-utils \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy installed Python packages from builder stage
@@ -68,10 +69,4 @@ HEALTHCHECK \
 # - uvloop: faster event loop
 # - httptools: faster HTTP parsing
 # - 4 workers: suitable for a 4-core container
-CMD ["uvicorn", "app.main:app", \
-     "--host", "0.0.0.0", \
-     "--port", "8000", \
-     "--workers", "4", \
-     "--loop", "uvloop", \
-     "--http", "httptools", \
-     "--no-access-log"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4", "--loop", "uvloop", "--http", "httptools", "--no-access-log"]

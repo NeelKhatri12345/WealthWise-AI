@@ -30,13 +30,13 @@ class StatementStatusEnum(str, Enum):
     UPLOADED = "uploaded"  # File stored in MinIO, queued for processing
 
     # ── Processing stages ─────────────────────────────────────────────────────
-    PROCESSING = "processing"  # Worker active; file is being decoded
+    PROCESSING = "PROCESSING"  # Worker active; file is being decoded
     OCR_COMPLETED = "ocr_completed"  # Raw text extracted by OCR engine
     PARSING = "parsing"  # Structured data being extracted from raw text
 
     # ── Terminal stages ───────────────────────────────────────────────────────
-    COMPLETED = "completed"  # Pipeline finished; transactions persisted
-    FAILED = "failed"  # Unrecoverable error; see error_message
+    COMPLETED = "COMPLETED"  # Pipeline finished; transactions persisted
+    FAILED = "FAILED"  # Unrecoverable error; see error_message
 
     # ── Convenience helpers ───────────────────────────────────────────────────
     @classmethod

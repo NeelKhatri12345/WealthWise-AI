@@ -98,38 +98,48 @@ class EasyOCRProvider(OCRProvider):
             RuntimeError: If pdf2image / poppler is not installed.
             Exception:    Propagated from pdf2image or EasyOCR on extraction failure.
         """
-        await self._ensure_reader()
+        try:
+            await self._ensure_reader()
 
-        started_at = datetime.now(timezone.utc)
-        logger.info(
-            "EasyOCR: starting PDF extraction",
-            extra={"provider": self._PROVIDER_NAME},
-        )
-
-        # Rasterise all PDF pages in the thread pool (pdf2image is synchronous).
-        loop = asyncio.get_event_loop()
-        pil_images = await loop.run_in_executor(
-            None, self._rasterise_pdf, file_bytes
-        )
-
-        pages: list[OCRPage] = []
-        for page_idx, pil_image in enumerate(pil_images, start=1):
-            ocr_page = await loop.run_in_executor(
-                None, self._run_easyocr_on_image, pil_image, page_idx
+            started_at = datetime.now(timezone.utc)
+            logger.info(
+                "EasyOCR: starting PDF extraction",
+                extra={"provider": self._PROVIDER_NAME},
             )
-            pages.append(ocr_page)
 
-        result = self._assemble_result(pages, started_at)
-        logger.info(
-            "EasyOCR: PDF extraction completed",
-            extra={
-                "provider": self._PROVIDER_NAME,
-                "page_count": len(pages),
-                "confidence": result.metadata.get("mean_confidence"),
-                "char_count": len(result.full_text),
-            },
-        )
-        return result
+            # Rasterise all PDF pages in the thread pool (pdf2image is synchronous).
+            logger.info("EasyOCR: Converting PDF to images")
+            loop = asyncio.get_event_loop()
+            pil_images = await loop.run_in_executor(
+                None, self._rasterise_pdf, file_bytes
+            )
+            logger.info("EasyOCR: Converted PDF into %d pages", len(pil_images))
+
+            pages: list[OCRPage] = []
+            for page_idx, pil_image in enumerate(pil_images, start=1):
+                logger.info("EasyOCR: Running OCR on page %d", page_idx)
+                ocr_page = await loop.run_in_executor(
+                    None, self._run_easyocr_on_image, pil_image, page_idx
+                )
+                logger.info("EasyOCR: Completed OCR page %d", page_idx)
+                pages.append(ocr_page)
+
+            result = self._assemble_result(pages, started_at)
+            logger.info("EasyOCR: OCR finished. Extracted %d characters", len(result.full_text))
+
+            logger.info(
+                "EasyOCR: PDF extraction completed",
+                extra={
+                    "provider": self._PROVIDER_NAME,
+                    "page_count": len(pages),
+                    "confidence": result.metadata.get("mean_confidence"),
+                    "char_count": len(result.full_text),
+                },
+            )
+            return result
+        except Exception as exc:
+            logger.exception("EasyOCR: OCR failed during PDF extraction")
+            raise
 
     async def extract_from_image(self, file_bytes: bytes) -> OCRResult:
         """
@@ -148,29 +158,37 @@ class EasyOCRProvider(OCRProvider):
             RuntimeError: If numpy / PIL is not installed.
             Exception:    Propagated from EasyOCR on extraction failure.
         """
-        await self._ensure_reader()
+        try:
+            await self._ensure_reader()
 
-        started_at = datetime.now(timezone.utc)
-        logger.info(
-            "EasyOCR: starting image extraction",
-            extra={"provider": self._PROVIDER_NAME},
-        )
+            started_at = datetime.now(timezone.utc)
+            logger.info(
+                "EasyOCR: starting image extraction",
+                extra={"provider": self._PROVIDER_NAME},
+            )
 
-        loop = asyncio.get_event_loop()
-        ocr_page = await loop.run_in_executor(
-            None, self._run_easyocr_on_bytes, file_bytes, 1
-        )
+            logger.info("EasyOCR: Running OCR on image bytes")
+            loop = asyncio.get_event_loop()
+            ocr_page = await loop.run_in_executor(
+                None, self._run_easyocr_on_bytes, file_bytes, 1
+            )
+            logger.info("EasyOCR: Completed OCR on image bytes")
 
-        result = self._assemble_result([ocr_page], started_at)
-        logger.info(
-            "EasyOCR: image extraction completed",
-            extra={
-                "provider": self._PROVIDER_NAME,
-                "confidence": result.metadata.get("mean_confidence"),
-                "char_count": len(result.full_text),
-            },
-        )
-        return result
+            result = self._assemble_result([ocr_page], started_at)
+            logger.info("EasyOCR: OCR finished. Extracted %d characters", len(result.full_text))
+
+            logger.info(
+                "EasyOCR: image extraction completed",
+                extra={
+                    "provider": self._PROVIDER_NAME,
+                    "confidence": result.metadata.get("mean_confidence"),
+                    "char_count": len(result.full_text),
+                },
+            )
+            return result
+        except Exception as exc:
+            logger.exception("EasyOCR: OCR failed during image extraction")
+            raise
 
     async def health_check(self) -> bool:
         """
@@ -209,13 +227,18 @@ class EasyOCRProvider(OCRProvider):
         if self._reader_ready:
             return
 
-        loop = asyncio.get_event_loop()
-        self._reader = await loop.run_in_executor(None, self._create_reader)
-        self._reader_ready = True
-        logger.info(
-            "EasyOCR Reader initialised",
-            extra={"languages": self._languages, "gpu": self._use_gpu},
-        )
+        logger.info("EasyOCR: Initialising reader")
+        try:
+            loop = asyncio.get_event_loop()
+            self._reader = await loop.run_in_executor(None, self._create_reader)
+            self._reader_ready = True
+            logger.info(
+                "EasyOCR Reader initialised successfully",
+                extra={"languages": self._languages, "gpu": self._use_gpu},
+            )
+        except Exception as exc:
+            logger.exception("EasyOCR: failed to initialise reader")
+            raise
 
     def _create_reader(self) -> Any:
         """
@@ -227,6 +250,8 @@ class EasyOCRProvider(OCRProvider):
         return easyocr.Reader(
             lang_list=self._languages,
             gpu=self._use_gpu,
+            model_storage_directory="/tmp/easyocr_models",
+            user_network_directory="/tmp/easyocr_networks",
         )
 
     # ── Synchronous extraction helpers (run inside thread pool) ──────────────
@@ -249,7 +274,14 @@ class EasyOCRProvider(OCRProvider):
                 "Also ensure poppler is installed on your system."
             )
 
-        return convert_from_bytes(file_bytes, dpi=300)
+        logger.info("EasyOCR: Calling convert_from_bytes")
+        try:
+            result = convert_from_bytes(file_bytes, dpi=300)
+            logger.info("EasyOCR: convert_from_bytes completed successfully")
+            return result
+        except Exception as exc:
+            logger.exception("EasyOCR: convert_from_bytes failed")
+            raise
 
     def _run_easyocr_on_image(self, pil_image: Any, page_number: int) -> OCRPage:
         """
@@ -267,9 +299,16 @@ class EasyOCRProvider(OCRProvider):
         if self._reader is None:
             raise RuntimeError("EasyOCR reader is not initialised")
 
-        img_array = np.array(pil_image)
-        raw_results = self._reader.readtext(img_array, detail=1)
-        return self._build_ocr_page(raw_results, page_number)
+        logger.info("EasyOCR: converting PIL image to numpy array for page %d", page_number)
+        try:
+            img_array = np.array(pil_image)
+            logger.info("EasyOCR: calling readtext for page %d", page_number)
+            raw_results = self._reader.readtext(img_array, detail=1)
+            logger.info("EasyOCR: readtext completed for page %d", page_number)
+            return self._build_ocr_page(raw_results, page_number)
+        except Exception as exc:
+            logger.exception("EasyOCR: OCR on image failed for page %d", page_number)
+            raise
 
     def _run_easyocr_on_bytes(self, file_bytes: bytes, page_number: int) -> OCRPage:
         """
@@ -288,10 +327,17 @@ class EasyOCRProvider(OCRProvider):
         if self._reader is None:
             raise RuntimeError("EasyOCR reader is not initialised")
 
-        pil_image = Image.open(io.BytesIO(file_bytes)).convert("RGB")
-        img_array = np.array(pil_image)
-        raw_results = self._reader.readtext(img_array, detail=1)
-        return self._build_ocr_page(raw_results, page_number)
+        logger.info("EasyOCR: processing image bytes for page %d", page_number)
+        try:
+            pil_image = Image.open(io.BytesIO(file_bytes)).convert("RGB")
+            img_array = np.array(pil_image)
+            logger.info("EasyOCR: calling readtext for image bytes page %d", page_number)
+            raw_results = self._reader.readtext(img_array, detail=1)
+            logger.info("EasyOCR: readtext completed for image bytes page %d", page_number)
+            return self._build_ocr_page(raw_results, page_number)
+        except Exception as exc:
+            logger.exception("EasyOCR: OCR on image bytes failed for page %d", page_number)
+            raise
 
     # ── Result normalisation ──────────────────────────────────────────────────
 

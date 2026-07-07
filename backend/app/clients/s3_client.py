@@ -55,13 +55,17 @@ class S3Client:
             Full S3 URL of the uploaded object
         """
         async with self._get_client() as s3:
-            await s3.put_object(
-                Bucket=self._bucket,
-                Key=key,
-                Body=data,
-                ContentType=content_type,
-                ServerSideEncryption="AES256",  # Encryption at rest
-            )
+            put_kwargs = {
+                "Bucket": self._bucket,
+                "Key": key,
+                "Body": data,
+                "ContentType": content_type,
+            }
+            # Only enable SSE if we are communicating with real AWS S3 (no custom endpoint)
+            if not self._endpoint_url:
+                put_kwargs["ServerSideEncryption"] = "AES256"
+
+            await s3.put_object(**put_kwargs)
         logger.info("S3 upload", extra={"key": key, "size_bytes": len(data)})
         return key
 
