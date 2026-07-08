@@ -7,6 +7,7 @@ export { transactionApi } from "./transaction.api";
 export { healthApi } from "./health.api";
 export { riskApi } from "./risk.api";
 export { portfolioApi } from "./portfolio.api";
+export { portfolioHoldingApi } from "./portfolioHolding.api";
 export { coachApi } from "./coach.api";
 export { notificationApi } from "./notification.api";
 export { reportApi } from "./report.api";

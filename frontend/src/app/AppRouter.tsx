@@ -31,6 +31,9 @@ const RiskProfilePage = React.lazy(
 const PortfolioPage = React.lazy(
   () => import("@/pages/portfolio/PortfolioPage"),
 );
+const PortfolioHoldingsPage = React.lazy(
+  () => import("@/pages/portfolio-holdings/PortfolioHoldingsPage"),
+);
 const AICoachPage = React.lazy(() => import("@/pages/coach/AICoachPage"));
 const ReportsPage = React.lazy(() => import("@/pages/reports/ReportsPage"));
 const NotificationsPage = React.lazy(
@@ -76,6 +79,10 @@ export function AppRouter() {
               <Route path={ROUTES.HEALTH_SCORE} element={<HealthScorePage />} />
               <Route path={ROUTES.RISK_PROFILE} element={<RiskProfilePage />} />
               <Route path={ROUTES.PORTFOLIO} element={<PortfolioPage />} />
+              <Route
+                path={ROUTES.PORTFOLIO_HOLDINGS}
+                element={<PortfolioHoldingsPage />}
+              />
               <Route path={ROUTES.AI_COACH} element={<AICoachPage />} />
               <Route path={ROUTES.REPORTS} element={<ReportsPage />} />
               <Route

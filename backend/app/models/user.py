@@ -49,6 +49,9 @@ class User(UUIDMixin, TimestampMixin, Base):
     ai_conversations: Mapped[list["AIConversation"]] = relationship(
         "AIConversation", back_populates="user", cascade="all, delete-orphan"
     )
+    portfolio_holdings: Mapped[list["PortfolioHolding"]] = relationship(
+        "PortfolioHolding", back_populates="user", cascade="all, delete-orphan"
+    )
 
     def __repr__(self) -> str:
         return f"<User id={self.id} email={self.email}>"
