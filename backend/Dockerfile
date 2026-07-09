@@ -29,13 +29,15 @@ FROM python:3.13-slim AS runtime
 WORKDIR /app
 
 # Install minimal runtime system libraries
+# poppler-utils removed: it was only required by pdf2image (PDF page
+# rasterization for the legacy EasyOCR path), which is no longer part of
+# the active pipeline. Docling reads PDFs directly — no rasterization.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
     tesseract-ocr \
     tesseract-ocr-eng \
     libmagic1 \
     curl \
-    poppler-utils \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy installed Python packages from builder stage

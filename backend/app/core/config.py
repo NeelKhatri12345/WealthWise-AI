@@ -117,7 +117,11 @@ class Settings(BaseSettings):
             return [host.strip() for host in v.split(",")]
         return v
 
-    # ── OCR ────────────────────────────────────────────────────────
+    # ── OCR (legacy manual/admin endpoints only — NOT the active pipeline) ──
+    # The active statement-processing pipeline uses Docling directly
+    # (app/extraction/docling_extractor.py) and does not read any setting
+    # in this block. These settings only affect the legacy EasyOCR-based
+    # manual endpoints (POST /statements/{id}/processing/run-ocr etc.).
     # Which OCR engine to use.  Routed by OCRFactory.
     # Supported: "easyocr" | "paddleocr" | "aws_textract" | "azure_ocr"
     OCR_PROVIDER: str = "easyocr"

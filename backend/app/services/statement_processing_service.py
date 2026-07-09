@@ -6,28 +6,36 @@ Manages the statement lifecycle after upload:
   FAILED may be reached from any non-terminal state.
 
 This service is invoked by background workers or admin processing endpoints.
-It owns state-machine transitions and exposes run_ocr() as a convenience
-entry point that coordinates PROCESSING → OCR_COMPLETED via OCROrchestrationService.
+It owns pure state-machine transitions, independent of which extraction
+engine is used. The active pipeline (DocumentExtractionService, Docling)
+does not need an ocr_provider at all; it is only required by the legacy
+run_ocr() convenience method below, kept for the legacy manual/admin
+EasyOCR endpoints.
 """
 
 from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Optional
 from uuid import UUID
 
 from app.core.logger import logger
 from app.enums.statement_status_enum import StatementStatusEnum
 from app.exceptions.custom_exceptions import NotFoundException, ValidationException
 from app.models.statement import Statement
-from app.ocr.base import OCRProvider
 from app.repositories.statement_repository import StatementRepository
 from app.schemas.statement_schema import StatementStatusResponse
+
+if TYPE_CHECKING:
+    # Only needed for the legacy run_ocr() convenience method below — the
+    # active Docling pipeline never constructs this service with an
+    # ocr_provider at all.
+    from app.ocr.base import OCRProvider
 
 
 class StatementProcessingService:
     def __init__(
         self,
         statement_repo: StatementRepository,
-        ocr_provider: OCRProvider,
+        ocr_provider: Optional["OCRProvider"] = None,
     ) -> None:
         self._statement_repo = statement_repo
         self._ocr_provider = ocr_provider
@@ -178,21 +186,21 @@ class StatementProcessingService:
         )
         return StatementStatusResponse.model_validate(updated)
 
-    # ── OCR orchestration entry point ────────────────────────────────────────
+    # ── Legacy OCR orchestration entry point (not used by the active pipeline) ─
 
     async def run_ocr(self, statement_id: UUID) -> None:
         """
-        Convenience entry point: transitions statement to PROCESSING then
-        executes the full OCR step via OCROrchestrationService.
+        Legacy convenience entry point: transitions statement to PROCESSING
+        then executes the full EasyOCR step via OCROrchestrationService.
+
+        Not called by the active Docling pipeline (see
+        DocumentExtractionService) — kept only for the legacy manual/admin
+        run-ocr endpoint. Requires this service to have been constructed
+        with an ocr_provider.
 
         Transitions:
             UPLOADED/PENDING → PROCESSING → OCR_COMPLETED  (success)
             UPLOADED/PENDING → PROCESSING → FAILED          (error)
-
-        This is used by internal callers that already hold both the processing
-        service and an S3Client.  The HTTP layer should prefer calling
-        processing_service.start_processing() then ocr_service.run_ocr()
-        directly so each service is injected independently via DI.
 
         Args:
             statement_id: UUID of the statement to process.
@@ -200,8 +208,15 @@ class StatementProcessingService:
         Raises:
             NotFoundException:  If the statement does not exist.
             ValidationException: If the transition is not valid.
+            RuntimeError: If this service was constructed without an ocr_provider.
             Exception: Propagated from OCR on failure (after FAILED is recorded).
         """
+        if self._ocr_provider is None:
+            raise RuntimeError(
+                "run_ocr() requires StatementProcessingService to be constructed "
+                "with an ocr_provider (legacy EasyOCR path only)."
+            )
+
         from app.clients.s3_client import S3Client
         from app.core.config import get_settings
         from app.services.ocr_orchestration_service import OCROrchestrationService

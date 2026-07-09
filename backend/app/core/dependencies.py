@@ -302,20 +302,69 @@ def get_ocr_orchestration_service(db: AsyncSession = Depends(get_db)):
     )
 
 
+# ── Document Extraction Dependencies (active pipeline: Docling only) ────────
+
+
+def get_document_extractor():
+    """
+    Returns the DoclingExtractor — the only document extraction engine in
+    the active statement processing pipeline. Not an OCRProvider: Docling
+    parses PDF structure directly, with OCR explicitly disabled.
+    """
+    from app.extraction.docling_extractor import DoclingExtractor
+
+    return DoclingExtractor()
+
+
+def get_document_extraction_service(db: AsyncSession = Depends(get_db)):
+    """
+    Constructs DocumentExtractionService with all required collaborators.
+
+    Wires together:
+      - StatementRepository       — raw statement access
+      - StatementProcessingService — pipeline state transitions
+      - S3Client                  — MinIO file download
+      - DocumentExtractor         — Docling structured extraction
+
+    Usage in a route or worker:
+        from app.core.dependencies import get_document_extraction_service
+        from app.services.document_extraction_service import DocumentExtractionService
+
+        async def my_worker(
+            extraction_svc: DocumentExtractionService = Depends(get_document_extraction_service)
+        ):
+            await extraction_svc.run_extraction(statement_id)
+    """
+    from app.clients.s3_client import S3Client
+    from app.repositories.statement_repository import StatementRepository
+    from app.services.document_extraction_service import DocumentExtractionService
+    from app.services.statement_processing_service import StatementProcessingService
+
+    statement_repo = StatementRepository(db)
+    processing_service = StatementProcessingService(statement_repo=statement_repo)
+
+    return DocumentExtractionService(
+        statement_repo=statement_repo,
+        processing_service=processing_service,
+        s3_client=S3Client(settings),
+        extractor=get_document_extractor(),
+    )
+
+
 # ── Transaction Parser Dependencies ──────────────────────────────────────────
 
 
 def get_transaction_parser():
     """
-    Returns the configured TransactionParser implementation.
-
-    Business logic depends only on the TransactionParser abstraction
-    (app.parsers.base.TransactionParser) — swap the concrete class here to
-    change parsing strategy without touching callers.
+    Returns the TransactionParser implementation used by the active
+    pipeline: DoclingTransactionMapper — a direct field mapping from
+    Docling's structured table JSON to ParsedTransaction (no regex, no OCR
+    cleanup). RegexTransactionParser remains importable for legacy/manual
+    use but is never returned here.
     """
-    from app.parsers.regex_parser import RegexTransactionParser
+    from app.parsers.docling_mapper import DoclingTransactionMapper
 
-    return RegexTransactionParser()
+    return DoclingTransactionMapper()
 
 
 def get_transaction_parser_service(db: AsyncSession = Depends(get_db)):
@@ -325,10 +374,7 @@ def get_transaction_parser_service(db: AsyncSession = Depends(get_db)):
     from app.services.transaction_parser_service import TransactionParserService
 
     statement_repo = StatementRepository(db)
-    processing_service = StatementProcessingService(
-        statement_repo=statement_repo,
-        ocr_provider=get_ocr_provider(),
-    )
+    processing_service = StatementProcessingService(statement_repo=statement_repo)
 
     return TransactionParserService(
         statement_repo=statement_repo,

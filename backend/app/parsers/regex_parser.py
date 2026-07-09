@@ -28,6 +28,7 @@ from dateutil import parser as dateutil_parser
 
 from app.core.logger import logger
 from app.parsers.base import TransactionParser
+from app.parsers.merchant_utils import extract_merchant
 from app.parsers.result import ParsedTransaction, ParsingResult
 
 # ── Regex patterns ────────────────────────────────────────────────────────────
@@ -66,13 +67,6 @@ _CREDIT_KEYWORDS = (
     "interest credit",
     "cash deposit",
 )
-_MERCHANT_NOISE = re.compile(
-    r"\b(POS|DEBIT CARD PURCHASE|ACH|RECURRING|PAYMENT|WITHDRAWAL|DEPOSIT|"
-    r"TRANSFER|PURCHASE|UPI|IMPS|NEFT|RTGS|NACH|BBPS|CHEQUE|CASH WITHDRAWAL|"
-    r"CASH DEPOSIT)\b.*$",
-    re.IGNORECASE,
-)
-
 _MIN_LINE_LENGTH = 6
 
 
@@ -178,7 +172,7 @@ class RegexTransactionParser(TransactionParser):
             description = "Unknown transaction"
 
         transaction_type, type_confidence = self._detect_type(is_negative, description)
-        merchant = self._extract_merchant(description)
+        merchant = extract_merchant(description)
 
         confidence = (
             date_confidence * 0.35
@@ -286,11 +280,3 @@ class RegexTransactionParser(TransactionParser):
         # No explicit sign or keyword — default to debit (statements skew
         # debit-heavy) but flag the guess with a low confidence score.
         return "debit", 0.4
-
-    @staticmethod
-    def _extract_merchant(description: str) -> Optional[str]:
-        if not description:
-            return None
-        cleaned = _MERCHANT_NOISE.sub("", description).strip(" -*#")
-        cleaned = re.split(r"[*]|\s{2,}", cleaned)[0].strip()
-        return cleaned or None
