@@ -1,0 +1,27 @@
+Docling Extraction Comparison Report
+====================================
+Processing mode: page
+Number of pages: 6
+Pages processed: 6
+Processed page numbers: [1, 2, 3, 4, 5, 6]
+Failed pages: []
+Pages with non-empty tables: [1, 2, 3, 4, 5]
+Pages without usable tables: [6]
+Number of tables detected: 6
+Transaction tables detected: 4
+Total transaction rows: 122
+Table 1: page=1, rows=11, columns=2
+Table 2: page=1, rows=17, columns=9
+Table 3: page=2, rows=35, columns=9
+Table 4: page=3, rows=35, columns=9
+Table 5: page=4, rows=35, columns=9
+Table 6: page=5, rows=35, columns=8
+Total extracted text length (characters): 40074
+Processing time: 321.48 seconds
+OCR Enabled: True (via pipeline_options.do_ocr)
+Post-processing: Enabled
+Numeric OCR correction: Enabled
+Serial number recovery: Enabled
+Normalized columns: Serial No., Value Date, Cheque No.
+Warnings:
+- No tables detected on page 6.
