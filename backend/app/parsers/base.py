@@ -28,20 +28,24 @@ class TransactionParser(ABC):
         """Machine-readable name of this parser (e.g. "regex"). Used in logging."""
 
     @abstractmethod
-    def parse(self, raw_text: str) -> ParsingResult:
+    def parse(self, extracted_data: str) -> ParsingResult:
         """
-        Parse raw OCR text into structured transactions.
+        Parse a statement's serialized extraction output into transactions.
 
         Args:
-            raw_text: Full OCR text for a statement (may span multiple pages,
-                      separated by form-feed characters).
+            extracted_data: Serialized output from the document extraction
+                            stage — Docling's structured table JSON for
+                            DoclingTransactionMapper (the active pipeline),
+                            or legacy free-text OCR output for
+                            RegexTransactionParser (not called by the active
+                            pipeline; kept for backward compatibility only).
 
         Returns:
             ParsingResult containing every transaction the parser could
-            extract, plus line-level stats for observability.
+            extract, plus row/line-level stats for observability.
 
         Note:
             Parsing is CPU-bound and synchronous — callers running inside an
-            async context call it directly; statement-sized text parses in
-            well under a millisecond per line.
+            async context call it directly; statement-sized input parses in
+            well under a millisecond per row/line.
         """

@@ -30,7 +30,10 @@ class ParsedTransaction:
         confidence:       Extraction confidence in [0.0, 1.0]. Lower values
                            indicate the parser had to guess (e.g. no explicit
                            debit/credit signal found on the line).
-        raw_line:         Original source line, kept for logging/dedup only.
+        raw_line:         Original source line/row, kept for logging/dedup only.
+        reference_number: Bank-issued transaction reference (e.g. Docling's
+                           "Transaction ID" column). Not persisted — the
+                           Transaction model has no matching column.
     """
 
     date: date
@@ -41,6 +44,7 @@ class ParsedTransaction:
     balance: Optional[Decimal] = None
     confidence: float = 0.0
     raw_line: str = ""
+    reference_number: Optional[str] = None
 
 
 @dataclass(frozen=True)

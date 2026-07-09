@@ -15,8 +15,14 @@ Design goals
 Usage (via dependency injection):
     provider = OCRFactory.create(settings)
 
+Note: Docling is NOT registered here. It is not an OCR engine in this
+codebase — see app/extraction/docling_extractor.py and
+app/services/document_extraction_service.py for the active, OCR-free
+document extraction pipeline. This factory only serves the legacy
+EasyOCR-based manual/admin endpoints.
+
 Supported provider keys (OCR_PROVIDER env var):
-    "easyocr"       → EasyOCRProvider   (current)
+    "easyocr"       → EasyOCRProvider   (current — legacy manual endpoints only)
     "paddleocr"     → PaddleOCRProvider (planned)
     "aws_textract"  → TextractProvider  (planned)
     "azure_ocr"     → AzureOCRProvider  (planned)

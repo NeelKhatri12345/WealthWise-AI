@@ -31,13 +31,16 @@ httpx==0.28.1
 # ── AI ────────────────────────────────────────────────────────────────────────
 google-genai==1.12.1
 
-# ── OCR / File Processing ─────────────────────────────────────────────────────
+# ── Document Extraction / File Processing ─────────────────────────────────────
 pdfplumber==0.11.4
 pillow==11.1.0
 python-dateutil==2.9.0
 python-magic==0.4.27   # Windows-compatible; use python-magic on Linux
-easyocr>=1.7.2         # EasyOCR text extraction engine
-pdf2image>=1.17.0      # Rasterise PDF pages via poppler (required: poppler-utils)
+docling>=2.0.0         # Only document extraction engine in the active pipeline (no OCR, no rasterization)
+# easyocr and pdf2image intentionally removed — no longer required by the
+# active pipeline. The legacy EasyOCR code (app/ocr/*) remains in the repo
+# for the manual/admin endpoints only; reinstall both packages manually
+# (`pip install easyocr pdf2image`, plus poppler-utils) if reactivating it.
 
 # AWS / MinIO
 boto3==1.36.1

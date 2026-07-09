@@ -1,20 +1,28 @@
 """
 WealthWise AI - Transaction Parser Service
 
-Converts a statement's raw OCR text into normalized Transaction rows.
+Converts a statement's document-extraction output into normalized
+Transaction rows. The active pipeline's extraction output is Docling's
+structured table JSON — mapped by DoclingTransactionMapper, with no regex
+or OCR text involved. (RegexTransactionParser also implements the same
+TransactionParser interface but is legacy-only and never injected by the
+active pipeline.)
 
 Pipeline position
 ──────────────────
   OCR_COMPLETED ──► [this service] ──► PARSING ──► COMPLETED
                                               └──► FAILED (on error)
+  (OCR_COMPLETED is a pre-existing enum value name — see
+  DocumentExtractionService for why it is not renamed.)
 
 Separation of concerns
 ───────────────────────
 - StatementProcessingService owns pure state-machine transitions.
-- TransactionParser (regex/default) owns line-level text → transaction extraction.
+- TransactionParser (DoclingTransactionMapper, the active implementation)
+  owns extraction-output → transaction mapping.
 - TransactionRepository owns persistence.
-- TransactionParserService is the single seam that connects all three, mirroring
-  OCROrchestrationService's role for the OCR step.
+- TransactionParserService is the single seam that connects all three,
+  mirroring DocumentExtractionService's role for the extraction step.
 
 This service is called by background workers or admin endpoints for
 parse/re-parse; regular users only read results via get_transactions_for_statement().
@@ -31,6 +39,7 @@ from app.exceptions.custom_exceptions import NotFoundException, ValidationExcept
 from app.models.statement import Statement
 from app.models.transaction import Transaction
 from app.parsers.base import TransactionParser
+from app.parsers.category_classifier import classify_category
 from app.parsers.result import ParsedTransaction
 from app.repositories.statement_repository import StatementRepository
 from app.repositories.transaction_repository import TransactionRepository
@@ -86,14 +95,14 @@ class TransactionParserService:
 
     async def _run(self, statement: Statement) -> ParseStatementResponse:
         statement_id = statement.id
-        raw_text = (statement.processing_metadata or {}).get("raw_text")
-        if not raw_text or not raw_text.strip():
-            error_msg = "No OCR text available to parse. Run OCR first."
+        extracted_data = (statement.processing_metadata or {}).get("extracted_data")
+        if not extracted_data or not extracted_data.strip():
+            error_msg = "No extracted data available to parse. Run extraction first."
             await self._processing_service.mark_failed(statement_id, error_message=error_msg)
             raise ValidationException(error_msg)
 
         try:
-            result = self._parser.parse(raw_text)
+            result = self._parser.parse(extracted_data)
             deduped = self._deduplicate(result.transactions)
 
             await self._transaction_repo.delete_by_statement(statement_id)
@@ -108,6 +117,7 @@ class TransactionParserService:
                     "transaction_type": t.transaction_type,
                     "merchant": t.merchant,
                     "balance": t.balance,
+                    "category": classify_category(t.description, t.merchant),
                     "confidence_score": Decimal(str(round(t.confidence, 3))),
                 }
                 for t in deduped

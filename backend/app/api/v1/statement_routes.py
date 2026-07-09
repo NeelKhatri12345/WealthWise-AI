@@ -54,30 +54,41 @@ _ACCEPTED_FORMATS = "PDF, PNG, JPG, JPEG"
 
 
 async def _process_statement_background_task(statement_id: UUID) -> None:
+    """
+    Active statement processing pipeline: Docling extraction only.
+
+    Upload → [this task] → DocumentExtractionService (Docling) →
+    TransactionParserService (DoclingTransactionMapper) → category
+    classification → Database.
+
+    No OCR provider, no EasyOCR, no image rasterization is invoked here.
+    """
     from app.database.session import AsyncSessionLocal
     from app.core.config import get_settings
     from app.core.logger import logger
-    from app.core.dependencies import get_ocr_provider, get_transaction_parser
+    from app.core.dependencies import get_document_extractor, get_transaction_parser
     from app.clients.s3_client import S3Client
+    from app.extraction.base import DocumentExtractor
     from app.repositories.statement_repository import StatementRepository
     from app.repositories.transaction_repository import TransactionRepository
+    from app.services.document_extraction_service import DocumentExtractionService
 
     settings = get_settings()
-    ocr_provider = get_ocr_provider()
+    extractor: DocumentExtractor = get_document_extractor()
     parser = get_transaction_parser()
-    
+
     async with AsyncSessionLocal() as session:
         try:
             # Reconstruct dependencies for the background session
             statement_repo = StatementRepository(session)
             transaction_repo = TransactionRepository(session)
-            
-            processing_service = StatementProcessingService(statement_repo, ocr_provider)
-            ocr_service = OCROrchestrationService(
+
+            processing_service = StatementProcessingService(statement_repo)
+            extraction_service = DocumentExtractionService(
                 statement_repo=statement_repo,
                 processing_service=processing_service,
                 s3_client=S3Client(settings),
-                ocr_provider=ocr_provider
+                extractor=extractor,
             )
             transaction_parser_service = TransactionParserService(
                 statement_repo=statement_repo,
@@ -85,16 +96,16 @@ async def _process_statement_background_task(statement_id: UUID) -> None:
                 processing_service=processing_service,
                 parser=parser
             )
-            
-            # 1. OCR (PENDING -> PROCESSING -> OCR_COMPLETED)
+
+            # 1. Document extraction (PENDING -> PROCESSING -> OCR_COMPLETED)
             await processing_service.start_processing(statement_id)
-            await ocr_service.run_ocr(statement_id)
+            await extraction_service.run_extraction(statement_id)
             await session.commit()
-            
-            # 2. Parsing (OCR_COMPLETED -> PARSING -> COMPLETED)
+
+            # 2. Mapping + persistence (OCR_COMPLETED -> PARSING -> COMPLETED)
             await transaction_parser_service.parse_statement(statement_id)
             await session.commit()
-            
+
         except Exception as exc:
             logger.error("Background processing failed", extra={"statement_id": str(statement_id)}, exc_info=exc)
             await session.rollback()
@@ -319,12 +330,13 @@ async def mark_statement_parsing(
     "/{statement_id}/processing/parse",
     response_model=APIResponse[ParseStatementResponse],
     status_code=202,
-    summary="Parse a statement's OCR text into transactions",
+    summary="Map a statement's extracted data into transactions",
     description=(
-        "Runs the transaction parser against the statement's OCR raw text and "
-        "persists the resulting transactions. Statement must currently be "
-        "OCR_COMPLETED. Transitions: OCR_COMPLETED → PARSING → COMPLETED "
-        "(success) or FAILED (error). Admin / worker only."
+        "Runs DoclingTransactionMapper against the statement's extracted "
+        "document data and persists the resulting transactions. Statement "
+        "must currently be OCR_COMPLETED (i.e. extraction has completed). "
+        "Transitions: OCR_COMPLETED → PARSING → COMPLETED (success) or "
+        "FAILED (error). Admin / worker only."
     ),
 )
 async def parse_statement(
