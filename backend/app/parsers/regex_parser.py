@@ -43,6 +43,7 @@ _DATE_PATTERNS: list[re.Pattern] = [
 _HIGH_CONFIDENCE_DATE_COUNT = 3
 
 _AMOUNT_PATTERN = re.compile(r"\(?-?(?:Rs\.?|₹|\$)?\s?[\d,]+\.\d{2}\)?", re.IGNORECASE)
+_TIME_PATTERN = re.compile(r"\b\d{1,2}[.:]\d{2}[.:]\d{2}\b")
 
 _DEBIT_KEYWORDS = (
     "debit",
@@ -87,6 +88,24 @@ class RegexTransactionParser(TransactionParser):
     def parser_name(self) -> str:
         return "regex"
 
+    @staticmethod
+    def is_non_transaction_block(text: str) -> bool:
+        keywords = [
+            "account statement",
+            "customer id",
+            "branch name",
+            "ifsc",
+            "micr",
+            "opening balance",
+            "closing balance",
+            "disclaimer",
+            "unless the constituent",
+            "page",
+            "statement period",
+        ]
+        text_lower = text.lower()
+        return any(kw in text_lower for kw in keywords)
+
     def parse(self, raw_text: str) -> ParsingResult:
         logger.info("Starting RegexTransactionParser.parse()")
         lines = [ln.strip() for ln in raw_text.replace("\f", "\n").splitlines()]
@@ -124,10 +143,21 @@ class RegexTransactionParser(TransactionParser):
             blocks.append(" ".join(current_block))
 
         for block_text in blocks:
+            if self.is_non_transaction_block(block_text):
+                skipped += 1
+                continue
+
             if len(block_text) < _MIN_LINE_LENGTH or not any(c.isdigit() for c in block_text):
                 skipped += 1
                 continue
 
+            logger.info(
+                f"\n--------------------------------------------------\n"
+                f"BLOCK START\n"
+                f"{block_text}\n"
+                f"BLOCK END\n"
+                f"--------------------------------------------------"
+            )
             parsed = self._parse_line(block_text)
             if parsed is None:
                 skipped += 1
@@ -158,28 +188,49 @@ class RegexTransactionParser(TransactionParser):
     # ── Per-line extraction ───────────────────────────────────────────────────
 
     def _parse_line(self, line: str) -> Optional[ParsedTransaction]:
+        # 1. Extract the leading transaction date
         date_value, date_span, date_confidence = self._extract_date(line)
         if date_value is None:
             return None
 
-        remainder = (line[: date_span[0]] + " " + line[date_span[1] :]).strip()
+        # 2. Extract trailing HH.MM.SS time if present (clean it from the line for amount matching)
+        time_match = _TIME_PATTERN.search(line)
+        line_clean = line
+        if time_match:
+            t_start, t_end = time_match.span()
+            line_clean = line[:t_start] + " " * (t_end - t_start) + line[t_end:]
 
-        amount, balance, amount_confidence, consumed_spans, is_negative = self._extract_amount(
-            remainder
-        )
-        if amount is None:
+        # 3. Find matches for Rs. <amount> / ₹ <amount> / $ <amount>
+        text_after_date = line_clean[date_span[1]:]
+        matches = list(_AMOUNT_PATTERN.finditer(text_after_date))
+        if not matches:
             return None
 
-        desc_text = remainder
-        for start, end in sorted(consumed_spans, key=lambda s: s[0], reverse=True):
-            desc_text = desc_text[:start] + " " + desc_text[end:]
-        description = re.sub(r"\s{2,}", " ", desc_text).strip(" -*#\t")
+        # First amount = transaction amount
+        amount_match = matches[0]
+        amount_start = date_span[1] + amount_match.start()
+        
+        amount_value, is_negative = self._to_decimal(amount_match.group())
+        if amount_value is None:
+            return None
+
+        # Second amount = running balance
+        balance_value = None
+        if len(matches) > 1:
+            balance_match = matches[1]
+            balance_value, _ = self._to_decimal(balance_match.group())
+
+        # Description is everything between the date and the first monetary value
+        description_raw = line[date_span[1] : amount_start]
+        description = re.sub(r"\s{2,}", " ", description_raw).strip(" -*#\t")
         if not description:
             description = "Unknown transaction"
 
+        # 4. Preserve existing debit/credit detection logic
         transaction_type, type_confidence = self._detect_type(is_negative, description)
         merchant = self._extract_merchant(description)
 
+        amount_confidence = 1.0
         confidence = (
             date_confidence * 0.35
             + amount_confidence * 0.35
@@ -190,13 +241,26 @@ class RegexTransactionParser(TransactionParser):
         return ParsedTransaction(
             date=date_value,
             description=description,
-            amount=amount,
+            amount=amount_value,
             transaction_type=transaction_type,
             merchant=merchant,
-            balance=balance,
+            balance=balance_value,
             confidence=round(min(confidence, 1.0), 2),
             raw_line=line,
         )
+
+    @staticmethod
+    def _to_decimal(raw: str) -> tuple[Optional[Decimal], bool]:
+        cleaned = raw.strip()
+        negative = cleaned.startswith("-") or (
+            cleaned.startswith("(") and cleaned.endswith(")")
+        )
+        cleaned = cleaned.replace("$", "").replace("Rs.", "").replace("Rs", "").replace("₹", "").replace(",", "").replace(" ", "")
+        cleaned = cleaned.strip("()").lstrip("-")
+        try:
+            return Decimal(cleaned), negative
+        except InvalidOperation:
+            return None, False
 
     @staticmethod
     def _extract_date(line: str):
@@ -212,61 +276,6 @@ class RegexTransactionParser(TransactionParser):
             confidence = 1.0 if idx < _HIGH_CONFIDENCE_DATE_COUNT else 0.8
             return parsed, match.span(), confidence
         return None, None, 0.0
-
-    @staticmethod
-    def _extract_amount(text: str):
-        """
-        Return (amount, balance, confidence, consumed_spans, is_negative) for
-        the best amount match(es) in ``text``, or (None, None, 0.0, [], False)
-        if none can be parsed. ``consumed_spans`` locates every token used
-        (amount, and balance if present) within ``text`` so the caller can
-        strip them out to build the description.
-        """
-        matches = list(_AMOUNT_PATTERN.finditer(text))
-        if not matches:
-            return None, None, 0.0, [], False
-
-        def to_decimal(raw: str) -> tuple[Optional[Decimal], bool]:
-            cleaned = raw.strip()
-            negative = cleaned.startswith("-") or (
-                cleaned.startswith("(") and cleaned.endswith(")")
-            )
-            cleaned = cleaned.replace("$", "").replace("Rs.", "").replace("Rs", "").replace("₹", "").replace(",", "").replace(" ", "")
-            cleaned = cleaned.strip("()").lstrip("-")
-            try:
-                return Decimal(cleaned), negative
-            except InvalidOperation:
-                return None, False
-
-        if len(matches) == 1:
-            value, negative = to_decimal(matches[0].group())
-            if value is None:
-                return None, None, 0.0, [], False
-            return value, None, 1.0, [matches[0].span()], negative
-
-        if len(matches) == 2:
-            amount_match, balance_match = matches[0], matches[1]
-            confidence = 1.0
-        else:
-            amount_match, balance_match = matches[-2], matches[-1]
-            confidence = 0.6
-            logger.debug(
-                "RegexTransactionParser: ambiguous amount count on line",
-                extra={"match_count": len(matches)},
-            )
-
-        amount_value, negative = to_decimal(amount_match.group())
-        balance_value, _ = to_decimal(balance_match.group())
-        if amount_value is None:
-            return None, None, 0.0, [], False
-
-        return (
-            amount_value,
-            balance_value,
-            confidence,
-            [amount_match.span(), balance_match.span()],
-            negative,
-        )
 
     @staticmethod
     def _detect_type(is_negative: bool, description: str) -> tuple[str, float]:

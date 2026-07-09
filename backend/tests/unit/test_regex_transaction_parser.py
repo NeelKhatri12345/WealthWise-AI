@@ -83,14 +83,15 @@ def test_parenthesized_amount_is_treated_as_debit_even_with_credit_keyword() -> 
     assert txn.confidence == 1.0  # explicit sign => full type confidence
 
 
-def test_ambiguous_amount_count_lowers_confidence() -> None:
+def test_multiple_amounts_positional_extraction() -> None:
     result = _parser().parse("01/05/2024 CHECK NO 100.00 250.00 5000.00")
 
     txn = result.transactions[0]
-    # 3 amount-shaped tokens: last two are used as (amount, balance).
-    assert txn.amount == Decimal("250.00")
-    assert txn.balance == Decimal("5000.00")
-    assert txn.confidence < 1.0
+    # Under positional extraction, the first amount is 100.00 and the second is 250.00
+    assert txn.amount == Decimal("100.00")
+    assert txn.balance == Decimal("250.00")
+    # Description is between date and first monetary value
+    assert txn.description == "CHECK NO"
 
 
 # ── Debit/credit keyword detection ──────────────────────────────────────────
