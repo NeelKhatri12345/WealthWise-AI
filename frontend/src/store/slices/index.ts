@@ -19,6 +19,9 @@ export * from "./riskProfileSlice";
 export { default as portfolioReducer } from "./portfolioSlice";
 export * from "./portfolioSlice";
 
+export { default as portfolioHoldingReducer } from "./portfolioHoldingSlice";
+export * from "./portfolioHoldingSlice";
+
 export { default as coachReducer } from "./coachSlice";
 export * from "./coachSlice";
 

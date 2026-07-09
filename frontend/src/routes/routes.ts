@@ -10,6 +10,7 @@ export const ROUTES = {
   HEALTH_SCORE: "/health-score",
   RISK_PROFILE: "/risk-profile",
   PORTFOLIO: "/portfolio",
+  PORTFOLIO_HOLDINGS: "/portfolio-holdings",
   AI_COACH: "/ai-coach",
   REPORTS: "/reports",
   NOTIFICATIONS: "/notifications",

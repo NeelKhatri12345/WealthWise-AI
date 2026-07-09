@@ -338,6 +338,26 @@ def get_transaction_parser_service(db: AsyncSession = Depends(get_db)):
     )
 
 
+# ── Portfolio Holding Dependencies ───────────────────────────────────────────
+
+
+def get_portfolio_holding_repository(db: AsyncSession = Depends(get_db)):
+    from app.repositories.portfolio_holding_repository import (
+        PortfolioHoldingRepository,
+    )
+
+    return PortfolioHoldingRepository(db)
+
+
+def get_portfolio_holding_service(db: AsyncSession = Depends(get_db)):
+    from app.repositories.portfolio_holding_repository import (
+        PortfolioHoldingRepository,
+    )
+    from app.services.portfolio_holding_service import PortfolioHoldingService
+
+    return PortfolioHoldingService(holding_repo=PortfolioHoldingRepository(db))
+
+
 # ── Internal Helpers ──────────────────────────────────────────────────────────
 
 
