@@ -83,7 +83,7 @@ export const TransactionsFilterBar: React.FC = () => {
           <label className="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wider">Type</label>
           <select
             value={filters.type}
-            onChange={(e) => dispatch(setFilters({ type: e.target.value as any }))}
+            onChange={(e) => dispatch(setFilters({ type: e.target.value as "all" | "credit" | "debit" }))}
             className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-primary-500 focus:border-primary-500"
           >
             <option value="all">All</option>

@@ -15,6 +15,18 @@ export interface TransactionResponse {
   confidenceScore?: number;
 }
 
+interface RawPaginatedResponse<T> {
+  success: boolean;
+  message: string;
+  data: T[];
+  meta: {
+    page: number;
+    page_size: number;
+    total: number;
+    total_pages: number;
+  };
+}
+
 interface RawTransaction {
   id: string;
   date: string;
@@ -75,7 +87,7 @@ export const transactionApi = {
         ([, v]) => v !== "" && v !== null && v !== undefined && v !== "all",
       ),
     );
-    const { data } = await axiosInstance.get<any>(
+    const { data } = await axiosInstance.get<RawPaginatedResponse<RawTransaction>>(
       "/transactions",
       { params: cleanParams }
     );
@@ -98,7 +110,7 @@ export const transactionApi = {
   },
 
   async getCategories(): Promise<CategoryResponse[]> {
-    const { data } = await axiosInstance.get<any>(
+    const { data } = await axiosInstance.get<ApiResponse<string[]>>(
       "/transactions/categories",
     );
     return data.data.map((c: string) => ({
@@ -111,8 +123,8 @@ export const transactionApi = {
 
   async searchTransactions(query: string): Promise<TransactionResponse[]> {
     const { data } = await axiosInstance.get<
-      ApiResponse<RawTransaction[]>
-    >("/transactions/search", { params: { q: query } });
+      RawPaginatedResponse<RawTransaction>
+    >("/transactions", { params: { search: query } });
     return data.data.map(mapTransaction);
   },
 
@@ -147,12 +159,13 @@ export const transactionApi = {
     id: string,
     data: Partial<TransactionResponse>,
   ): Promise<TransactionResponse> {
-    const payload: any = {
-      ...data,
-      transaction_type: data.type,
+    const rest: Record<string, unknown> = { ...data };
+    delete rest.type;
+    delete rest.confidenceScore;
+    const payload = {
+      ...rest,
+      ...(data.type !== undefined ? { transaction_type: data.type } : {}),
     };
-    delete payload.type;
-    delete payload.confidenceScore;
     
     const { data: resData } = await axiosInstance.put<ApiResponse<RawTransaction>>(
       `/transactions/${id}`,

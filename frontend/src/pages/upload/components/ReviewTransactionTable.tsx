@@ -97,7 +97,7 @@ export const ReviewTransactionTable: React.FC<ReviewTransactionTableProps> = () 
               type: "debit",
               category: "Uncategorized",
               merchant: ""
-            } as any);
+            } as TransactionResponse);
           }}
           className="px-3 py-1.5 text-sm bg-primary-50 text-primary-700 rounded-md hover:bg-primary-100 transition-colors"
         >

@@ -9,6 +9,8 @@ import { ROUTES } from "@/routes/routes";
 import { StatementReviewHeader } from "./components/StatementReviewHeader";
 import { ReviewTransactionTable } from "./components/ReviewTransactionTable";
 
+import { parseApiError } from "@/utils/error";
+
 export default function StatementReviewPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -31,8 +33,8 @@ export default function StatementReviewPage() {
         setIsLoadingStatement(true);
         const st = await uploadService.getStatement(id);
         setStatement(st);
-      } catch (err: any) {
-        setStatementError(err.message || "Failed to load statement details.");
+      } catch (err: unknown) {
+        setStatementError(parseApiError(err));
       } finally {
         setIsLoadingStatement(false);
       }

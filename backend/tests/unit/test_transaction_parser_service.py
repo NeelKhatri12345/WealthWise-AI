@@ -86,7 +86,7 @@ def _sample_parsing_result(count: int = 1) -> ParsingResult:
 
 @pytest.mark.asyncio
 async def test_parse_statement_persists_transactions_and_completes() -> None:
-    statement = _make_statement(processing_metadata={"raw_text": "01/05/2024 COFFEE -4.50"})
+    statement = _make_statement(processing_metadata={"extracted_data": "01/05/2024 COFFEE -4.50"})
     service, statement_repo, transaction_repo, processing_service, parser = _make_service(
         statement
     )
@@ -150,7 +150,7 @@ async def test_parse_statement_with_none_processing_metadata_fails_validation() 
 
 @pytest.mark.asyncio
 async def test_parser_exception_marks_statement_failed_and_reraises() -> None:
-    statement = _make_statement(processing_metadata={"raw_text": "garbage"})
+    statement = _make_statement(processing_metadata={"extracted_data": "garbage"})
     service, _, transaction_repo, processing_service, parser = _make_service(statement)
     parser.parse.side_effect = RuntimeError("boom")
 
@@ -167,7 +167,7 @@ async def test_parser_exception_marks_statement_failed_and_reraises() -> None:
 @pytest.mark.asyncio
 async def test_reparse_statement_uses_force_reparse_and_replaces_transactions() -> None:
     statement = _make_statement(
-        processing_metadata={"raw_text": "01/05/2024 COFFEE -4.50"},
+        processing_metadata={"extracted_data": "01/05/2024 COFFEE -4.50"},
         status=StatementStatusEnum.COMPLETED,
     )
     service, _, transaction_repo, processing_service, parser = _make_service(statement)
@@ -186,7 +186,7 @@ async def test_reparse_statement_uses_force_reparse_and_replaces_transactions() 
 
 @pytest.mark.asyncio
 async def test_duplicate_extractions_are_collapsed_before_insert() -> None:
-    statement = _make_statement(processing_metadata={"raw_text": "dupe"})
+    statement = _make_statement(processing_metadata={"extracted_data": "dupe"})
     service, _, transaction_repo, _, parser = _make_service(statement)
 
     duplicate_txn = ParsedTransaction(

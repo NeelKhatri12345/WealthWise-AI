@@ -5,6 +5,7 @@ import { useAppDispatch, useAppSelector } from "@/store";
 import { selectReviewHasUnsavedChanges, saveStatementTransactions, selectReviewTransactions, selectReviewIsSaving, restoreTransactions } from "@/store/slices/statementReviewSlice";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/routes/routes";
+import { parseApiError } from "@/utils/error";
 
 interface StatementReviewHeaderProps {
   statement: StatementDetail;
@@ -25,8 +26,8 @@ export const StatementReviewHeader: React.FC<StatementReviewHeaderProps> = ({ st
     try {
       setError(null);
       await dispatch(saveStatementTransactions({ statementId: statement.id, transactions })).unwrap();
-    } catch (err: any) {
-      setError(typeof err === "string" ? err : err.message || "Failed to save changes.");
+    } catch (err: unknown) {
+      setError(parseApiError(err));
     }
   };
 
@@ -41,8 +42,8 @@ export const StatementReviewHeader: React.FC<StatementReviewHeaderProps> = ({ st
       const updated = await uploadService.completeStatement(statement.id);
       onStatusChange(updated.status);
       navigate(ROUTES.UPLOAD);
-    } catch (err: any) {
-      setError(err.message || "Failed to accept statement.");
+    } catch (err: unknown) {
+      setError(parseApiError(err));
       setIsProcessing(false);
     }
   };
@@ -54,8 +55,8 @@ export const StatementReviewHeader: React.FC<StatementReviewHeaderProps> = ({ st
       await uploadService.reparseStatement(statement.id);
       onStatusChange("processing");
       navigate(ROUTES.UPLOAD);
-    } catch (err: any) {
-      setError(err.message || "Failed to re-run parser.");
+    } catch (err: unknown) {
+      setError(parseApiError(err));
       setIsProcessing(false);
     }
   };

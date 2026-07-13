@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import type { TransactionResponse } from "@/services/api/transaction.api";
 import type { RootState } from "@/store";
+import { parseApiError } from "@/utils/error";
 
 export interface StatementReviewState {
   statementId: string | null;
@@ -33,10 +34,7 @@ export const fetchStatementTransactions = createAsyncThunk<
       const { transactionApi } = await import("@/services/api/transaction.api");
       return await transactionApi.getTransactionsByStatement(statementId);
     } catch (err: unknown) {
-      const axiosErr = err as any;
-      return rejectWithValue(
-        axiosErr.response?.data?.message ?? axiosErr.message ?? "Failed to fetch transactions."
-      );
+      return rejectWithValue(parseApiError(err));
     }
   }
 );
@@ -52,10 +50,7 @@ export const saveStatementTransactions = createAsyncThunk<
       const { transactionApi } = await import("@/services/api/transaction.api");
       await transactionApi.syncTransactions(statementId, transactions);
     } catch (err: unknown) {
-      const axiosErr = err as any;
-      return rejectWithValue(
-        axiosErr.response?.data?.message ?? axiosErr.message ?? "Failed to save transactions."
-      );
+      return rejectWithValue(parseApiError(err));
     }
   }
 );

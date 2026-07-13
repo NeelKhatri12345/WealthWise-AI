@@ -241,7 +241,7 @@ const transactionSlice = createSlice({
       .addCase(updateTransactionThunk.fulfilled, (state, action) => {
         const index = state.transactions.findIndex(t => t.id === action.payload.id);
         if (index >= 0) {
-          state.transactions[index] = action.payload as any; // Cast as transaction types mismatch slightly due to interface duplicating
+          state.transactions[index] = action.payload as Transaction; // Cast as transaction types mismatch slightly due to interface duplicating
         }
       })
       .addCase(deleteTransactionThunk.fulfilled, (state, action) => {

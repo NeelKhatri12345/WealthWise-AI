@@ -35,7 +35,7 @@ export function useAuth(): AuthContextValue {
     void dispatch(logoutThunk());
   }, [dispatch]);
 
-  const login = useCallback((_token: string, _user: User) => {
+  const login = useCallback(() => {
     // Authentication is handled via Redux auth thunks on auth pages.
   }, []);
 
