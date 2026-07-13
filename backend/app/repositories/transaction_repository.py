@@ -165,3 +165,10 @@ class TransactionRepository(BaseRepository[Transaction]):
         result = await self.db.execute(stmt)
         await self.db.flush()
         return result.rowcount or 0
+
+    async def delete_all_by_user(self, user_id: UUID) -> int:
+        """Remove every transaction belonging to the given user."""
+        stmt = delete(Transaction).where(Transaction.user_id == user_id)
+        result = await self.db.execute(stmt)
+        await self.db.flush()
+        return result.rowcount or 0

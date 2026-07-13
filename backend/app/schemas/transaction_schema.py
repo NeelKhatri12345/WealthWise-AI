@@ -38,8 +38,11 @@ class TransactionFilterRequest(BaseModel):
     page: int = 1
     page_size: int = 20
 
+datetime_date = date
+
+
 class TransactionUpdateRequest(BaseModel):
-    date: Optional[date] = None
+    date: Optional[datetime_date] = None
     description: Optional[str] = None
     amount: Optional[Decimal] = None
     transaction_type: Optional[str] = None

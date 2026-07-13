@@ -214,6 +214,13 @@ def get_dashboard_service(db: AsyncSession = Depends(get_db)):
     )
 
 
+def get_transaction_service(db: AsyncSession = Depends(get_db)):
+    from app.repositories.transaction_repository import TransactionRepository
+    from app.services.transaction_service import TransactionService
+
+    return TransactionService(transaction_repo=TransactionRepository(db))
+
+
 # ── OCR Dependencies ──────────────────────────────────────────────────────────
 
 
