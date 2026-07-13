@@ -5,13 +5,13 @@ import { ROUTES } from "@/routes/routes";
 const navItems = [
   { label: "Dashboard", path: ROUTES.DASHBOARD },
   { label: "Upload", path: ROUTES.UPLOAD },
-  { label: "Transactions", path: ROUTES.TRANSACTIONS },
+  // { label: "Transactions", path: ROUTES.TRANSACTIONS },
   { label: "Health Score", path: ROUTES.HEALTH_SCORE },
   { label: "Risk Profile", path: ROUTES.RISK_PROFILE },
-  { label: "Portfolio", path: ROUTES.PORTFOLIO },
+  // { label: "Portfolio", path: ROUTES.PORTFOLIO },
   { label: "AI Coach", path: ROUTES.AI_COACH },
-  { label: "Reports", path: ROUTES.REPORTS },
-  { label: "Notifications", path: ROUTES.NOTIFICATIONS },
+  // { label: "Reports", path: ROUTES.REPORTS },
+  // { label: "Notifications", path: ROUTES.NOTIFICATIONS },
   { label: "Profile", path: ROUTES.PROFILE },
 ];
 
