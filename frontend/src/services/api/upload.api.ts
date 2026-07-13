@@ -18,8 +18,25 @@ import axiosInstance, { type ApiResponse } from "./axiosInstance";
 // Types — mirroring the backend StatementUploadResponse / StatementStatusResponse
 // ---------------------------------------------------------------------------
 
-/** Possible lifecycle states returned by the backend. */
-export type StatementStatus = "pending" | "processing" | "completed" | "failed";
+/**
+ * Possible lifecycle states returned by the backend.
+ * Must stay in sync with backend StatementStatusEnum (app/enums/statement_status_enum.py).
+ */
+export type StatementStatus =
+  | "pending"
+  | "uploaded"
+  | "processing"
+  | "ocr_completed"
+  | "parsing"
+  | "completed"
+  | "failed";
+
+/** Statuses where the pipeline is still running — not yet safe to reparse/accept. */
+export const IN_PROGRESS_STATEMENT_STATUSES: StatementStatus[] = [
+  "pending",
+  "uploaded",
+  "processing",
+];
 
 /**
  * Returned immediately after a successful POST /statements/upload (HTTP 202).

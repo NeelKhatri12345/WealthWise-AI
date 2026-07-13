@@ -8,15 +8,18 @@ GET  /              → List all statements for the authenticated user
 GET  /{id}          → Get a single statement's status and metadata
 DELETE /{id}        → Delete a statement and its associated transactions
 
-Processing pipeline (admin / worker):
-POST /{id}/processing/start          → Transition to PROCESSING
-POST /{id}/processing/run-ocr        → Full OCR step: download → extract → OCR_COMPLETED
-POST /{id}/processing/ocr-completed  → Manually record OCR result (manual flow)
-POST /{id}/processing/parsing        → Transition to PARSING
-POST /{id}/processing/parse          → Run transaction parser (OCR_COMPLETED → COMPLETED)
-POST /{id}/processing/reparse        → Re-run transaction parser (replaces transactions)
-POST /{id}/processing/complete       → Transition to COMPLETED
-POST /{id}/processing/fail           → Transition to FAILED
+Processing pipeline:
+POST /{id}/processing/start          → Transition to PROCESSING (admin / worker)
+POST /{id}/processing/run-ocr        → Full OCR step: download → extract → OCR_COMPLETED (admin / worker)
+POST /{id}/processing/ocr-completed  → Manually record OCR result (admin / worker)
+POST /{id}/processing/parsing        → Transition to PARSING (admin / worker)
+POST /{id}/processing/parse          → Run transaction parser (admin / worker; also invoked
+                                        in-process by the upload background task)
+POST /{id}/processing/reparse        → Re-run transaction parser for the CALLER'S OWN
+                                        statement (owner-only; 403 for non-owners)
+POST /{id}/processing/complete       → Accept/complete the CALLER'S OWN statement
+                                        (owner-only; 403 for non-owners)
+POST /{id}/processing/fail           → Transition to FAILED (admin / worker)
 """
 
 from typing import List
@@ -30,10 +33,12 @@ from app.core.dependencies import (
     get_current_active_user,
     get_ocr_orchestration_service,
     get_statement_processing_service,
+    get_statement_repository,
     get_statement_service,
     get_transaction_parser_service,
 )
-from app.exceptions.custom_exceptions import UnsupportedFileTypeException
+from app.exceptions.custom_exceptions import ForbiddenException, UnsupportedFileTypeException
+from app.repositories.statement_repository import StatementRepository
 from app.schemas.base_schema import APIResponse
 from app.schemas.statement_schema import (
     StatementOcrCompletedRequest,
@@ -356,14 +361,19 @@ async def parse_statement(
     description=(
         "Re-parses a statement that has already completed OCR (e.g. after a "
         "parser fix), replacing any previously parsed transactions. Valid "
-        "from OCR_COMPLETED, PARSING, COMPLETED, or FAILED. Admin / worker only."
+        "from OCR_COMPLETED, PARSING, COMPLETED, or FAILED. The authenticated "
+        "user must own the statement (403 otherwise)."
     ),
 )
 async def reparse_statement(
     statement_id: UUID,
-    _admin=Depends(get_admin_user),
+    current_user=Depends(get_current_active_user),
     service: TransactionParserService = Depends(get_transaction_parser_service),
+    statement_repo: StatementRepository = Depends(get_statement_repository),
 ):
+    owned = await statement_repo.get_by_id_and_user(statement_id, current_user.id)
+    if not owned:
+        raise ForbiddenException("You do not have access to this statement")
     result = await service.reparse_statement(statement_id)
     return APIResponse(success=True, message="Statement re-parsed successfully", data=result)
 
@@ -371,14 +381,21 @@ async def reparse_statement(
 @router.post(
     "/{statement_id}/processing/complete",
     response_model=APIResponse[StatementStatusResponse],
-    summary="Mark processing complete",
-    description="Transition statement to COMPLETED. Admin / worker only.",
+    summary="Accept and complete a statement",
+    description=(
+        "Transition statement to COMPLETED. The authenticated user must own "
+        "the statement (403 otherwise)."
+    ),
 )
 async def mark_statement_completed(
     statement_id: UUID,
-    _admin=Depends(get_admin_user),
+    current_user=Depends(get_current_active_user),
     service: StatementProcessingService = Depends(get_statement_processing_service),
+    statement_repo: StatementRepository = Depends(get_statement_repository),
 ):
+    owned = await statement_repo.get_by_id_and_user(statement_id, current_user.id)
+    if not owned:
+        raise ForbiddenException("You do not have access to this statement")
     result = await service.mark_completed(statement_id)
     return APIResponse(
         success=True,

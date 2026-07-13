@@ -1,6 +1,11 @@
 import React from "react";
 import { Badge } from "@/components/ui/Badge";
-import { uploadService, type StatementDetail, type StatementStatus } from "@/services/api/upload.api";
+import {
+  uploadService,
+  type StatementDetail,
+  type StatementStatus,
+  IN_PROGRESS_STATEMENT_STATUSES,
+} from "@/services/api/upload.api";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { selectReviewHasUnsavedChanges, saveStatementTransactions, selectReviewTransactions, selectReviewIsSaving, restoreTransactions } from "@/store/slices/statementReviewSlice";
 import { useNavigate } from "react-router-dom";
@@ -67,12 +72,19 @@ export const StatementReviewHeader: React.FC<StatementReviewHeaderProps> = ({ st
     }
   };
 
+  // Mirrors the backend state machine (StatementProcessingService):
+  // reparse is valid from ocr_completed/parsing/completed/failed, and
+  // complete (accept) is only valid from parsing (parsing -> completed).
+  const isPipelineRunning = IN_PROGRESS_STATEMENT_STATUSES.includes(statement.status);
+  const canReparse = !isPipelineRunning;
+  const canComplete = statement.status === "parsing";
+
   return (
     <div className="bg-white p-6 rounded-xl border border-wealth-border shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">{statement.fileName}</h1>
         <div className="flex items-center gap-3 mt-2">
-          <Badge variant={statement.status === "completed" ? "success" : statement.status === "processing" ? "warning" : statement.status === "failed" ? "danger" : "default"}>
+          <Badge variant={statement.status === "completed" ? "success" : statement.status === "failed" ? "danger" : isPipelineRunning ? "warning" : "default"}>
             {statement.status.toUpperCase()}
           </Badge>
           <span className="text-sm text-wealth-muted">
@@ -104,15 +116,15 @@ export const StatementReviewHeader: React.FC<StatementReviewHeaderProps> = ({ st
         
         <button
           onClick={handleReparse}
-          disabled={isProcessing || statement.status === "processing"}
+          disabled={isProcessing || !canReparse}
           className="bg-primary-50 text-primary-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-100 transition-colors disabled:opacity-50"
         >
           Re-run Parser
         </button>
-        
+
         <button
           onClick={handleAccept}
-          disabled={isProcessing || statement.status === "completed" || statement.status === "processing"}
+          disabled={isProcessing || !canComplete}
           className="bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors disabled:opacity-50"
         >
           {isProcessing ? "Processing..." : "Accept Statement"}

@@ -82,9 +82,26 @@ export const transactionApi = {
   async getTransactions(
     params: TransactionQueryParams,
   ): Promise<PaginatedResponse<TransactionResponse>> {
+    // Backend query params are snake_case (see GET /transactions in
+    // transaction_routes.py); frontend filter state stays camelCase for
+    // consistency with the rest of the app, so translate at this boundary.
+    const backendParams: Record<string, unknown> = {
+      search: params.search,
+      category: params.category,
+      transaction_type: params.type && params.type !== "all" ? params.type : undefined,
+      date_from: params.dateFrom,
+      date_to: params.dateTo,
+      min_amount: params.amountMin,
+      max_amount: params.amountMax,
+      sort_by: params.sortBy,
+      sort_order: params.sortOrder,
+      page: params.page,
+      page_size: params.pageSize,
+      statement_id: params.statementId,
+    };
     const cleanParams = Object.fromEntries(
-      Object.entries(params).filter(
-        ([, v]) => v !== "" && v !== null && v !== undefined && v !== "all",
+      Object.entries(backendParams).filter(
+        ([, v]) => v !== "" && v !== null && v !== undefined,
       ),
     );
     const { data } = await axiosInstance.get<RawPaginatedResponse<RawTransaction>>(

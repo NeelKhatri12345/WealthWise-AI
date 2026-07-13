@@ -83,7 +83,11 @@ class DocumentExtractionService:
             - The exception is re-raised so the caller can decide further action.
 
         Raises:
-            ValueError:  If the statement does not exist.
+            ValueError:  If the statement does not exist, or if extraction
+                        produced zero rows (e.g. a scanned/image-only PDF —
+                        Docling's table-structure model can still detect
+                        table shapes without text, but with OCR disabled
+                        there is nothing to populate cells with).
             Exception:   Propagated from download or extraction on failure,
                          after the FAILED transition has been recorded.
         """
@@ -114,6 +118,13 @@ class DocumentExtractionService:
                 },
             )
             extraction_result = await self._extractor.extract(file_bytes)
+
+            if not extraction_result.rows:
+                raise ValueError(
+                    "No extractable data found in this document. Scanned or "
+                    "image-only PDFs are not currently supported — please "
+                    "upload a digitally-generated PDF statement."
+                )
 
             processing_metadata = self._build_metadata(extraction_result)
 

@@ -15,13 +15,17 @@ Field mapping
 ─────────────
   Value Date          → date
   Description         → description
-  Transaction Amount  → amount
   Available Balance   → balance
-  CrIDr                → transaction_type (debit/credit)
   Transaction ID       → reference_number
   Cheque No.            → not mapped (no matching Transaction column)
   Txn Posted Date       → not mapped (no matching Transaction column)
   Merchant              → derived from Description via extract_merchant()
+
+  amount + transaction_type: bank statement layouts vary in how they encode
+  this, so two shapes are supported —
+    1. Combined:  Transaction Amount + CrIDr indicator (Cr/Dr)
+    2. Split:     separate Debit / Credit columns, exactly one populated
+  See _resolve_amount_and_type().
 """
 
 from __future__ import annotations
@@ -94,13 +98,12 @@ class DoclingTransactionMapper(TransactionParser):
 
     def _map_row(self, row: dict[str, Any]) -> Optional[ParsedTransaction]:
         date_value = self._parse_date(row.get("Value Date"))
-        amount_value = self._parse_amount(row.get("Transaction Amount"))
+        amount_value, transaction_type = self._resolve_amount_and_type(row)
         if date_value is None or amount_value is None:
             return None
 
         description = str(row.get("Description") or "").strip() or "Unknown transaction"
         balance_value = self._parse_amount(row.get("Available Balance"))
-        transaction_type = self._detect_type(row.get("CrIDr"), amount_value)
         merchant = extract_merchant(description)
         reference_number = self._clean_str(row.get("Transaction ID"))
         # Cheque No. and Txn Posted Date are present on the raw row but have
@@ -171,3 +174,23 @@ class DoclingTransactionMapper(TransactionParser):
         # No explicit CrIDr indicator on a non-negative amount — default to
         # debit (statements skew debit-heavy).
         return "debit"
+
+    def _resolve_amount_and_type(self, row: dict[str, Any]) -> tuple[Optional[Decimal], str]:
+        """
+        Resolve (amount, transaction_type) supporting both layouts:
+          1. Combined "Transaction Amount" + "CrIDr" indicator column.
+          2. Split "Debit" / "Credit" columns, exactly one populated per row.
+        """
+        combined_amount = self._parse_amount(row.get("Transaction Amount"))
+        if combined_amount is not None:
+            return combined_amount, self._detect_type(row.get("CrIDr"), combined_amount)
+
+        debit_amount = self._parse_amount(row.get("Debit"))
+        if debit_amount:
+            return debit_amount, "debit"
+
+        credit_amount = self._parse_amount(row.get("Credit"))
+        if credit_amount:
+            return credit_amount, "credit"
+
+        return None, "debit"

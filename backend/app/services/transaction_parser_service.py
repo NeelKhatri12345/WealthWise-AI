@@ -103,6 +103,19 @@ class TransactionParserService:
 
         try:
             result = self._parser.parse(extracted_data)
+
+            if result.total_lines == 0:
+                # Nothing was ever extracted for this statement (e.g. a
+                # scanned/image-only PDF processed before extraction started
+                # rejecting empty results). Fail clearly instead of silently
+                # completing with zero transactions.
+                error_msg = (
+                    "No data was extracted from this statement. It may be a "
+                    "scanned or unsupported document."
+                )
+                await self._processing_service.mark_failed(statement_id, error_message=error_msg)
+                raise ValidationException(error_msg)
+
             deduped = self._deduplicate(result.transactions)
 
             await self._transaction_repo.delete_by_statement(statement_id)

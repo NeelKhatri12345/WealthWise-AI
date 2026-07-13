@@ -49,6 +49,18 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         logger.critical("Database connection failed on startup", exc_info=exc)
         raise
 
+    # Ensure the MinIO/S3 bucket exists (idempotent — no-op if already present).
+    # Statement upload otherwise fails with an unhandled NoSuchBucket error on
+    # a fresh MinIO instance (e.g. a new machine that never ran minio_setup).
+    try:
+        from app.clients.s3_client import S3Client
+
+        await S3Client(settings).ensure_bucket_exists()
+        logger.info("MinIO bucket verified", extra={"bucket": settings.S3_BUCKET_NAME})
+    except Exception as exc:
+        logger.critical("MinIO bucket check failed on startup", exc_info=exc)
+        raise
+
     # Load ML models into app state
     try:
         from pathlib import Path
