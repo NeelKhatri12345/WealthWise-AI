@@ -2,7 +2,11 @@ import React, { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { setFilters, resetFilters, fetchCategories } from "@/store/slices/transactionSlice";
 
-export const TransactionsFilterBar: React.FC = () => {
+interface TransactionsFilterBarProps {
+  onDeleteAll?: () => void;
+}
+
+export const TransactionsFilterBar: React.FC<TransactionsFilterBarProps> = ({ onDeleteAll }) => {
   const dispatch = useAppDispatch();
   const { filters, categories } = useAppSelector((state) => state.transactions);
 
@@ -141,6 +145,15 @@ export const TransactionsFilterBar: React.FC = () => {
         >
           Reset Filters
         </button>
+
+        {onDeleteAll && (
+          <button
+            onClick={onDeleteAll}
+            className="px-4 py-2 text-sm font-medium text-wealth-danger bg-white border border-red-200 hover:bg-red-50 rounded-md transition-colors h-[38px]"
+          >
+            Delete All Transactions
+          </button>
+        )}
       </div>
     </div>
   );

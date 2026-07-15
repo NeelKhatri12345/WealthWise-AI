@@ -24,6 +24,7 @@ Dependencies (install once):
 from __future__ import annotations
 
 import asyncio
+import re
 from io import BytesIO
 from typing import Any
 
@@ -66,10 +67,74 @@ _HEADER_ALIASES: dict[str, str] = {
     "closingbalance": "Available Balance",
 }
 
+# Column-name sets used by _is_transaction_table().
+# A table qualifies when it has a date column, a description column, and at
+# least one amount column — regardless of which bank issued the statement.
+_TXN_DATE_COLS = {"Value Date", "Txn Date", "Transaction Date", "Date", "Txn Posted Date"}
+_TXN_DESC_COLS = {"Description", "Narration", "Particulars", "Transaction Remarks"}
+_TXN_AMOUNT_COLS = {
+    "Debit", "Credit", "Withdrawal", "Deposit", "Dr", "Cr",
+    "Transaction Amount", "Available Balance",
+}
+
 
 def _normalize_header(raw_header: str) -> str:
     """Collapse a raw table header to a lookup key: lowercase, alphanumeric only."""
     return "".join(ch for ch in raw_header.lower() if ch.isalnum())
+
+
+def _clean_column_name(raw: Any) -> str:
+    """
+    Collapse whitespace and newlines in a column label, then strip.
+    Matches the POC's normalize_column_name() pre-processing step.
+    """
+    text = str(raw) if raw is not None else ""
+    text = text.replace("\n", " ")
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
+
+
+def _deduplicate_columns(columns: list[str]) -> list[str]:
+    """
+    Deduplicate column names by appending _1, _2, … to later occurrences.
+    Matches the POC's canonicalize_column_names() deduplication logic so
+    that tables with repeated column labels (e.g. two unnamed columns) do
+    not silently drop data during to_dict().
+    """
+    seen: dict[str, int] = {}
+    result: list[str] = []
+    for col in columns:
+        if col in seen:
+            seen[col] += 1
+            result.append(f"{col}_{seen[col]}")
+        else:
+            seen[col] = 0
+            result.append(col)
+    return result
+
+
+def _clean_cell_value(value: Any) -> Any:
+    """
+    Replace float NaN / None / NaT sentinel strings with None.
+    Matches the POC's normalize_spaces() + clean_dataframe_for_json() pair.
+
+    Without this step, Docling fills empty cells with float('nan').
+    When passed through to_dict() those become float('nan') values in the
+    row dict.  The mapper's _parse_date() and _parse_amount() both receive
+    str(float('nan')) == 'nan' and return None, causing every row to be
+    skipped.
+    """
+    import math
+
+    if value is None:
+        return None
+    # float NaN from pandas empty cells
+    if isinstance(value, float) and math.isnan(value):
+        return None
+    text = str(value).strip()
+    if text.lower() in {"nan", "none", "nat", ""}:
+        return None
+    return value
 
 
 def _normalize_row_keys(row: dict[str, Any]) -> dict[str, Any]:
@@ -77,25 +142,58 @@ def _normalize_row_keys(row: dict[str, Any]) -> dict[str, Any]:
     normalized: dict[str, Any] = {}
     for key, value in row.items():
         canonical = _HEADER_ALIASES.get(_normalize_header(str(key)))
-        normalized[canonical or str(key).strip()] = value
+        normalized[canonical or str(key).strip()] = _clean_cell_value(value)
     return normalized
+
+
+def _is_transaction_table(columns: set[str]) -> bool:
+    """
+    Return True when the column set contains at least one date column, at
+    least one description column, and at least one amount column.
+
+    Deliberately bank-agnostic: the exact column names vary across issuers
+    ("Debit"/"Credit", "Transaction Amount", "Withdrawal"/"Deposit", etc.)
+    so we accept any recognised variant for each role.
+    """
+    has_date = bool(_TXN_DATE_COLS & columns)
+    has_desc = bool(_TXN_DESC_COLS & columns)
+    has_amount = bool(_TXN_AMOUNT_COLS & columns)
+    return has_date and has_desc and has_amount
 
 
 def _dataframe_to_records(dataframe: Any) -> list[dict[str, Any]]:
     """
     Convert a Docling table DataFrame to a list of row dicts.
 
-    Docling's table structure model usually recognises the header row, but
-    on some layouts it comes back as generic/unnamed columns with the real
-    header text sitting in the first data row instead. Detect that case and
-    promote it before converting to records.
+    Steps applied to match the proven POC behaviour:
+      1. Strip / collapse whitespace and newlines in column labels.
+      2. Deduplicate column names (prevents silent data loss in to_dict).
+      3. Unlabelled-header promotion: if every column label is purely
+         numeric or "unnamed…", treat the first data row as the header.
+      4. NaN / None / NaT cell cleaning (applied via _normalize_row_keys).
     """
-    columns = [str(c).strip() for c in dataframe.columns]
-    looks_unlabelled = all(c.isdigit() or c.lower().startswith("unnamed") for c in columns)
+    import pandas as pd
+
+    # 1. Clean column labels (collapse newlines and multi-spaces).
+    cleaned_cols = [_clean_column_name(c) for c in dataframe.columns]
+
+    # 2. Deduplicate column names before any further processing.
+    deduped_cols = _deduplicate_columns(cleaned_cols)
+    dataframe = dataframe.copy()
+    dataframe.columns = deduped_cols
+
+    # 3. Unlabelled-header promotion.
+    looks_unlabelled = all(
+        c.isdigit() or c.lower().startswith("unnamed") for c in deduped_cols
+    )
     if looks_unlabelled and len(dataframe) > 0:
-        header = [str(v).strip() for v in dataframe.iloc[0]]
-        dataframe = dataframe.iloc[1:]
-        dataframe.columns = header
+        new_header = [_clean_column_name(v) for v in dataframe.iloc[0]]
+        new_header = _deduplicate_columns(new_header)
+        dataframe = dataframe.iloc[1:].copy()
+        dataframe.columns = new_header
+
+    # Replace pandas NaN with None so to_dict() never emits float('nan').
+    dataframe = dataframe.where(pd.notnull(dataframe), None)
 
     return dataframe.to_dict(orient="records")
 
@@ -120,7 +218,8 @@ class DoclingExtractor(DocumentExtractor):
         logger.info("DoclingExtractor: starting extraction")
 
         pipeline_options = PdfPipelineOptions()
-        pipeline_options.do_ocr = False  # Docling must never perform OCR.
+        pipeline_options.do_ocr = False            # Docling must never perform OCR.
+        pipeline_options.do_table_structure = True  # Required: populate table cell content.
 
         converter = DocumentConverter(
             format_options={InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options)}
@@ -131,8 +230,29 @@ class DoclingExtractor(DocumentExtractor):
 
         rows: list[dict[str, Any]] = []
         for table in document.tables:
-            dataframe = table.export_to_dataframe()
-            rows.extend(_dataframe_to_records(dataframe))
+            try:
+                dataframe = table.export_to_dataframe(doc=document)
+            except Exception as exc:
+                logger.warning(
+                    "DoclingExtractor: failed to export table to DataFrame: %s", exc
+                )
+                continue
+            if dataframe is None or dataframe.empty:
+                continue
+
+            records = _dataframe_to_records(dataframe)
+
+            # Apply alias mapping to resolve column names before the
+            # is_transaction_table check so the check sees canonical names.
+            if records:
+                aliased_cols = {
+                    (_HEADER_ALIASES.get(_normalize_header(k)) or k)
+                    for k in records[0].keys()
+                }
+                if not _is_transaction_table(aliased_cols):
+                    continue
+
+            rows.extend(records)
 
         normalized_rows = [_normalize_row_keys(row) for row in rows]
         page_count = len(document.pages) if hasattr(document, "pages") else 1

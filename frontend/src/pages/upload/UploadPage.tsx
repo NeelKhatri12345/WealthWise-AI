@@ -37,6 +37,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Alert } from "@/components/ui/Alert";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { cn } from "@/utils/cn";
+import TransactionsPage from "@/pages/transactions/TransactionsPage";
 
 import { useAppDispatch, useAppSelector } from "@/store";
 import {
@@ -720,6 +721,9 @@ export default function UploadPage() {
           are deleted from our servers after analysis is complete.
         </Alert>
       </div>
+
+      {/* ── Transactions Section ── */}
+      <TransactionsPage hideHeader />
     </div>
   );
 }

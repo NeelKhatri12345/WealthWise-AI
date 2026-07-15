@@ -12,6 +12,7 @@ from app.core.dependencies import (
     get_transaction_parser_service,
     get_transaction_repository,
     get_statement_repository,
+    get_transaction_service,
 )
 from app.repositories.transaction_repository import TransactionRepository
 from app.schemas.base_schema import APIResponse, PaginatedResponse, PaginationMeta
@@ -95,6 +96,24 @@ async def list_categories(
         success=True,
         message="Categories retrieved",
         data=categories,
+    )
+
+
+@router.delete(
+    "/all",
+    response_model=APIResponse[dict],
+    summary="Delete all transactions for the current user",
+)
+async def delete_all_transactions(
+    current_user=Depends(get_current_active_user),
+    service=Depends(get_transaction_service),
+):
+    from app.services.transaction_service import TransactionService
+    deleted_count = await service.delete_all_transactions(current_user.id)
+    return APIResponse(
+        success=True,
+        message=f"{deleted_count} transactions deleted",
+        data={"deleted_count": deleted_count},
     )
 
 

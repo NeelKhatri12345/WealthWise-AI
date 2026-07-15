@@ -187,6 +187,21 @@ export const bulkDeleteTransactionsThunk = createAsyncThunk(
   },
 );
 
+export const deleteAllTransactionsThunk = createAsyncThunk(
+  "transactions/deleteAll",
+  async (_, { rejectWithValue }) => {
+    try {
+      const { transactionApi } = await import("../../services/api/transaction.api");
+      return await transactionApi.deleteAllTransactions();
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      return rejectWithValue(
+        error.response?.data?.message ?? "Failed to delete all transactions",
+      );
+    }
+  },
+);
+
 const transactionSlice = createSlice({
   name: "transactions",
   initialState,
@@ -259,6 +274,12 @@ const transactionSlice = createSlice({
         const deletedIds = action.payload;
         state.transactions = state.transactions.filter(t => !deletedIds.includes(t.id));
         state.selectedIds = [];
+      })
+      .addCase(deleteAllTransactionsThunk.fulfilled, (state) => {
+        state.transactions = [];
+        state.selectedIds = [];
+        state.pagination.total = 0;
+        state.pagination.totalPages = 0;
       });
   },
 });

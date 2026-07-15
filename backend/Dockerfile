@@ -34,8 +34,11 @@ WORKDIR /app
 # the active pipeline. Docling reads PDFs directly — no rasterization.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
-    tesseract-ocr \
-    tesseract-ocr-eng \
+    libgl1 \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender1 \
     libmagic1 \
     curl \
     && rm -rf /var/lib/apt/lists/*
@@ -50,8 +53,19 @@ RUN groupadd -r wealthwise && useradd -r -g wealthwise -s /sbin/nologin wealthwi
 COPY --chown=wealthwise:wealthwise . .
 
 # Create required directories with correct ownership
-RUN mkdir -p app/logs app/static app/ml_models \
-    && chown -R wealthwise:wealthwise app/logs app/static app/ml_models
+# /app/.cache/huggingface is the writable cache for Docling/HuggingFace model
+# downloads. HF_HOME is set below so that snapshot_download() never tries to
+# write to ~/. (which does not exist for a system user created with useradd -r).
+RUN mkdir -p app/logs app/static app/ml_models .cache/huggingface \
+    && chown -R wealthwise:wealthwise app/logs app/static app/ml_models .cache
+
+# Tell HuggingFace (and Docling, which uses hf_hub internally) to store all
+# downloaded models under /app/.cache/huggingface so the non-root wealthwise
+# user always has write access.  TRANSFORMERS_CACHE is the legacy alias kept
+# for compatibility with older transformers/tokenizers versions.
+ENV HF_HOME=/app/.cache/huggingface \
+    TRANSFORMERS_CACHE=/app/.cache/huggingface \
+    HF_HUB_CACHE=/app/.cache/huggingface
 
 # Switch to non-root user
 USER wealthwise

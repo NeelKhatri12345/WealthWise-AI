@@ -82,6 +82,7 @@ export const transactionApi = {
   async getTransactions(
     params: TransactionQueryParams,
   ): Promise<PaginatedResponse<TransactionResponse>> {
+<<<<<<< HEAD
     // Backend query params are snake_case (see GET /transactions in
     // transaction_routes.py); frontend filter state stays camelCase for
     // consistency with the rest of the app, so translate at this boundary.
@@ -108,6 +109,48 @@ export const transactionApi = {
       "/transactions",
       { params: cleanParams }
     );
+=======
+    // Map camelCase filter keys to the snake_case names the backend expects.
+    const {
+      type,
+      amountMin,
+      amountMax,
+      dateFrom,
+      dateTo,
+      sortBy,
+      sortOrder,
+      pageSize,
+      statementId,
+      ...rest
+    } = params;
+
+    const mapped: Record<string, unknown> = {
+      ...rest,
+      ...(type && type !== "all" ? { transaction_type: type } : {}),
+      ...(amountMin != null ? { min_amount: amountMin } : {}),
+      ...(amountMax != null ? { max_amount: amountMax } : {}),
+      ...(dateFrom ? { date_from: dateFrom } : {}),
+      ...(dateTo ? { date_to: dateTo } : {}),
+      ...(sortBy ? { sort_by: sortBy } : {}),
+      ...(sortOrder ? { sort_order: sortOrder } : {}),
+      ...(pageSize ? { page_size: pageSize } : {}),
+      ...(statementId ? { statement_id: statementId } : {}),
+    };
+
+    // Drop empty / null / undefined values.
+    // Drop empty / null / undefined values.
+const cleanParams = Object.fromEntries(
+  Object.entries(mapped).filter(
+    ([, v]) => v !== "" && v !== null && v !== undefined,
+  ),
+);
+
+const { data } =
+  await axiosInstance.get<RawPaginatedResponse<RawTransaction>>(
+    "/transactions",
+    { params: cleanParams },
+  );
+>>>>>>> main
     return {
       data: data.data.map(mapTransaction),
       pagination: {
@@ -193,6 +236,13 @@ export const transactionApi = {
 
   async deleteTransaction(id: string): Promise<void> {
     await axiosInstance.delete(`/transactions/${id}`);
+  },
+
+  async deleteAllTransactions(): Promise<{ deletedCount: number }> {
+    const { data } = await axiosInstance.delete<ApiResponse<{ deleted_count: number }>>(
+      "/transactions/all",
+    );
+    return { deletedCount: data.data.deleted_count };
   },
 
   async bulkUpdateCategory(

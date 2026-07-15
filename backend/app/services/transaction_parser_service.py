@@ -103,6 +103,7 @@ class TransactionParserService:
 
         try:
             result = self._parser.parse(extracted_data)
+<<<<<<< HEAD
 
             if result.total_lines == 0:
                 # Nothing was ever extracted for this statement (e.g. a
@@ -116,10 +117,17 @@ class TransactionParserService:
                 await self._processing_service.mark_failed(statement_id, error_message=error_msg)
                 raise ValidationException(error_msg)
 
+=======
+            logger.info(
+                "TransactionParserService received %d ParsedTransaction objects",
+                len(result.transactions),
+            )
+>>>>>>> main
             deduped = self._deduplicate(result.transactions)
 
             await self._transaction_repo.delete_by_statement(statement_id)
 
+            logger.info("Building database records...")
             records = [
                 {
                     "statement_id": statement_id,
@@ -135,6 +143,7 @@ class TransactionParserService:
                 }
                 for t in deduped
             ]
+            logger.info("Prepared %d database records", len(records))
             for idx, t in enumerate(deduped):
                 desc_len = len(t.description) if t.description else 0
                 merch_len = len(t.merchant) if t.merchant else 0
@@ -160,9 +169,9 @@ class TransactionParserService:
                         )
 
             if records:
-                logger.info("Starting database insert")
+                logger.info("Inserting %d records into database", len(records))
                 await self._transaction_repo.bulk_create(records)
-                logger.info("Insert completed")
+                logger.info("Successfully inserted %d transactions", len(records))
 
             status_response = await self._processing_service.mark_completed(statement_id)
             logger.info("Statement marked completed")

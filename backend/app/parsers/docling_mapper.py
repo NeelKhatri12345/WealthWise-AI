@@ -11,10 +11,11 @@ Implements the TransactionParser interface so it plugs into
 TransactionParserService via app/core/dependencies.py::get_transaction_parser()
 with no changes to the parsing/persistence pipeline.
 
-Field mapping
-─────────────
+Field mapping — Case A (Transaction Amount schema)
+───────────────────────────────────────────────────
   Value Date          → date
   Description         → description
+<<<<<<< HEAD
   Available Balance   → balance
   Transaction ID       → reference_number
   Cheque No.            → not mapped (no matching Transaction column)
@@ -26,6 +27,26 @@ Field mapping
     1. Combined:  Transaction Amount + CrIDr indicator (Cr/Dr)
     2. Split:     separate Debit / Credit columns, exactly one populated
   See _resolve_amount_and_type().
+=======
+  Transaction Amount  → amount
+  CrIDr               → transaction_type (debit/credit)
+  Available Balance   → balance
+  Transaction ID      → reference_number
+  Merchant            → derived from Description via extract_merchant()
+
+Field mapping — Case B (Debit / Credit column schema)
+──────────────────────────────────────────────────────
+  Value Date          → date
+  Description         → description
+  Debit (non-empty)   → amount, transaction_type = "debit"
+  Credit (non-empty)  → amount, transaction_type = "credit"
+  Available Balance   → balance
+  Transaction ID      → reference_number
+  Merchant            → derived from Description via extract_merchant()
+
+  Cheque No. and Txn Posted Date are present on raw rows but have no
+  corresponding Transaction column and are intentionally not mapped.
+>>>>>>> main
 """
 
 from __future__ import annotations
@@ -75,6 +96,10 @@ class DoclingTransactionMapper(TransactionParser):
             },
         )
 
+        logger.info(
+            "DoclingTransactionMapper produced %d ParsedTransaction objects",
+            len(transactions),
+        )
         return ParsingResult(
             transactions=transactions,
             parser_name=self.parser_name,
@@ -97,11 +122,42 @@ class DoclingTransactionMapper(TransactionParser):
         return data if isinstance(data, list) else []
 
     def _map_row(self, row: dict[str, Any]) -> Optional[ParsedTransaction]:
+        # ── Date (required) ───────────────────────────────────────────────────
         date_value = self._parse_date(row.get("Value Date"))
+<<<<<<< HEAD
         amount_value, transaction_type = self._resolve_amount_and_type(row)
         if date_value is None or amount_value is None:
+=======
+        if date_value is None:
+>>>>>>> main
             return None
 
+        # ── Amount + transaction_type (schema-agnostic) ───────────────────────
+        # Case A: single signed/unsigned amount column with explicit Cr/Dr flag.
+        if "Transaction Amount" in row:
+            amount_value = self._parse_amount(row.get("Transaction Amount"))
+            if amount_value is None:
+                return None
+            transaction_type = self._detect_type(row.get("CrIDr"), amount_value)
+
+        # Case B: separate Debit / Credit columns.
+        else:
+            raw_debit = row.get("Debit")
+            raw_credit = row.get("Credit")
+            debit_value = self._parse_amount(raw_debit)
+            credit_value = self._parse_amount(raw_credit)
+
+            if debit_value is not None:
+                amount_value = debit_value
+                transaction_type = "debit"
+            elif credit_value is not None:
+                amount_value = credit_value
+                transaction_type = "credit"
+            else:
+                # Both columns absent or unparseable — skip row.
+                return None
+
+        # ── Remaining fields ──────────────────────────────────────────────────
         description = str(row.get("Description") or "").strip() or "Unknown transaction"
         balance_value = self._parse_amount(row.get("Available Balance"))
         merchant = extract_merchant(description)

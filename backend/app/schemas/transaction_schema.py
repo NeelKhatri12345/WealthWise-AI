@@ -39,7 +39,11 @@ class TransactionFilterRequest(BaseModel):
     page: int = 1
     page_size: int = 20
 
+datetime_date = date
+
+
 class TransactionUpdateRequest(BaseModel):
+<<<<<<< HEAD
     # Annotated with the aliased `_date` import, not `date`: a field literally
     # named "date" combined with an `Optional[date] = None` default makes
     # Pydantic v2 resolve the annotation against the class's own `date = None`
@@ -50,6 +54,9 @@ class TransactionUpdateRequest(BaseModel):
     # one needing the aliased import. The field name itself is unchanged, so
     # the JSON API contract ("date": "...") stays the same.
     date: Optional[_date] = None
+=======
+    date: Optional[datetime_date] = None
+>>>>>>> main
     description: Optional[str] = None
     amount: Optional[Decimal] = None
     transaction_type: Optional[str] = None

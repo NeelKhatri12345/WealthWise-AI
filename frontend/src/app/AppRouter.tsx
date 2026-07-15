@@ -19,26 +19,26 @@ const DashboardPage = React.lazy(
 );
 const UploadPage = React.lazy(() => import("@/pages/upload/UploadPage"));
 const StatementReviewPage = React.lazy(() => import("@/pages/upload/StatementReviewPage"));
-const TransactionsPage = React.lazy(
-  () => import("@/pages/transactions/TransactionsPage"),
-);
+// const TransactionsPage = React.lazy(
+//   () => import("@/pages/transactions/TransactionsPage"),
+// );
 const HealthScorePage = React.lazy(
   () => import("@/pages/health/HealthScorePage"),
 );
 const RiskProfilePage = React.lazy(
   () => import("@/pages/risk/RiskProfilePage"),
 );
-const PortfolioPage = React.lazy(
-  () => import("@/pages/portfolio/PortfolioPage"),
-);
-const PortfolioHoldingsPage = React.lazy(
-  () => import("@/pages/portfolio-holdings/PortfolioHoldingsPage"),
-);
+// const PortfolioPage = React.lazy(
+//   () => import("@/pages/portfolio/PortfolioPage"),
+// );
+// const PortfolioHoldingsPage = React.lazy(
+//   () => import("@/pages/portfolio-holdings/PortfolioHoldingsPage"),
+// );
 const AICoachPage = React.lazy(() => import("@/pages/coach/AICoachPage"));
-const ReportsPage = React.lazy(() => import("@/pages/reports/ReportsPage"));
-const NotificationsPage = React.lazy(
-  () => import("@/pages/notifications/NotificationsPage"),
-);
+// const ReportsPage = React.lazy(() => import("@/pages/reports/ReportsPage"));
+// const NotificationsPage = React.lazy(
+//   () => import("@/pages/notifications/NotificationsPage"),
+// );
 const ProfilePage = React.lazy(() => import("@/pages/profile/ProfilePage"));
 const SettingsPage = React.lazy(() => import("@/pages/settings/SettingsPage"));
 const AdminDashboardPage = React.lazy(
@@ -72,23 +72,29 @@ export function AppRouter() {
               <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
               <Route path={ROUTES.UPLOAD} element={<UploadPage />} />
               <Route path={ROUTES.STATEMENT_REVIEW} element={<StatementReviewPage />} />
+              {/*
               <Route
                 path={ROUTES.TRANSACTIONS}
                 element={<TransactionsPage />}
               />
+              */}
               <Route path={ROUTES.HEALTH_SCORE} element={<HealthScorePage />} />
               <Route path={ROUTES.RISK_PROFILE} element={<RiskProfilePage />} />
+              {/*
               <Route path={ROUTES.PORTFOLIO} element={<PortfolioPage />} />
               <Route
                 path={ROUTES.PORTFOLIO_HOLDINGS}
                 element={<PortfolioHoldingsPage />}
               />
+              */}
               <Route path={ROUTES.AI_COACH} element={<AICoachPage />} />
+              {/*
               <Route path={ROUTES.REPORTS} element={<ReportsPage />} />
               <Route
                 path={ROUTES.NOTIFICATIONS}
                 element={<NotificationsPage />}
               />
+              */}
               <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
               <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
             </Route>
