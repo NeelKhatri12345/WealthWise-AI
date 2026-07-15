@@ -124,6 +124,31 @@ class TransactionRepository(BaseRepository[Transaction]):
         rows = result.all()
         return {"year": year, "month": month, "rows": [dict(r._mapping) for r in rows]}
 
+    async def get_total_aggregates(self, user_id: UUID) -> dict:
+        """Calculate total sum of credit and debit transaction amounts for a user."""
+        stmt = (
+            select(
+                Transaction.transaction_type,
+                func.sum(Transaction.amount).label("total")
+            )
+            .where(Transaction.user_id == user_id)
+            .group_by(Transaction.transaction_type)
+        )
+        result = await self.db.execute(stmt)
+        rows = result.all()
+        
+        total_income = Decimal("0")
+        total_expenses = Decimal("0")
+        for row in rows:
+            if row.transaction_type == "credit":
+                total_income = Decimal(str(row.total or 0))
+            elif row.transaction_type == "debit":
+                total_expenses = Decimal(str(row.total or 0))
+        return {
+            "total_income": total_income,
+            "total_expenses": total_expenses
+        }
+
     async def bulk_create(self, records: list[dict]) -> None:
         """Efficient bulk insert of extracted transactions."""
         from sqlalchemy.dialects.postgresql import insert

@@ -13,36 +13,51 @@ from app.core.logger import logger
 from app.exceptions.custom_exceptions import NotFoundException
 from app.models.transaction import Transaction
 from app.repositories.analytics_repository import AnalyticsRepository
-from app.schemas.health_score_schema import HealthScoreResponse
+from app.schemas.health_score_schema import HealthScoreDetailResponse
 from app.schemas.risk_profile_schema import RiskProfileResponse
+from app.services.financial_metrics_service import FinancialMetricsService
+from app.services.health_score_service import HealthScoreService
 
 
 class AnalyticsService:
 
-    def __init__(self, analytics_repo: AnalyticsRepository) -> None:
+    def __init__(
+        self,
+        analytics_repo: AnalyticsRepository,
+        metrics_service: FinancialMetricsService,
+        health_score_service: HealthScoreService,
+    ) -> None:
         self._repo = analytics_repo
+        self._metrics_service = metrics_service
+        self._health_score_service = health_score_service
 
-    async def get_latest_health_score(self, user_id: UUID) -> HealthScoreResponse:
-        record = await self._repo.get_latest_health_score(user_id)
-        if not record:
+    async def get_latest_health_score(self, user_id: UUID) -> HealthScoreDetailResponse:
+        """Calculate and return the latest health score on demand."""
+        metrics = await self._metrics_service.get_metrics(user_id)
+        if metrics.transaction_count == 0:
             raise NotFoundException(
                 "No health score found. Please upload a bank statement first."
             )
-        return HealthScoreResponse.from_orm_with_label(record)
+        return self._health_score_service.calculate_health_score(metrics)
 
     async def get_health_score_history(
         self, user_id: UUID, limit: int = 10
-    ) -> list[HealthScoreResponse]:
-        records = await self._repo.get_health_score_history(user_id, limit)
-        return [HealthScoreResponse.from_orm_with_label(r) for r in records]
+    ) -> list[HealthScoreDetailResponse]:
+        """Return history of health scores (calculated on demand)."""
+        metrics = await self._metrics_service.get_metrics(user_id)
+        if metrics.transaction_count == 0:
+            return []
+        score = self._health_score_service.calculate_health_score(metrics)
+        return [score]
 
     async def get_health_score_by_statement(
         self, user_id: UUID, statement_id: UUID
-    ) -> HealthScoreResponse:
-        record = await self._repo.get_health_score_by_statement(statement_id)
-        if not record or record.user_id != user_id:
+    ) -> HealthScoreDetailResponse:
+        """Calculate and return the health score for a specific statement on demand."""
+        metrics = await self._metrics_service.get_metrics(user_id, statement_id)
+        if metrics.transaction_count == 0:
             raise NotFoundException("Health score not found for this statement")
-        return HealthScoreResponse.from_orm_with_label(record)
+        return self._health_score_service.calculate_health_score(metrics)
 
     async def get_latest_risk_profile(self, user_id: UUID) -> RiskProfileResponse:
         record = await self._repo.get_latest_risk_profile(user_id)
@@ -64,46 +79,20 @@ class AnalyticsService:
         statement_id: UUID,
         transactions: Sequence[Transaction],
         request: Request | None = None,
-    ):
+    ) -> HealthScoreDetailResponse:
         """
         Computes financial health score from transaction list.
-        Business logic placeholder — implement with notebook formulas.
+        Phase 2 architectural changes: Do not persist to database during this phase.
         """
-        # TODO: Port health score computation from 04_financial_health_score.ipynb
-        # Placeholder implementation
-        total_credits = sum(
-            float(t.amount) for t in transactions if t.transaction_type == "credit"
-        )
-        total_debits = sum(
-            float(t.amount) for t in transactions if t.transaction_type == "debit"
-        )
-        savings_rate = (
-            ((total_credits - total_debits) / total_credits * 100)
-            if total_credits
-            else 0
-        )
-        expense_ratio = (total_debits / total_credits * 100) if total_credits else 100
-        overall_score = max(0.0, min(100.0, savings_rate))
-
-        record = await self._repo.save_health_score(
-            {
-                "user_id": user_id,
-                "statement_id": statement_id,
-                "overall_score": round(overall_score, 2),
-                "savings_rate": round(savings_rate, 2),
-                "expense_ratio": round(expense_ratio, 2),
-                "score_breakdown": {
-                    "total_credits": total_credits,
-                    "total_debits": total_debits,
-                },
-            }
-        )
+        metrics = self._metrics_service.compute_metrics_from_transactions(transactions)
+        score_detail = self._health_score_service.calculate_health_score(metrics)
 
         logger.info(
-            "Health score computed",
-            extra={"user_id": str(user_id), "score": overall_score},
+            "Health score computed on demand",
+            extra={"user_id": str(user_id), "score": score_detail.score},
         )
-        return record
+        return score_detail
+
 
     async def compute_and_save_risk_profile(
         self,

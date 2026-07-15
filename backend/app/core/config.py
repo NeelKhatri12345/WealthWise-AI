@@ -138,6 +138,15 @@ class Settings(BaseSettings):
     # Blocks below this threshold are discarded before building OCRResult.
     OCR_CONFIDENCE_THRESHOLD: float = Field(default=0.5, ge=0.0, le=1.0)
 
+    # ── AI Provider (Financial Profile Chatbot) ────────────────────
+    # Controls which AI backend the financial profile chatbot uses.
+    # "disabled" (default) → deterministic rule-based question flow; no API key required.
+    # "openai"             → uses OPENAI_API_KEY + AI_MODEL_NAME
+    # "gemini"             → uses existing GEMINI_API_KEY + AI_MODEL_NAME
+    AI_PROVIDER: str = Field(default="disabled", pattern="^(disabled|openai|gemini)$")
+    OPENAI_API_KEY: str = ""       # Only read when AI_PROVIDER=openai
+    AI_MODEL_NAME: str = ""        # Override model name; provider uses its own default if empty
+
     @property
     def max_file_size_bytes(self) -> int:
         return self.MAX_FILE_SIZE_MB * 1024 * 1024

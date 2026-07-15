@@ -6,7 +6,11 @@ via Base.metadata when autogenerating migrations.
 """
 
 from app.models.ai_conversation import AIConversation
+from app.models.financial_chat_message import FinancialChatMessage
+from app.models.financial_chat_session import FinancialChatSession
+from app.models.financial_profile import FinancialProfile
 from app.models.health_score import HealthScore
+from app.models.health_score_snapshot import HealthScoreSnapshot
 from app.models.portfolio import Portfolio
 from app.models.risk_profile import RiskProfile
 from app.models.role import Role
@@ -20,7 +24,11 @@ __all__ = [
     "Statement",
     "Transaction",
     "HealthScore",
+    "HealthScoreSnapshot",
     "RiskProfile",
     "Portfolio",
     "AIConversation",
+    "FinancialProfile",
+    "FinancialChatSession",
+    "FinancialChatMessage",
 ]

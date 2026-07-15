@@ -52,6 +52,17 @@ class User(UUIDMixin, TimestampMixin, Base):
     portfolio_holdings: Mapped[list["PortfolioHolding"]] = relationship(
         "PortfolioHolding", back_populates="user", cascade="all, delete-orphan"
     )
+    # ── Financial Profile & Chat ──────────────────────────────────────
+    financial_profile: Mapped["FinancialProfile | None"] = relationship(
+        "FinancialProfile", back_populates="user", uselist=False, cascade="all, delete-orphan"
+    )
+    financial_chat_sessions: Mapped[list["FinancialChatSession"]] = relationship(
+        "FinancialChatSession", back_populates="user", cascade="all, delete-orphan"
+    )
+    health_score_snapshots: Mapped[list["HealthScoreSnapshot"]] = relationship(
+        "HealthScoreSnapshot", back_populates="user", cascade="all, delete-orphan"
+    )
 
     def __repr__(self) -> str:
         return f"<User id={self.id} email={self.email}>"
+

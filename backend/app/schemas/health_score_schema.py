@@ -44,3 +44,25 @@ class HealthScoreResponse(BaseModel):
         obj = cls.model_validate(record)
         obj.score_label = label
         return obj
+
+
+class HealthScoreBreakdown(BaseModel):
+    savings_rate: int
+    expense_ratio: int
+    cash_flow: int
+    spending_behaviour: int
+    income_stability: int
+    transaction_diversity: int
+    financial_discipline: int
+
+
+class HealthScoreDetailResponse(BaseModel):
+    score: int
+    grade: str
+    status: str
+    breakdown: HealthScoreBreakdown
+    strengths: list[str]
+    recommendations: list[str]
+    notes: list[str] = []
+
+

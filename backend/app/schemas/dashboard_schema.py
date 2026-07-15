@@ -17,6 +17,8 @@ class DashboardSummaryResponse(BaseModel):
     total_balance: Decimal
     monthly_income: Decimal
     monthly_expenses: Decimal
+    total_income: Decimal
+    total_expenses: Decimal
     savings_rate: Decimal
     health_score: Decimal
     health_score_label: str

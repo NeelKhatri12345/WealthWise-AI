@@ -38,6 +38,79 @@ HEALTH_SCORE_LABELS: Final[dict[str, tuple[float, float]]] = {
     "critical": (0.0, HEALTH_SCORE_POOR),
 }
 
+# ── Phase 2 Financial Health Score Weights ─────────────────────────────────────
+HEALTH_SCORE_SAVINGS_RATE_WEIGHT: Final[int] = 25
+HEALTH_SCORE_EXPENSE_RATIO_WEIGHT: Final[int] = 20
+HEALTH_SCORE_CASH_FLOW_WEIGHT: Final[int] = 15
+HEALTH_SCORE_SPENDING_BEHAVIOUR_WEIGHT: Final[int] = 15
+HEALTH_SCORE_INCOME_STABILITY_WEIGHT: Final[int] = 10
+HEALTH_SCORE_TRANSACTION_DIVERSITY_WEIGHT: Final[int] = 5
+HEALTH_SCORE_FINANCIAL_DISCIPLINE_WEIGHT: Final[int] = 10
+
+# ── Phase 2 Component Thresholds ──────────────────────────────────────────────
+# Savings Rate thresholds: (threshold_percentage, points)
+HEALTH_SCORE_SAVINGS_RATE_THRESHOLDS: Final[list[tuple[float, int]]] = [
+    (30.0, 25),
+    (20.0, 20),
+    (10.0, 15),
+    (0.0, 8),
+]
+
+# Expense-to-Income Ratio thresholds: (threshold_percentage, points)
+HEALTH_SCORE_EXPENSE_RATIO_THRESHOLDS: Final[list[tuple[float, int]]] = [
+    (60.0, 20),
+    (75.0, 15),
+    (90.0, 10),
+    (100.0, 5),
+]
+
+# Cash Flow thresholds
+HEALTH_SCORE_CASH_FLOW_POSITIVE_POINTS: Final[int] = 15
+HEALTH_SCORE_CASH_FLOW_SLIGHTLY_NEGATIVE_POINTS: Final[int] = 8
+HEALTH_SCORE_CASH_FLOW_SLIGHTLY_NEGATIVE_LIMIT: Final[float] = -10.0  # limit for savings_rate percentage
+
+# Spending Behaviour top category percentage thresholds: (max_percentage, points)
+HEALTH_SCORE_SPENDING_BEHAVIOUR_THRESHOLDS: Final[list[tuple[float, int]]] = [
+    (40.0, 15),
+    (60.0, 10),
+]
+
+# Income Stability CV thresholds: (max_cv, points)
+HEALTH_SCORE_INCOME_STABILITY_THRESHOLDS: Final[list[tuple[float, int]]] = [
+    (0.15, 10),
+    (0.40, 7),
+]
+
+# Transaction Diversity categories count thresholds: (min_categories, points)
+HEALTH_SCORE_TRANSACTION_DIVERSITY_THRESHOLDS: Final[list[tuple[int, int]]] = [
+    (5, 5),
+    (3, 3),
+]
+
+# Financial Discipline behaviour thresholds
+HEALTH_SCORE_DISCIPLINE_MIN_MONTHS: Final[int] = 3
+HEALTH_SCORE_DISCIPLINE_CASH_FLOW_BONUS: Final[int] = 5
+HEALTH_SCORE_DISCIPLINE_INCOME_STABILITY_BONUS: Final[int] = 3
+HEALTH_SCORE_DISCIPLINE_BALANCED_SPENDING_BONUS: Final[int] = 2
+
+# ── Phase 2 Grading Rules ──────────────────────────────────────────────────────
+HEALTH_SCORE_GRADING_RULES: Final[list[tuple[float, str]]] = [
+    (90.0, "A+"),
+    (80.0, "A"),
+    (70.0, "B"),
+    (60.0, "C"),
+    (50.0, "D"),
+]
+
+# ── Phase 2 Status Rules ───────────────────────────────────────────────────────
+HEALTH_SCORE_STATUS_RULES: Final[list[tuple[float, str]]] = [
+    (90.0, "Excellent"),
+    (80.0, "Good"),
+    (70.0, "Fair"),
+    (60.0, "Needs Improvement"),
+]
+
+
 # ── Risk Profile Score Thresholds ─────────────────────────────────────────────
 RISK_SCORE_VERY_AGGRESSIVE: Final[float] = 75.0
 RISK_SCORE_AGGRESSIVE: Final[float] = 50.0

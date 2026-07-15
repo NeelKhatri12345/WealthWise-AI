@@ -163,11 +163,35 @@ def get_statement_service(db: AsyncSession = Depends(get_db)):
         s3_client=S3Client(settings),
     )
 
-def get_analytics_service(db: AsyncSession = Depends(get_db)):
+def get_financial_metrics_service(db: AsyncSession = Depends(get_db)):
+    from app.repositories.transaction_repository import TransactionRepository
+    from app.services.financial_metrics_service import FinancialMetricsService
+
+    return FinancialMetricsService(transaction_repo=TransactionRepository(db))
+
+
+def get_health_score_service():
+    from app.services.health_recommendations import HealthScoreRecommendationsGenerator
+    from app.services.health_score_service import HealthScoreService
+
+    return HealthScoreService(
+        recommendations_gen=HealthScoreRecommendationsGenerator()
+    )
+
+
+def get_analytics_service(
+    db: AsyncSession = Depends(get_db),
+    metrics_service=Depends(get_financial_metrics_service),
+    health_score_service=Depends(get_health_score_service),
+):
     from app.repositories.analytics_repository import AnalyticsRepository
     from app.services.analytics_service import AnalyticsService
 
-    return AnalyticsService(analytics_repo=AnalyticsRepository(db))
+    return AnalyticsService(
+        analytics_repo=AnalyticsRepository(db),
+        metrics_service=metrics_service,
+        health_score_service=health_score_service,
+    )
 
 
 def get_portfolio_service(db: AsyncSession = Depends(get_db)):
@@ -203,14 +227,22 @@ def get_admin_service(db: AsyncSession = Depends(get_db)):
     )
 
 
-def get_dashboard_service(db: AsyncSession = Depends(get_db)):
+def get_dashboard_service(
+    db: AsyncSession = Depends(get_db),
+    metrics_service=Depends(get_financial_metrics_service),
+    health_score_service=Depends(get_health_score_service),
+):
     from app.repositories.analytics_repository import AnalyticsRepository
     from app.repositories.transaction_repository import TransactionRepository
+    from app.repositories.health_score_snapshot_repository import HealthScoreSnapshotRepository
     from app.services.dashboard_service import DashboardService
 
     return DashboardService(
         transaction_repo=TransactionRepository(db),
         analytics_repo=AnalyticsRepository(db),
+        metrics_service=metrics_service,
+        health_score_service=health_score_service,
+        snapshot_repo=HealthScoreSnapshotRepository(db),
     )
 
 
@@ -219,6 +251,68 @@ def get_transaction_service(db: AsyncSession = Depends(get_db)):
     from app.services.transaction_service import TransactionService
 
     return TransactionService(transaction_repo=TransactionRepository(db))
+
+
+# ── Financial Profile & Chat Dependencies ─────────────────────────────────────
+
+
+def get_financial_profile_repository(db: AsyncSession = Depends(get_db)):
+    from app.repositories.financial_profile_repository import FinancialProfileRepository
+
+    return FinancialProfileRepository(db)
+
+
+def get_financial_chat_repository(db: AsyncSession = Depends(get_db)):
+    from app.repositories.financial_chat_repository import FinancialChatRepository
+
+    return FinancialChatRepository(db)
+
+
+def get_health_score_snapshot_repository(db: AsyncSession = Depends(get_db)):
+    from app.repositories.health_score_snapshot_repository import HealthScoreSnapshotRepository
+
+    return HealthScoreSnapshotRepository(db)
+
+
+def get_financial_profile_service(db: AsyncSession = Depends(get_db)):
+    from app.repositories.financial_profile_repository import FinancialProfileRepository
+    from app.services.financial_profile_service import FinancialProfileService
+
+    return FinancialProfileService(profile_repo=FinancialProfileRepository(db))
+
+
+def get_financial_chat_service(db: AsyncSession = Depends(get_db)):
+    from app.repositories.financial_chat_repository import FinancialChatRepository
+    from app.repositories.financial_profile_repository import FinancialProfileRepository
+    from app.repositories.transaction_repository import TransactionRepository
+    from app.services.financial_chat_service import FinancialChatService
+    from app.services.financial_profile_service import FinancialProfileService
+
+    return FinancialChatService(
+        chat_repo=FinancialChatRepository(db),
+        transaction_repo=TransactionRepository(db),
+        profile_service=FinancialProfileService(profile_repo=FinancialProfileRepository(db)),
+    )
+
+
+def get_hybrid_health_score_service(
+    db: AsyncSession = Depends(get_db),
+    health_score_service=Depends(get_health_score_service),
+):
+    from app.repositories.financial_profile_repository import FinancialProfileRepository
+    from app.repositories.health_score_snapshot_repository import HealthScoreSnapshotRepository
+    from app.repositories.transaction_repository import TransactionRepository
+    from app.services.financial_metrics_service import FinancialMetricsService
+    from app.services.hybrid_health_score_service import HybridHealthScoreService
+
+    txn_repo = TransactionRepository(db)
+    return HybridHealthScoreService(
+        transaction_repo=txn_repo,
+        profile_repo=FinancialProfileRepository(db),
+        snapshot_repo=HealthScoreSnapshotRepository(db),
+        metrics_service=FinancialMetricsService(transaction_repo=txn_repo),
+        health_score_service=health_score_service,
+    )
 
 
 # ── OCR Dependencies ──────────────────────────────────────────────────────────
