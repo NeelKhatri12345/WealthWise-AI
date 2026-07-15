@@ -16,6 +16,7 @@ import {
   adminReducer,
   uiReducer,
   statementReviewReducer,
+  financialProfileReducer,
 } from "./slices";
 import { apiMiddleware } from "./middleware/api.middleware";
 import { loggerMiddleware } from "./middleware/logger.middleware";
@@ -35,6 +36,7 @@ export const store = configureStore({
     admin: adminReducer,
     ui: uiReducer,
     statementReview: statementReviewReducer,
+    financialProfile: financialProfileReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

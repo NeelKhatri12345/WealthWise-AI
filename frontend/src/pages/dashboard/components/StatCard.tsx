@@ -1,4 +1,5 @@
 import { memo, type ReactNode } from "react";
+import { Link } from "react-router-dom";
 
 import { Card } from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -18,7 +19,9 @@ export interface StatCardProps {
   error?: string | null;
   onRetry?: () => void;
   className?: string;
+  to?: string;
 }
+
 
 // ---------------------------------------------------------------------------
 // Skeleton variant
@@ -81,19 +84,15 @@ export const StatCard = memo(function StatCard({
   error = null,
   onRetry,
   className,
+  to,
 }: StatCardProps) {
   if (loading) return <StatCardSkeleton className={className} />;
   if (error) return <StatCardError error={error} onRetry={onRetry} className={className} />;
 
   const isPositive = (change ?? 0) >= 0;
 
-  return (
-    <Card
-      className={cn(
-        "group transition-shadow duration-200 hover:shadow-md",
-        className,
-      )}
-    >
+  const cardContent = (
+    <>
       <div className="flex items-start justify-between">
         <div
           className={cn(
@@ -135,6 +134,31 @@ export const StatCard = memo(function StatCard({
         <p className="text-2xl font-bold text-gray-900">{value}</p>
         <p className="mt-0.5 text-sm text-wealth-muted">{title}</p>
       </div>
+    </>
+  );
+
+  if (to) {
+    return (
+      <Link
+        to={to}
+        className={cn(
+          "block rounded-xl border border-wealth-border bg-wealth-card p-6 shadow-sm group transition-all duration-200 hover:shadow-md hover:border-gray-300 cursor-pointer",
+          className,
+        )}
+      >
+        {cardContent}
+      </Link>
+    );
+  }
+
+  return (
+    <Card
+      className={cn(
+        "group transition-shadow duration-200 hover:shadow-md",
+        className,
+      )}
+    >
+      {cardContent}
     </Card>
   );
 });

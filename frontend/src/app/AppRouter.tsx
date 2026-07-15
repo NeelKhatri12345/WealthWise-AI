@@ -25,6 +25,9 @@ const StatementReviewPage = React.lazy(() => import("@/pages/upload/StatementRev
 const HealthScorePage = React.lazy(
   () => import("@/pages/health/HealthScorePage"),
 );
+const FinancialProfileChatPage = React.lazy(
+  () => import("@/pages/financial-profile/FinancialProfileChatPage"),
+);
 const RiskProfilePage = React.lazy(
   () => import("@/pages/risk/RiskProfilePage"),
 );
@@ -39,6 +42,7 @@ const AICoachPage = React.lazy(() => import("@/pages/coach/AICoachPage"));
 // const NotificationsPage = React.lazy(
 //   () => import("@/pages/notifications/NotificationsPage"),
 // );
+const LandingPage = React.lazy(() => import("@/pages/landing/LandingPage"));
 const ProfilePage = React.lazy(() => import("@/pages/profile/ProfilePage"));
 const SettingsPage = React.lazy(() => import("@/pages/settings/SettingsPage"));
 const AdminDashboardPage = React.lazy(
@@ -53,6 +57,9 @@ export function AppRouter() {
     <BrowserRouter>
       <Suspense fallback={<LoadingScreen />}>
         <Routes>
+          {/* Public landing page */}
+          <Route path={ROUTES.HOME} element={<LandingPage />} />
+
           {/* Public auth routes */}
           <Route element={<PublicRoute />}>
             <Route element={<AuthLayout />}>
@@ -68,7 +75,6 @@ export function AppRouter() {
           {/* Protected user routes */}
           <Route element={<PrivateRoute />}>
             <Route element={<MainLayout />}>
-              <Route path={ROUTES.HOME} element={<DashboardPage />} />
               <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
               <Route path={ROUTES.UPLOAD} element={<UploadPage />} />
               <Route path={ROUTES.STATEMENT_REVIEW} element={<StatementReviewPage />} />
@@ -78,6 +84,10 @@ export function AppRouter() {
                 element={<TransactionsPage />}
               />
               */}
+              <Route
+                path={ROUTES.FINANCIAL_PROFILE}
+                element={<FinancialProfileChatPage />}
+              />
               <Route path={ROUTES.HEALTH_SCORE} element={<HealthScorePage />} />
               <Route path={ROUTES.RISK_PROFILE} element={<RiskProfilePage />} />
               {/*

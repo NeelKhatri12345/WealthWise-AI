@@ -1,35 +1,17 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-
-export interface HealthMetric {
-  name: string;
-  value: number;
-  maxValue: number;
-  status: "good" | "fair" | "poor";
-  description: string;
-}
-
-export interface HealthTip {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  priority: "high" | "medium" | "low";
-}
+import { type HealthScoreDetailResponse } from "../../services/api/health.api";
+import type { RootState } from "../index";
 
 export interface HealthScoreState {
-  currentScore: number | null;
-  history: { date: string; score: number }[];
-  metrics: HealthMetric[];
-  tips: HealthTip[];
+  scoreData: HealthScoreDetailResponse | null;
+  history: HealthScoreDetailResponse[];
   loading: boolean;
   error: string | null;
 }
 
 const initialState: HealthScoreState = {
-  currentScore: null,
+  scoreData: null,
   history: [],
-  metrics: [],
-  tips: [],
   loading: false,
   error: null,
 };
@@ -39,11 +21,8 @@ export const fetchHealthScore = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const { healthApi } = await import("../../services/api/health.api");
-      const [scoreData, metrics] = await Promise.all([
-        healthApi.getHealthScore(),
-        healthApi.getHealthMetrics(),
-      ]);
-      return { ...scoreData, metrics };
+      const scoreData = await healthApi.getHealthScore();
+      return scoreData;
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       return rejectWithValue(
@@ -84,9 +63,7 @@ const healthScoreSlice = createSlice({
       })
       .addCase(fetchHealthScore.fulfilled, (state, action) => {
         state.loading = false;
-        state.currentScore = action.payload.score;
-        state.tips = action.payload.tips;
-        state.metrics = action.payload.metrics;
+        state.scoreData = action.payload;
       })
       .addCase(fetchHealthScore.rejected, (state, action) => {
         state.loading = false;
@@ -108,3 +85,5 @@ const healthScoreSlice = createSlice({
 
 export const { clearHealthError } = healthScoreSlice.actions;
 export default healthScoreSlice.reducer;
+
+export const selectHealthScore = (state: RootState) => state.healthScore;

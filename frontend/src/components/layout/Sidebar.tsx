@@ -6,6 +6,7 @@ const navItems = [
   { label: "Dashboard", path: ROUTES.DASHBOARD },
   { label: "Upload", path: ROUTES.UPLOAD },
   // { label: "Transactions", path: ROUTES.TRANSACTIONS },
+  { label: "Financial Profile", path: ROUTES.FINANCIAL_PROFILE },
   { label: "Health Score", path: ROUTES.HEALTH_SCORE },
   { label: "Risk Profile", path: ROUTES.RISK_PROFILE },
   // { label: "Portfolio", path: ROUTES.PORTFOLIO },

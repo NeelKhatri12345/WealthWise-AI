@@ -7,6 +7,7 @@ export const ROUTES = {
   UPLOAD: "/upload",
   STATEMENT_REVIEW: "/statement/:id/review",
   TRANSACTIONS: "/transactions",
+  FINANCIAL_PROFILE: "/financial-profile",
   HEALTH_SCORE: "/health-score",
   RISK_PROFILE: "/risk-profile",
   PORTFOLIO: "/portfolio",

@@ -21,6 +21,8 @@ export interface DashboardSummary {
   totalBalance: number;
   monthlyIncome: number;
   monthlyExpenses: number;
+  totalIncome: number;
+  totalExpenses: number;
   savingsRate: number;
   healthScore: number;
   healthScoreLabel: string;
@@ -63,6 +65,8 @@ interface RawSummary {
   total_balance: string;
   monthly_income: string;
   monthly_expenses: string;
+  total_income: string;
+  total_expenses: string;
   savings_rate: string;
   health_score: string;
   health_score_label: string;
@@ -106,6 +110,8 @@ function mapSummary(raw: RawSummary): DashboardSummary {
     totalBalance: parseFloat(raw.total_balance),
     monthlyIncome: parseFloat(raw.monthly_income),
     monthlyExpenses: parseFloat(raw.monthly_expenses),
+    totalIncome: parseFloat(raw.total_income),
+    totalExpenses: parseFloat(raw.total_expenses),
     savingsRate: parseFloat(raw.savings_rate),
     healthScore: parseFloat(raw.health_score),
     healthScoreLabel: raw.health_score_label,

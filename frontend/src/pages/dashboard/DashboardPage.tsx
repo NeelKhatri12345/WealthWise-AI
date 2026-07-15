@@ -20,11 +20,9 @@ import {
   fetchDashboardSummary,
   fetchRecentTransactions,
   fetchDashboardInsights,
-  fetchDashboardNotifications,
   selectDashboardSummary,
   selectDashboardTransactions,
   selectDashboardInsights,
-  selectDashboardNotifications,
 } from "@/store/slices/dashboardSlice";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { ROUTES } from "@/routes/routes";
@@ -35,9 +33,7 @@ import {
   QuickActionCard,
   InsightCard,
   TransactionTable,
-  ChartPlaceholder,
 } from "./components";
-import { NotificationPanel } from "./components/NotificationPanel";
 
 // ---------------------------------------------------------------------------
 // Static UI config (routing / labels / colours — never comes from the server)
@@ -54,7 +50,7 @@ const kpiIcons: ReactNode[] = [
   >
     <path d="M2 4.5A2.5 2.5 0 014.5 2h11A2.5 2.5 0 0118 4.5v.495a.75.75 0 01-.002.009v6.497a.75.75 0 01.002.009v.99A2.5 2.5 0 0115.5 15h-11A2.5 2.5 0 012 12.5v-8zm12.75 6a.75.75 0 100-1.5.75.75 0 000 1.5z" />
   </svg>,
-  // Arrow-up — Monthly Income
+  // Arrow-up — Current Month Income
   <svg
     key="income"
     className="h-5 w-5"
@@ -68,7 +64,7 @@ const kpiIcons: ReactNode[] = [
       clipRule="evenodd"
     />
   </svg>,
-  // Arrow-down — Monthly Expenses
+  // Arrow-down — Current Month Expenses
   <svg
     key="expenses"
     className="h-5 w-5"
@@ -121,26 +117,6 @@ const quickActions: QuickAction[] = [
     ),
   },
   {
-    label: "View Reports",
-    description: "Monthly & yearly summaries",
-    to: ROUTES.REPORTS,
-    iconBg: "bg-violet-50 text-violet-600",
-    icon: (
-      <svg
-        className="h-5 w-5"
-        viewBox="0 0 20 20"
-        fill="currentColor"
-        aria-hidden="true"
-      >
-        <path
-          fillRule="evenodd"
-          d="M4.5 2A1.5 1.5 0 003 3.5v13A1.5 1.5 0 004.5 18h11a1.5 1.5 0 001.5-1.5V7.621a1.5 1.5 0 00-.44-1.06l-4.12-4.122A1.5 1.5 0 0011.378 2H4.5zm4.75 6.75a.75.75 0 00-1.5 0v4.5a.75.75 0 001.5 0v-4.5zm2.5 1.5a.75.75 0 00-1.5 0v3a.75.75 0 001.5 0v-3zm2.5-2.25a.75.75 0 00-1.5 0v5.25a.75.75 0 001.5 0V8z"
-          clipRule="evenodd"
-        />
-      </svg>
-    ),
-  },
-  {
     label: "AI Coach",
     description: "Personalized financial tips",
     to: ROUTES.AI_COACH,
@@ -154,26 +130,6 @@ const quickActions: QuickAction[] = [
       >
         <path d="M10 1l.806 3.694a1 1 0 00.698.698L15.198 6.2l-3.694.806a1 1 0 00-.698.698L10 11.398l-.806-3.694a1 1 0 00-.698-.698L4.802 6.2l3.694-.806a1 1 0 00.698-.698L10 1z" />
         <path d="M5.5 10l.56 2.56a1 1 0 00.698.699L9.32 13.82l-2.56.56a1 1 0 00-.699.698L5.5 17.64l-.56-2.56a1 1 0 00-.699-.699L1.68 13.82l2.56-.56a1 1 0 00.699-.699L5.5 10z" />
-      </svg>
-    ),
-  },
-  {
-    label: "Portfolio",
-    description: "Investment allocation",
-    to: ROUTES.PORTFOLIO,
-    iconBg: "bg-green-50 text-green-600",
-    icon: (
-      <svg
-        className="h-5 w-5"
-        viewBox="0 0 20 20"
-        fill="currentColor"
-        aria-hidden="true"
-      >
-        <path
-          fillRule="evenodd"
-          d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 6a.75.75 0 00-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 000-1.5h-3.75V6z"
-          clipRule="evenodd"
-        />
       </svg>
     ),
   },
@@ -203,9 +159,8 @@ export default function DashboardPage() {
   const summary = useAppSelector(selectDashboardSummary);
   const transactions = useAppSelector(selectDashboardTransactions);
   const insights = useAppSelector(selectDashboardInsights);
-  const notifications = useAppSelector(selectDashboardNotifications);
 
-  // Dispatch all four sections in parallel on first render
+  // Dispatch all sections in parallel on first render
   useEffect(() => {
     dispatch(fetchDashboardAll());
   }, [dispatch]);
@@ -223,10 +178,6 @@ export default function DashboardPage() {
     () => dispatch(fetchDashboardInsights()),
     [dispatch],
   );
-  const retryNotifications = useCallback(
-    () => dispatch(fetchDashboardNotifications()),
-    [dispatch],
-  );
 
   // -------------------------------------------------------------------------
   // KPI stat cards derived from summary
@@ -235,25 +186,37 @@ export default function DashboardPage() {
   const kpiStats = [
     {
       title: "Total Balance",
+      // TODO: This currently displays the balance field from a single latest transaction returned by the database.
+      // Once account identification is implemented, this should be replaced with the sum of the latest available
+      // balance from every unique bank account/statement to avoid incorrect aggregates/arbitrary selections.
       value: summary.data ? formatCurrency(summary.data.totalBalance) : "—",
       iconBg: "bg-primary-50 text-primary-600",
     },
     {
-      title: "Monthly Income",
-      value: summary.data ? formatCurrency(summary.data.monthlyIncome) : "—",
+      title: "Total Income",
+      // Calculate Total Income = Sum of all CREDIT transaction amounts regardless of date
+      value: summary.data ? formatCurrency(summary.data.totalIncome) : "—",
       iconBg: "bg-green-50 text-wealth-success",
     },
     {
-      title: "Monthly Expenses",
-      value: summary.data ? formatCurrency(summary.data.monthlyExpenses) : "—",
+      title: "Total Expenses",
+      // Calculate Total Expenses = Sum of all DEBIT transaction amounts regardless of date
+      value: summary.data ? formatCurrency(summary.data.totalExpenses) : "—",
       iconBg: "bg-red-50 text-wealth-danger",
     },
     {
-      title: "Health Score",
+      title: summary.data
+        ? summary.data.healthScoreLabel === "Preliminary"
+          ? "Preliminary Health Score"
+          : summary.data.healthScoreLabel === "N/A"
+            ? "Health Score"
+            : "Final Hybrid Health Score"
+        : "Health Score",
       value: summary.data
         ? `${summary.data.healthScore.toFixed(0)} / 100`
         : "—",
       iconBg: "bg-amber-50 text-amber-600",
+      to: ROUTES.HEALTH_SCORE,
     },
   ];
 
@@ -275,6 +238,7 @@ export default function DashboardPage() {
               loading={summary.loading}
               error={summary.error}
               onRetry={retrySummary}
+              to={stat.to}
             />
           ))}
         </div>
@@ -285,7 +249,7 @@ export default function DashboardPage() {
         <h2 className="mb-3 text-lg font-semibold text-gray-900">
           Quick Actions
         </h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {quickActions.map((action) => (
             <QuickActionCard
               key={action.label}
@@ -307,28 +271,16 @@ export default function DashboardPage() {
         onRetry={retryInsights}
       />
 
-      {/* 5 & 6 — Transactions + Spending Chart (2-column on desktop) */}
-      <section
-        aria-label="Financial details"
-        className="grid grid-cols-1 gap-6 lg:grid-cols-5"
-      >
+      {/* 5 — Transactions */}
+      <section aria-label="Financial details">
         <TransactionTable
           transactions={transactions.data}
           loading={transactions.loading}
           error={transactions.error}
           onRetry={retryTransactions}
-          className="lg:col-span-3"
+          className="w-full"
         />
-        <ChartPlaceholder className="lg:col-span-2" />
       </section>
-
-      {/* 7 — Notifications panel */}
-      <NotificationPanel
-        notifications={notifications.data}
-        loading={notifications.loading}
-        error={notifications.error}
-        onRetry={retryNotifications}
-      />
     </div>
   );
 }

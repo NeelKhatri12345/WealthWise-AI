@@ -37,8 +37,7 @@ export function DashboardHeader() {
             {getGreeting()}, {displayName}!
           </h1>
           <p className="mt-2 max-w-lg text-sm text-primary-200 sm:text-base">
-            Your portfolio is performing well. You&apos;re on track to meet your
-            monthly savings goal.
+            Track your spending, monitor your finances, and improve your financial health.
           </p>
         </div>
       </div>

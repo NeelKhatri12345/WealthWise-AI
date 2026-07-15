@@ -36,3 +36,7 @@ export * from "./uiSlice";
 
 export { default as statementReviewReducer } from "./statementReviewSlice";
 export * from "./statementReviewSlice";
+
+export { default as financialProfileReducer } from "./financialProfileSlice";
+export * from "./financialProfileSlice";
+

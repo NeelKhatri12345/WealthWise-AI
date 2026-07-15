@@ -55,13 +55,13 @@ export default function RegisterPage() {
   });
 
   return (
-    <div>
-      <div className="mb-6 text-center">
-        <h1 className="text-2xl font-bold text-gray-900">
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight text-gray-900">
           Create Account
         </h1>
-        <p className="mt-1 text-sm text-wealth-muted">
-          Start your financial wellness journey
+        <p className="mt-1.5 text-sm text-wealth-muted">
+          Start your journey toward smarter financial management.
         </p>
       </div>
 
@@ -119,22 +119,37 @@ export default function RegisterPage() {
 
         <Button
           type="submit"
-          className="w-full"
+          className="w-full mt-2"
           isLoading={isLoading}
         >
           Create account
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-wealth-muted">
-        Already have an account?{" "}
-        <Link
-          to={ROUTES.LOGIN}
-          className="font-medium text-primary-600 hover:text-primary-700"
-        >
-          Sign in
-        </Link>
-      </p>
+      {/* Footer Actions */}
+      <div className="space-y-4 pt-2 border-t border-wealth-border">
+        <p className="text-center text-sm text-wealth-muted">
+          Already have an account?{" "}
+          <Link
+            to={ROUTES.LOGIN}
+            className="font-medium text-primary-600 hover:text-primary-750 transition-colors"
+          >
+            Sign In
+          </Link>
+        </p>
+
+        <div className="text-center">
+          <Link
+            to={ROUTES.HOME}
+            className="text-xs font-semibold text-wealth-muted hover:text-primary-600 transition-colors inline-flex items-center gap-1.5"
+          >
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Home
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }

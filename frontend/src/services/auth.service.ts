@@ -78,4 +78,19 @@ export const authService = {
     );
     return data.data;
   },
+
+  async updateProfile(payload: { full_name: string; phone?: string | null }): Promise<CurrentUserResponse> {
+    const { data } = await axiosInstance.patch<ApiResponse<CurrentUserResponse>>(
+      "/users/me",
+      payload,
+    );
+    return data.data;
+  },
+
+  async changePassword(payload: { current_password: string; new_password: string }): Promise<void> {
+    await axiosInstance.post<ApiResponse<null>>(
+      "/users/me/change-password",
+      payload,
+    );
+  },
 };
