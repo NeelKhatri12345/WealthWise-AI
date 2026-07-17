@@ -24,7 +24,7 @@ export interface DashboardSummary {
   totalIncome: number;
   totalExpenses: number;
   savingsRate: number;
-  healthScore: number;
+  healthScore: number | null;
   healthScoreLabel: string;
   netWorth: number;
   transactionCount: number;
@@ -68,7 +68,7 @@ interface RawSummary {
   total_income: string;
   total_expenses: string;
   savings_rate: string;
-  health_score: string;
+  health_score: string | null;
   health_score_label: string;
   net_worth: string;
   transaction_count: number;
@@ -113,7 +113,7 @@ function mapSummary(raw: RawSummary): DashboardSummary {
     totalIncome: parseFloat(raw.total_income),
     totalExpenses: parseFloat(raw.total_expenses),
     savingsRate: parseFloat(raw.savings_rate),
-    healthScore: parseFloat(raw.health_score),
+    healthScore: raw.health_score !== null && raw.health_score !== undefined ? parseFloat(raw.health_score) : null,
     healthScoreLabel: raw.health_score_label,
     netWorth: parseFloat(raw.net_worth),
     transactionCount: raw.transaction_count,

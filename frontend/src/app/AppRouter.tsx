@@ -37,7 +37,7 @@ const RiskProfilePage = React.lazy(
 // const PortfolioHoldingsPage = React.lazy(
 //   () => import("@/pages/portfolio-holdings/PortfolioHoldingsPage"),
 // );
-const AICoachPage = React.lazy(() => import("@/pages/coach/AICoachPage"));
+const AICoachPage = React.lazy(() => import("@/pages/ai-coach/AICoachPage"));
 // const ReportsPage = React.lazy(() => import("@/pages/reports/ReportsPage"));
 // const NotificationsPage = React.lazy(
 //   () => import("@/pages/notifications/NotificationsPage"),

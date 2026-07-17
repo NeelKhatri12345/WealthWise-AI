@@ -32,14 +32,13 @@ class AuthService:
     def __init__(self, user_repo: UserRepository) -> None:
         self._user_repo = user_repo
 
-    async def register(self, data: RegisterRequest) -> TokenResponse:
+    async def register(self, data: RegisterRequest):
         """
         Register a new user.
         1. Check email uniqueness
         2. Hash password
         3. Assign default USER role
         4. Create user record
-        5. Issue tokens
         """
         if await self._user_repo.email_exists(data.email):
             raise ConflictException(f"Email '{data.email}' is already registered")
@@ -67,8 +66,9 @@ class AuthService:
             }
         )
 
+        user.role = role  # Set role to prevent lazy loading exception in v1/auth_routes
         logger.info("New user registered", extra={"user_id": str(user.id)})
-        return self._generate_tokens(user)
+        return user
 
     async def login(self, data: LoginRequest) -> TokenResponse:
         """

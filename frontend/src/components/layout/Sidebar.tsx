@@ -8,7 +8,7 @@ const navItems = [
   // { label: "Transactions", path: ROUTES.TRANSACTIONS },
   { label: "Financial Profile", path: ROUTES.FINANCIAL_PROFILE },
   { label: "Health Score", path: ROUTES.HEALTH_SCORE },
-  { label: "Risk Profile", path: ROUTES.RISK_PROFILE },
+  // { label: "Risk Profile", path: ROUTES.RISK_PROFILE },
   // { label: "Portfolio", path: ROUTES.PORTFOLIO },
   { label: "AI Coach", path: ROUTES.AI_COACH },
   // { label: "Reports", path: ROUTES.REPORTS },

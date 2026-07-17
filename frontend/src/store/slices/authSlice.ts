@@ -128,6 +128,17 @@ export const logout = createAsyncThunk("auth/logout", async () => {
   }
 });
 
+export const deleteAccount = createAsyncThunk(
+  "auth/deleteAccount",
+  async (_, { rejectWithValue }) => {
+    try {
+      return await authService.deleteAccount();
+    } catch (err: unknown) {
+      return rejectWithValue(getErrorMessage(err, "Failed to delete account"));
+    }
+  },
+);
+
 export const fetchCurrentUser = createAsyncThunk(
   "auth/fetchCurrentUser",
   async (_, { rejectWithValue }) => {
@@ -184,9 +195,8 @@ const authSlice = createSlice({
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(register.fulfilled, (state, action) => {
+      .addCase(register.fulfilled, (state) => {
         state.isLoading = false;
-        applyTokens(state, action.payload);
       })
       .addCase(register.rejected, (state, action) => {
         state.isLoading = false;
@@ -217,6 +227,18 @@ const authSlice = createSlice({
         state.isLoading = false;
         clearAuthState(state);
         state.error = action.error.message ?? "Logout failed";
+      })
+      .addCase(deleteAccount.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(deleteAccount.fulfilled, (state) => {
+        state.isLoading = false;
+        clearAuthState(state);
+      })
+      .addCase(deleteAccount.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
       })
       .addCase(fetchCurrentUser.pending, (state) => {
         state.isLoading = true;

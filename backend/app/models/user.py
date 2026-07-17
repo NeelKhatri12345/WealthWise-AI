@@ -49,6 +49,9 @@ class User(UUIDMixin, TimestampMixin, Base):
     ai_conversations: Mapped[list["AIConversation"]] = relationship(
         "AIConversation", back_populates="user", cascade="all, delete-orphan"
     )
+    ai_coach_conversations: Mapped[list["AICoachConversation"]] = relationship(
+        "AICoachConversation", back_populates="user", cascade="all, delete-orphan"
+    )
     portfolio_holdings: Mapped[list["PortfolioHolding"]] = relationship(
         "PortfolioHolding", back_populates="user", cascade="all, delete-orphan"
     )

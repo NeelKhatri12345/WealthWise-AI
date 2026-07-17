@@ -33,6 +33,14 @@ class AnalyticsService:
 
     async def get_latest_health_score(self, user_id: UUID) -> HealthScoreDetailResponse:
         """Calculate and return the latest health score on demand."""
+        from app.repositories.financial_profile_repository import FinancialProfileRepository
+        profile_repo = FinancialProfileRepository(self._repo.db)
+        profile = await profile_repo.get_by_user_id(user_id)
+        if not profile or profile.profile_completion_percentage < 100.0:
+            raise NotFoundException(
+                "No health score found. Please complete your Financial Profile first."
+            )
+
         metrics = await self._metrics_service.get_metrics(user_id)
         if metrics.transaction_count == 0:
             raise NotFoundException(
@@ -44,6 +52,12 @@ class AnalyticsService:
         self, user_id: UUID, limit: int = 10
     ) -> list[HealthScoreDetailResponse]:
         """Return history of health scores (calculated on demand)."""
+        from app.repositories.financial_profile_repository import FinancialProfileRepository
+        profile_repo = FinancialProfileRepository(self._repo.db)
+        profile = await profile_repo.get_by_user_id(user_id)
+        if not profile or profile.profile_completion_percentage < 100.0:
+            return []
+
         metrics = await self._metrics_service.get_metrics(user_id)
         if metrics.transaction_count == 0:
             return []
@@ -54,6 +68,14 @@ class AnalyticsService:
         self, user_id: UUID, statement_id: UUID
     ) -> HealthScoreDetailResponse:
         """Calculate and return the health score for a specific statement on demand."""
+        from app.repositories.financial_profile_repository import FinancialProfileRepository
+        profile_repo = FinancialProfileRepository(self._repo.db)
+        profile = await profile_repo.get_by_user_id(user_id)
+        if not profile or profile.profile_completion_percentage < 100.0:
+            raise NotFoundException(
+                "No health score found. Please complete your Financial Profile first."
+            )
+
         metrics = await self._metrics_service.get_metrics(user_id, statement_id)
         if metrics.transaction_count == 0:
             raise NotFoundException("Health score not found for this statement")

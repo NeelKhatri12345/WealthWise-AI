@@ -14,6 +14,7 @@ from app.models.transaction import Transaction
 from app.repositories.analytics_repository import AnalyticsRepository
 from app.repositories.transaction_repository import TransactionRepository
 from app.repositories.health_score_snapshot_repository import HealthScoreSnapshotRepository
+from app.repositories.financial_profile_repository import FinancialProfileRepository
 from app.schemas.dashboard_schema import (
     DashboardInsightResponse,
     DashboardNotificationResponse,
@@ -33,13 +34,14 @@ class DashboardService:
         metrics_service: FinancialMetricsService,
         health_score_service: HealthScoreService,
         snapshot_repo: HealthScoreSnapshotRepository,
+        profile_repo: FinancialProfileRepository,
     ) -> None:
         self._txn_repo = transaction_repo
         self._analytics_repo = analytics_repo
         self._metrics_service = metrics_service
         self._health_score_service = health_score_service
         self._snapshot_repo = snapshot_repo
-
+        self._profile_repo = profile_repo
 
     async def get_summary(self, user_id: UUID) -> DashboardSummaryResponse:
         """Build aggregated KPI summary from user's transactions and health score."""
@@ -67,7 +69,7 @@ class DashboardService:
         )
 
         # Latest health score
-        health_score_val = Decimal("0")
+        health_score_val = None
         health_score_label = "N/A"
         try:
             snapshot = await self._snapshot_repo.get_latest_by_user(user_id)
@@ -76,11 +78,18 @@ class DashboardService:
                 # Capitalize or keep band as is (e.g. "EXCELLENT", "GOOD" etc)
                 health_score_label = snapshot.band
             else:
+                profile = await self._profile_repo.get_by_user_id(user_id)
+                is_profile_complete = profile is not None and profile.profile_completion_percentage >= 100.0
+
                 metrics = await self._metrics_service.get_metrics(user_id)
                 if metrics.transaction_count > 0:
-                    score_detail = self._health_score_service.calculate_health_score(metrics)
-                    health_score_val = Decimal(str(score_detail.score))
-                    health_score_label = "Preliminary"
+                    if is_profile_complete:
+                        score_detail = self._health_score_service.calculate_health_score(metrics)
+                        health_score_val = Decimal(str(score_detail.score))
+                        health_score_label = "Preliminary"
+                    else:
+                        health_score_val = None
+                        health_score_label = "Pending"
         except Exception as exc:
             logger.warning("Failed to compute or fetch health score for dashboard", exc_info=exc)
 
@@ -226,36 +235,42 @@ class DashboardService:
 
         # Health score insight
         try:
-            metrics = await self._metrics_service.get_metrics(user_id)
-            if metrics.transaction_count > 0:
-                score_detail = self._health_score_service.calculate_health_score(metrics)
-                score_f = float(score_detail.score)
-                if score_f >= 80:
-                    insights.append(
-                        DashboardInsightResponse(
-                            id=str(uuid4()),
-                            title="Excellent Financial Health",
-                            description=(
-                                f"Your health score is {score_f:.0f}/100. "
-                                f"You're in great financial shape!"
-                            ),
-                            category="health",
-                            severity="success",
+            from app.repositories.financial_profile_repository import FinancialProfileRepository
+            profile_repo = FinancialProfileRepository(self._txn_repo.db)
+            profile = await profile_repo.get_by_user_id(user_id)
+            is_profile_complete = profile is not None and profile.profile_completion_percentage >= 100.0
+
+            if is_profile_complete:
+                metrics = await self._metrics_service.get_metrics(user_id)
+                if metrics.transaction_count > 0:
+                    score_detail = self._health_score_service.calculate_health_score(metrics)
+                    score_f = float(score_detail.score)
+                    if score_f >= 80:
+                        insights.append(
+                            DashboardInsightResponse(
+                                id=str(uuid4()),
+                                title="Excellent Financial Health",
+                                description=(
+                                    f"Your health score is {score_f:.0f}/100. "
+                                    f"You're in great financial shape!"
+                                ),
+                                category="health",
+                                severity="success",
+                            )
                         )
-                    )
-                elif score_f < 50:
-                    insights.append(
-                        DashboardInsightResponse(
-                            id=str(uuid4()),
-                            title="Financial Health Needs Attention",
-                            description=(
-                                f"Your health score is {score_f:.0f}/100. "
-                                f"Upload more statements and follow AI Coach recommendations."
-                            ),
-                            category="health",
-                            severity="warning",
+                    elif score_f < 50:
+                        insights.append(
+                            DashboardInsightResponse(
+                                id=str(uuid4()),
+                                title="Financial Health Needs Attention",
+                                description=(
+                                    f"Your health score is {score_f:.0f}/100. "
+                                    f"Upload more statements and follow AI Coach recommendations."
+                                ),
+                                category="health",
+                                severity="warning",
+                            )
                         )
-                    )
         except Exception as exc:
             logger.warning("Failed to compute on-demand health score for dashboard insights", exc_info=exc)
 
@@ -289,19 +304,25 @@ class DashboardService:
 
         # Check for recent health score
         try:
-            metrics = await self._metrics_service.get_metrics(user_id)
-            if metrics.transaction_count > 0:
-                score_detail = self._health_score_service.calculate_health_score(metrics)
-                notifications.append(
-                    DashboardNotificationResponse(
-                        id=str(uuid4()),
-                        title="Health Score Updated",
-                        message=f"Your financial health score is {float(score_detail.score):.0f}/100.",
-                        type="info",
-                        read=False,
-                        created_at=now.isoformat(),
+            from app.repositories.financial_profile_repository import FinancialProfileRepository
+            profile_repo = FinancialProfileRepository(self._txn_repo.db)
+            profile = await profile_repo.get_by_user_id(user_id)
+            is_profile_complete = profile is not None and profile.profile_completion_percentage >= 100.0
+
+            if is_profile_complete:
+                metrics = await self._metrics_service.get_metrics(user_id)
+                if metrics.transaction_count > 0:
+                    score_detail = self._health_score_service.calculate_health_score(metrics)
+                    notifications.append(
+                        DashboardNotificationResponse(
+                            id=str(uuid4()),
+                            title="Health Score Updated",
+                            message=f"Your financial health score is {float(score_detail.score):.0f}/100.",
+                            type="info",
+                            read=False,
+                            created_at=now.isoformat(),
+                        )
                     )
-                )
         except Exception as exc:
             logger.warning("Failed to compute on-demand health score for dashboard notifications", exc_info=exc)
 

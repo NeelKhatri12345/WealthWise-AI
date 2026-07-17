@@ -60,9 +60,12 @@ class AnalyticsRepository:
         return result.scalars().all()
 
     async def get_health_score_by_statement(
-        self, statement_id: UUID
+        self, user_id: UUID, statement_id: UUID
     ) -> Optional[HealthScore]:
-        stmt = select(HealthScore).where(HealthScore.statement_id == statement_id)
+        stmt = select(HealthScore).where(
+            HealthScore.user_id == user_id,
+            HealthScore.statement_id == statement_id,
+        )
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 

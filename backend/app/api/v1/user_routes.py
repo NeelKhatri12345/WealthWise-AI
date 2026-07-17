@@ -48,3 +48,14 @@ async def change_password(
         current_user.id, data.current_password, data.new_password
     )
     return APIResponse(success=True, message="Password changed successfully")
+
+
+@router.delete(
+    "/me", response_model=APIResponse[None], summary="Delete current user account"
+)
+async def delete_account(
+    current_user=Depends(get_current_active_user),
+    service: UserService = Depends(get_user_service),
+):
+    await service.delete_user(current_user.id)
+    return APIResponse(success=True, message="Your account has been permanently deleted.")

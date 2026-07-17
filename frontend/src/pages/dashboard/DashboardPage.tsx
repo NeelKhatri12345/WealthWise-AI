@@ -208,12 +208,14 @@ export default function DashboardPage() {
       title: summary.data
         ? summary.data.healthScoreLabel === "Preliminary"
           ? "Preliminary Health Score"
-          : summary.data.healthScoreLabel === "N/A"
-            ? "Health Score"
+          : summary.data.healthScoreLabel === "Pending" || summary.data.healthScoreLabel === "Incomplete" || summary.data.healthScore === null
+            ? "Final Health Score"
             : "Final Hybrid Health Score"
         : "Health Score",
       value: summary.data
-        ? `${summary.data.healthScore.toFixed(0)} / 100`
+        ? summary.data.healthScore === null || summary.data.healthScore === undefined || summary.data.healthScoreLabel === "Pending" || summary.data.healthScoreLabel === "Incomplete"
+          ? "Pending"
+          : `${summary.data.healthScore.toFixed(0)} / 100`
         : "—",
       iconBg: "bg-amber-50 text-amber-600",
       to: ROUTES.HEALTH_SCORE,

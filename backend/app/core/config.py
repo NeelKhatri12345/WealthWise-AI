@@ -146,6 +146,8 @@ class Settings(BaseSettings):
     AI_PROVIDER: str = Field(default="disabled", pattern="^(disabled|openai|gemini)$")
     OPENAI_API_KEY: str = ""       # Only read when AI_PROVIDER=openai
     AI_MODEL_NAME: str = ""        # Override model name; provider uses its own default if empty
+    AI_REQUEST_TIMEOUT_SECONDS: int = 60  # Max seconds to wait for AI provider response
+
 
     @property
     def max_file_size_bytes(self) -> int:

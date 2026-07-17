@@ -47,8 +47,9 @@ export default function RegisterPage() {
           password: data.password,
         }),
       ).unwrap();
-      await dispatch(fetchCurrentUser()).unwrap();
-      navigate(ROUTES.DASHBOARD);
+      navigate(ROUTES.LOGIN, {
+        state: { message: "Account created successfully. Please log in." },
+      });
     } catch {
       // Thunk error is stored in auth.error and shown via Alert
     }

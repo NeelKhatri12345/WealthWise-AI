@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
@@ -15,7 +15,10 @@ export default function LoginPage() {
 
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const { isLoading, error } = useAppSelector((state) => state.auth);
+
+  const successMessage = (location.state as { message?: string } | null)?.message;
 
   const {
     register,
@@ -48,6 +51,13 @@ export default function LoginPage() {
           Access your personalized financial workspace.
         </p>
       </div>
+
+      {/* Success Message from registration */}
+      {successMessage && (
+        <Alert variant="success" className="mb-4">
+          {successMessage}
+        </Alert>
+      )}
 
       {/* Server error */}
       {error && (

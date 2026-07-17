@@ -23,7 +23,6 @@ _COMPLETION_FIELDS: list[str] = [
     "age_range",
     "employment_type",
     "monthly_income",
-    "family_income",
     "earning_members",
     "dependents_count",
     "has_loans",
@@ -36,7 +35,6 @@ _COMPLETION_FIELDS: list[str] = [
     "investment_types",
     "risk_comfort",
     "financial_goals",
-    "income_stability",
 ]
 
 

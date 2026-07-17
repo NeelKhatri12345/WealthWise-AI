@@ -20,7 +20,7 @@ class DashboardSummaryResponse(BaseModel):
     total_income: Decimal
     total_expenses: Decimal
     savings_rate: Decimal
-    health_score: Decimal
+    health_score: Optional[Decimal] = None
     health_score_label: str
     net_worth: Decimal
     transaction_count: int

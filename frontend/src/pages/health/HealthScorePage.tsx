@@ -345,8 +345,8 @@ export default function HealthScorePage() {
   }
 
   const isNoStatementError = error && (
-    error.includes("No health score found") || 
-    error.includes("Please upload a bank statement first")
+    error.includes("Please upload a bank statement first") ||
+    error.includes("upload a bank statement")
   );
 
   if (isNoStatementError || (!loading && !error && !scoreData)) {
@@ -410,16 +410,26 @@ export default function HealthScorePage() {
           description="Your comprehensive financial wellness assessment"
         />
 
-        <Card className="flex flex-col items-center justify-center text-center p-12 max-w-xl mx-auto shadow-sm">
+        <Card className="flex flex-col items-center justify-center text-center p-8 max-w-xl mx-auto shadow-sm">
           <div className="w-16 h-16 bg-violet-50 rounded-full flex items-center justify-center mb-6">
             <svg className="h-8 w-8 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
           </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">Complete Your Financial Profile</h3>
-          <p className="text-sm text-wealth-muted mb-8 max-w-md leading-relaxed">
-            Your Final Hybrid Health Score combines 60% bank statement analysis with 40% financial profile responses.
-            Complete the Financial Profile chatbot to generate your personalised score.
+          
+          <div className="w-full space-y-4 mb-6">
+            <div className="flex justify-between items-center py-2.5 border-b border-gray-100">
+              <span className="text-sm font-semibold text-gray-600">Financial Profile</span>
+              <Badge variant="warning">Not Completed</Badge>
+            </div>
+            <div className="flex justify-between items-center py-2.5 border-b border-gray-100">
+              <span className="text-sm font-semibold text-gray-600">Final Health Score</span>
+              <span className="text-sm font-bold text-amber-600">Pending</span>
+            </div>
+          </div>
+
+          <p className="text-sm font-medium text-gray-700 mb-8 max-w-md leading-relaxed">
+            Complete your Financial Profile to unlock your final Health Score.
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
             <a
@@ -444,7 +454,7 @@ export default function HealthScorePage() {
 
         {/* Small secondary card — bank-only score if available */}
         {scoreData && (
-        <LegacyScoreCard
+          <LegacyScoreCard
             scoreData={scoreData}
             getGradeVariant={getGradeVariant}
           />

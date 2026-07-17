@@ -147,10 +147,16 @@ def get_auth_service(db: AsyncSession = Depends(get_db)):
 
 
 def get_user_service(db: AsyncSession = Depends(get_db)):
+    from app.clients.s3_client import S3Client
+    from app.repositories.statement_repository import StatementRepository
     from app.repositories.user_repository import UserRepository
     from app.services.user_service import UserService
 
-    return UserService(user_repo=UserRepository(db))
+    return UserService(
+        user_repo=UserRepository(db),
+        statement_repo=StatementRepository(db),
+        s3_client=S3Client(settings),
+    )
 
 
 def get_statement_service(db: AsyncSession = Depends(get_db)):
@@ -206,14 +212,33 @@ def get_portfolio_service(db: AsyncSession = Depends(get_db)):
 
 
 def get_ai_coach_service(db: AsyncSession = Depends(get_db)):
-    from app.clients.gemini_client import GeminiClient
-    from app.repositories.analytics_repository import AnalyticsRepository
+    from app.repositories.ai_coach_repository import AICoachRepository
+    from app.services.financial_context_builder import FinancialContextBuilder
+    from app.services.ai_prompt_builder import AIPromptBuilder
+    from app.services.ai_provider_service import AIProviderService
     from app.services.ai_coach_service import AICoachService
+    from app.repositories.transaction_repository import TransactionRepository
+    from app.repositories.analytics_repository import AnalyticsRepository
+    from app.repositories.financial_profile_repository import FinancialProfileRepository
+    from app.repositories.health_score_snapshot_repository import HealthScoreSnapshotRepository
+    from app.services.financial_metrics_service import FinancialMetricsService
 
-    return AICoachService(
+    txn_repo = TransactionRepository(db)
+    metrics_service = FinancialMetricsService(transaction_repo=txn_repo)
+    context_builder = FinancialContextBuilder(
+        transaction_repo=txn_repo,
         analytics_repo=AnalyticsRepository(db),
-        gemini_client=GeminiClient(settings),
+        profile_repo=FinancialProfileRepository(db),
+        snapshot_repo=HealthScoreSnapshotRepository(db),
+        metrics_service=metrics_service,
     )
+    return AICoachService(
+        ai_coach_repo=AICoachRepository(db),
+        context_builder=context_builder,
+        prompt_builder=AIPromptBuilder(),
+        provider_service=AIProviderService(),
+    )
+
 
 
 def get_admin_service(db: AsyncSession = Depends(get_db)):
@@ -235,6 +260,7 @@ def get_dashboard_service(
     from app.repositories.analytics_repository import AnalyticsRepository
     from app.repositories.transaction_repository import TransactionRepository
     from app.repositories.health_score_snapshot_repository import HealthScoreSnapshotRepository
+    from app.repositories.financial_profile_repository import FinancialProfileRepository
     from app.services.dashboard_service import DashboardService
 
     return DashboardService(
@@ -243,6 +269,7 @@ def get_dashboard_service(
         metrics_service=metrics_service,
         health_score_service=health_score_service,
         snapshot_repo=HealthScoreSnapshotRepository(db),
+        profile_repo=FinancialProfileRepository(db),
     )
 
 
@@ -262,10 +289,24 @@ def get_financial_profile_repository(db: AsyncSession = Depends(get_db)):
     return FinancialProfileRepository(db)
 
 
+def get_ai_coach_repository(db: AsyncSession = Depends(get_db)):
+    from app.repositories.ai_coach_repository import AICoachRepository
+
+    return AICoachRepository(db)
+
+
 def get_financial_chat_repository(db: AsyncSession = Depends(get_db)):
     from app.repositories.financial_chat_repository import FinancialChatRepository
 
     return FinancialChatRepository(db)
+
+
+def get_financial_analysis_service(db: AsyncSession = Depends(get_db)):
+    """Provides a FinancialAnalysisService scoped to the current DB session."""
+    from app.repositories.statement_repository import StatementRepository
+    from app.services.financial_analysis_service import FinancialAnalysisService
+
+    return FinancialAnalysisService(statement_repo=StatementRepository(db))
 
 
 def get_health_score_snapshot_repository(db: AsyncSession = Depends(get_db)):

@@ -47,6 +47,25 @@ class FinancialChatRepository(BaseRepository[FinancialChatSession]):
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
+    async def get_latest_completed_session(self, user_id: UUID) -> Optional[FinancialChatSession]:
+        """Return the most recent completed session for a user, or None.
+
+        Used by start_session to resume after a page refresh instead of
+        creating a brand-new step-0 session that would show 'Step 1' while
+        the profile already has 100% completion stored in the database.
+        """
+        stmt = (
+            select(FinancialChatSession)
+            .where(
+                FinancialChatSession.user_id == user_id,
+                FinancialChatSession.status == "completed",
+            )
+            .order_by(FinancialChatSession.created_at.desc())
+            .limit(1)
+        )
+        result = await self.db.execute(stmt)
+        return result.scalar_one_or_none()
+
     async def advance_step(self, session: FinancialChatSession, step: int) -> FinancialChatSession:
         """Update current_step on a session."""
         return await self.update(session, {"current_step": step})

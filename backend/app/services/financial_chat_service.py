@@ -819,8 +819,9 @@ def _extract_step7(text: str, _emp: str | None = None) -> dict:
     for kw, itype in inv_map:
         if kw in t and itype not in found_inv:
             found_inv.append(itype)
-    if found_inv:
-        out["investment_types"] = found_inv
+    # Always set investment_types so the completion field is never left NULL.
+    # An empty list means "no specific types mentioned" which is a valid answer.
+    out["investment_types"] = found_inv
     return out
 
 
@@ -922,11 +923,20 @@ class FinancialChatService:
         """
         Create (or reuse) a session.
         Raises ForbiddenException if user has no transactions yet.
+
+        Priority:
+          1. Resume an existing active session.
+          2. Resume the most recent completed session (user refreshed after finishing).
+          3. Create a brand-new session (first time or after a reset).
         """
         await self._verify_has_transactions(user_id)
 
         session = await self._chat_repo.get_active_session(user_id)
         is_new = False
+        if session is None:
+            # Check if a completed session already exists before creating a new one.
+            # This prevents re-starting at step 0 when the user simply refreshes.
+            session = await self._chat_repo.get_latest_completed_session(user_id)
         if session is None:
             session = await self._chat_repo.create_session(user_id)
             is_new = True

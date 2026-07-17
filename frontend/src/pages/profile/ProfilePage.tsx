@@ -4,7 +4,7 @@ import toast from "react-hot-toast";
 
 import { useAppDispatch } from "@/store";
 import { useAuth } from "@/hooks/useAuth";
-import { updateProfile, logout } from "@/store/slices/authSlice";
+import { updateProfile, logout, deleteAccount } from "@/store/slices/authSlice";
 import { authService, type CurrentUserResponse } from "@/services/auth.service";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
@@ -18,6 +18,7 @@ import {
   Avatar,
   Button,
   Input,
+  Modal,
 } from "@/components/ui";
 
 function formatCreatedDate(isoString: string): string {
@@ -51,6 +52,11 @@ export default function ProfilePage() {
   const [savingProfile, setSavingProfile] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+
+  // Delete Account State
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   // Refs
   const nameInputRef = useRef<HTMLInputElement>(null);
@@ -162,8 +168,8 @@ export default function ProfilePage() {
       if (currentPasswordInputRef.current) currentPasswordInputRef.current.value = "";
       if (newPasswordInputRef.current) newPasswordInputRef.current.value = "";
       if (confirmNewPasswordInputRef.current) confirmNewPasswordInputRef.current.value = "";
-    } catch (err: any) {
-      const errorMsg = err.response?.data?.message ?? "Failed to update password";
+    } catch (err: unknown) {
+      const errorMsg = (err as { response?: { data?: { message?: string } } }).response?.data?.message ?? "Failed to update password";
       toast.error(errorMsg);
     } finally {
       setChangingPassword(false);
@@ -175,6 +181,31 @@ export default function ProfilePage() {
     await dispatch(logout());
     setLoggingOut(false);
     navigate(ROUTES.LOGIN);
+  };
+
+  const handleOpenDeleteModal = () => {
+    setDeleteConfirmationText("");
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleCloseDeleteModal = () => {
+    if (deletingAccount) return;
+    setIsDeleteModalOpen(false);
+    setDeleteConfirmationText("");
+  };
+
+  const handleConfirmDelete = async () => {
+    if (deleteConfirmationText !== "DELETE") return;
+    setDeletingAccount(true);
+    const result = await dispatch(deleteAccount());
+    setDeletingAccount(false);
+    if (deleteAccount.fulfilled.match(result)) {
+      toast.success("Your account has been permanently deleted.");
+      navigate(ROUTES.LOGIN);
+    } else {
+      const errorMsg = (result.payload as string) ?? "Failed to delete account";
+      toast.error(errorMsg);
+    }
   };
 
   return (
@@ -270,14 +301,24 @@ export default function ProfilePage() {
                 Irreversible and critical account actions
               </CardDescription>
             </CardHeader>
-            <CardContent className="py-6">
-              <div className="flex items-center justify-between">
+            <CardContent className="py-6 space-y-6">
+              <div className="flex items-center justify-between border-b border-wealth-border pb-6">
                 <div>
                   <p className="text-sm font-semibold text-gray-900">Sign Out</p>
                   <p className="text-xs text-wealth-muted">Log out of your current session</p>
                 </div>
                 <Button variant="danger" onClick={handleLogout} isLoading={loggingOut}>
                   Logout
+                </Button>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">Delete Account</p>
+                  <p className="text-xs text-wealth-muted">Permanently delete your account and all associated data</p>
+                </div>
+                <Button variant="danger" onClick={handleOpenDeleteModal}>
+                  Delete Account
                 </Button>
               </div>
             </CardContent>
@@ -382,6 +423,60 @@ export default function ProfilePage() {
           </Card>
         </div>
       </div>
+
+      {/* Account Deletion Confirmation Modal */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={handleCloseDeleteModal}
+        title="⚠ Delete Account"
+      >
+        <div className="space-y-4">
+          <p className="text-sm font-semibold text-red-600">
+            This action is permanent.
+          </p>
+          <div className="text-sm text-wealth-muted space-y-1">
+            <p>Deleting your account will permanently remove:</p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>Profile</li>
+              <li>Uploaded statements</li>
+              <li>Financial Profile</li>
+              <li>Health Scores</li>
+              <li>AI Coach conversations</li>
+              <li>Dashboard data</li>
+              <li>Any other user-owned records</li>
+            </ul>
+          </div>
+          <p className="text-sm font-semibold text-gray-900">
+            This action cannot be undone.
+          </p>
+          <div className="space-y-2">
+            <label htmlFor="confirm-delete" className="block text-xs font-medium text-wealth-muted">
+              Type <span className="font-bold text-gray-900 select-all">DELETE</span> to continue.
+            </label>
+            <Input
+              id="confirm-delete"
+              type="text"
+              value={deleteConfirmationText}
+              onChange={(e) => setDeleteConfirmationText(e.target.value)}
+              placeholder="DELETE"
+              className="w-full"
+            />
+          </div>
+          <div className="flex justify-end gap-3 pt-4 border-t border-wealth-border">
+            <Button variant="outline" onClick={handleCloseDeleteModal} disabled={deletingAccount}>
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              disabled={deleteConfirmationText !== "DELETE"}
+              onClick={handleConfirmDelete}
+              isLoading={deletingAccount}
+            >
+              Delete Account
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

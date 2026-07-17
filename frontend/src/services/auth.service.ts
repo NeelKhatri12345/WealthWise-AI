@@ -51,8 +51,8 @@ export const authService = {
     return data.data;
   },
 
-  async register(payload: RegisterRequest): Promise<TokenResponse> {
-    const { data } = await axiosInstance.post<ApiResponse<TokenResponse>>(
+  async register(payload: RegisterRequest): Promise<CurrentUserResponse> {
+    const { data } = await axiosInstance.post<ApiResponse<CurrentUserResponse>>(
       "/auth/register",
       payload,
     );
@@ -92,5 +92,9 @@ export const authService = {
       "/users/me/change-password",
       payload,
     );
+  },
+
+  async deleteAccount(): Promise<void> {
+    await axiosInstance.delete<ApiResponse<null>>("/users/me");
   },
 };

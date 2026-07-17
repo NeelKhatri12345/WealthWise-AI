@@ -25,6 +25,10 @@ export * from "./portfolioHoldingSlice";
 export { default as coachReducer } from "./coachSlice";
 export * from "./coachSlice";
 
+export { default as aiCoachReducer } from "./aiCoachSlice";
+export * from "./aiCoachSlice";
+
+
 export { default as notificationReducer } from "./notificationSlice";
 export * from "./notificationSlice";
 
@@ -39,4 +43,7 @@ export * from "./statementReviewSlice";
 
 export { default as financialProfileReducer } from "./financialProfileSlice";
 export * from "./financialProfileSlice";
+
+export { default as financialAnalysisReducer } from "./financialAnalysisSlice";
+export * from "./financialAnalysisSlice";
 
