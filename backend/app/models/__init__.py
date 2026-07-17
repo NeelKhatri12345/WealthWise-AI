@@ -5,6 +5,8 @@ Import all models here so Alembic's env.py can discover them
 via Base.metadata when autogenerating migrations.
 """
 
+from app.models.ai_coach_conversation import AICoachConversation
+from app.models.ai_coach_message import AICoachMessage
 from app.models.ai_conversation import AIConversation
 from app.models.financial_chat_message import FinancialChatMessage
 from app.models.financial_chat_session import FinancialChatSession
@@ -27,6 +29,8 @@ __all__ = [
     "HealthScoreSnapshot",
     "RiskProfile",
     "Portfolio",
+    "AICoachConversation",
+    "AICoachMessage",
     "AIConversation",
     "FinancialProfile",
     "FinancialChatSession",

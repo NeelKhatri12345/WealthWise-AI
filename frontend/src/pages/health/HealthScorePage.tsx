@@ -308,8 +308,8 @@ export default function HealthScorePage() {
   useDocumentTitle("Financial Health Score");
 
   const dispatch = useAppDispatch();
-  const { scoreData, loading, error } = useAppSelector(selectHealthScore);
-  const { snapshot, snapshotLoading } = useAppSelector(selectFinancialProfile);
+  const { scoreData, loading: legacyLoading, error: legacyError } = useAppSelector(selectHealthScore);
+  const { snapshot, snapshotLoading, snapshotError } = useAppSelector(selectFinancialProfile);
 
   useEffect(() => {
     dispatch(fetchHealthScore());
@@ -318,6 +318,7 @@ export default function HealthScorePage() {
 
   const handleRetry = () => {
     dispatch(fetchHealthScore());
+    dispatch(fetchLatestSnapshot());
   };
 
   const handleRecalculate = () => {
@@ -333,76 +334,47 @@ export default function HealthScorePage() {
     return "default";
   };
 
+  // Show spinner only while BOTH data sources are still loading
+  const isFullyLoading = (legacyLoading || snapshotLoading) && !snapshot && !scoreData;
 
-
-  if (loading) {
+  if (isFullyLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
         <Spinner size="lg" />
-        <p className="text-sm text-wealth-muted animate-pulse">Calculating your health score...</p>
+        <p className="text-sm text-wealth-muted animate-pulse">Loading your health score…</p>
       </div>
     );
   }
 
-  const isNoStatementError = error && (
-    error.includes("No health score found") || 
-    error.includes("Please upload a bank statement first")
-  );
-
-  if (isNoStatementError || (!loading && !error && !scoreData)) {
+  // ── Case 1: Hybrid snapshot exists — PRIMARY display ──────────────────────
+  if (snapshot) {
     return (
       <div className="animate-fade-in space-y-6">
         <PageHeader
           title="Financial Health Score"
           description="Your comprehensive financial wellness assessment"
         />
-        
-        <Card className="flex flex-col items-center justify-center text-center p-12 max-w-xl mx-auto shadow-sm">
-          <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mb-6">
-            <svg className="h-8 w-8 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-          </div>
-          
-          <h3 className="text-xl font-bold text-gray-900 mb-2">No Health Score Calculated</h3>
-          <p className="text-sm text-wealth-muted mb-8 max-w-md">
-            Before we can assess your financial health, you need to upload a bank statement. We will parse your transactions and compile a breakdown of your score automatically.
-          </p>
-          
-          <a
-            href="/upload"
-            className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-sm font-semibold rounded-lg text-white bg-primary-600 hover:bg-primary-700 shadow-sm transition-colors"
-          >
-            Upload Bank Statement
-          </a>
-        </Card>
-      </div>
-    );
-  }
 
-  if (error) {
-    return (
-      <div className="animate-fade-in space-y-6">
-        <PageHeader
-          title="Financial Health Score"
-          description="Your comprehensive financial wellness assessment"
+        {/* PRIMARY — Final Hybrid Health Score */}
+        <HybridSnapshotCard
+          snapshot={snapshot}
+          onRecalculate={handleRecalculate}
+          recalculating={snapshotLoading}
         />
-        
-        <Card className="p-8 max-w-lg mx-auto text-center">
-          <p className="text-sm text-wealth-danger mb-4 font-medium">{error}</p>
-          <button
-            onClick={handleRetry}
-            className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-semibold rounded-lg text-white bg-primary-600 hover:bg-primary-700 transition-colors"
-          >
-            Retry Assessment
-          </button>
-        </Card>
+
+        {/* SECONDARY — Bank Statement Score (collapsed / small) */}
+        {scoreData && (
+          <LegacyScoreCard
+            scoreData={scoreData}
+            getGradeVariant={getGradeVariant}
+          />
+        )}
       </div>
     );
   }
 
-  // ── Case: no hybrid snapshot yet ───────────────────────────────────────────
-  if (!snapshot) {
+  // ── Case 2: No snapshot, but legacy bank-only score exists ─────────────────
+  if (scoreData) {
     return (
       <div className="animate-fade-in space-y-6">
         <PageHeader
@@ -418,7 +390,7 @@ export default function HealthScorePage() {
           </div>
           <h3 className="text-xl font-bold text-gray-900 mb-2">Complete Your Financial Profile</h3>
           <p className="text-sm text-wealth-muted mb-8 max-w-md leading-relaxed">
-            Your Final Hybrid Health Score combines 60% bank statement analysis with 40% financial profile responses.
+            Your Final Hybrid Health Score combines bank statement analysis with your financial profile responses.
             Complete the Financial Profile chatbot to generate your personalised score.
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
@@ -431,29 +403,52 @@ export default function HealthScorePage() {
               </svg>
               Complete Financial Profile
             </a>
-            {scoreData && (
-              <button
-                onClick={handleRetry}
-                className="inline-flex items-center gap-2 px-6 py-3 border border-wealth-border text-sm font-semibold text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
-              >
-                Refresh
-              </button>
-            )}
+            <button
+              onClick={handleRetry}
+              className="inline-flex items-center gap-2 px-6 py-3 border border-wealth-border text-sm font-semibold text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
+            >
+              Refresh
+            </button>
           </div>
         </Card>
 
-        {/* Small secondary card — bank-only score if available */}
-        {scoreData && (
+        {/* Show the bank-only score below */}
         <LegacyScoreCard
-            scoreData={scoreData}
-            getGradeVariant={getGradeVariant}
-          />
-        )}
+          scoreData={scoreData}
+          getGradeVariant={getGradeVariant}
+        />
       </div>
     );
   }
 
-  // ── Case: hybrid snapshot exists — primary display ──────────────────────────
+  // ── Case 3: Neither snapshot nor legacy score — truly empty ────────────────
+  // Check if the legacy error says "upload a statement"
+  const isNoStatementError = legacyError && (
+    legacyError.includes("No health score found") ||
+    legacyError.includes("Please upload a bank statement first")
+  );
+
+  // A real, unexpected error from the snapshot endpoint
+  if (snapshotError && !isNoStatementError) {
+    return (
+      <div className="animate-fade-in space-y-6">
+        <PageHeader
+          title="Financial Health Score"
+          description="Your comprehensive financial wellness assessment"
+        />
+        <Card className="p-8 max-w-lg mx-auto text-center">
+          <p className="text-sm text-wealth-danger mb-4 font-medium">{snapshotError}</p>
+          <button
+            onClick={handleRetry}
+            className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-semibold rounded-lg text-white bg-primary-600 hover:bg-primary-700 transition-colors"
+          >
+            Retry
+          </button>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="animate-fade-in space-y-6">
       <PageHeader
@@ -461,20 +456,25 @@ export default function HealthScorePage() {
         description="Your comprehensive financial wellness assessment"
       />
 
-      {/* PRIMARY — Final Hybrid Health Score */}
-      <HybridSnapshotCard
-        snapshot={snapshot}
-        onRecalculate={handleRecalculate}
-        recalculating={snapshotLoading}
-      />
+      <Card className="flex flex-col items-center justify-center text-center p-12 max-w-xl mx-auto shadow-sm">
+        <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mb-6">
+          <svg className="h-8 w-8 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
 
-      {/* SECONDARY — Bank Statement Score (collapsed / small) */}
-      {scoreData && (
-        <LegacyScoreCard
-          scoreData={scoreData}
-          getGradeVariant={getGradeVariant}
-        />
-      )}
+        <h3 className="text-xl font-bold text-gray-900 mb-2">No Health Score Calculated</h3>
+        <p className="text-sm text-wealth-muted mb-8 max-w-md">
+          Before we can assess your financial health, you need to upload a bank statement. We will parse your transactions and compile a breakdown of your score automatically.
+        </p>
+
+        <a
+          href="/upload"
+          className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-sm font-semibold rounded-lg text-white bg-primary-600 hover:bg-primary-700 shadow-sm transition-colors"
+        >
+          Upload Bank Statement
+        </a>
+      </Card>
     </div>
   );
 }

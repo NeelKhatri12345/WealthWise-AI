@@ -32,6 +32,7 @@ from uuid import UUID
 from app.core.logger import logger
 from app.exceptions.custom_exceptions import NotFoundException, ValidationException
 from app.models.financial_profile import FinancialProfile
+from app.repositories.analytics_repository import AnalyticsRepository
 from app.repositories.financial_profile_repository import FinancialProfileRepository
 from app.repositories.health_score_snapshot_repository import HealthScoreSnapshotRepository
 from app.repositories.transaction_repository import TransactionRepository
@@ -42,6 +43,19 @@ from app.schemas.health_score_snapshot_schema import (
 )
 from app.services.financial_metrics_service import FinancialMetricsService
 from app.services.health_score_service import HealthScoreService
+
+
+# ── Configurable weights (must sum to 100) ─────────────────────────────────────
+# Override via environment or configuration; never hardcode in calculation logic.
+
+WEIGHT_BANK_STATEMENT = 50   # %
+WEIGHT_FINANCIAL_PROFILE = 35  # %
+WEIGHT_RISK_PROFILE = 15      # %
+
+# Minimum profile completion required to calculate health score.
+# With the 10 core completion fields, completing the chat → ~100%.
+# This threshold is a safeguard for partially-completed profiles.
+MIN_PROFILE_COMPLETION = 50.0
 
 
 # ── Band thresholds ────────────────────────────────────────────────────────────
@@ -443,9 +457,14 @@ def _build_suggestions(
 
 class HybridHealthScoreService:
     """
-    Calculates a hybrid Financial Health Score from transaction analytics
-    and chatbot-collected financial profile data.
+    Calculates a hybrid Financial Health Score from transaction analytics,
+    chatbot-collected financial profile, and ML-derived risk profile.
     Persists the result as a HealthScoreSnapshot.
+
+    Weights (configurable at module level):
+      WEIGHT_BANK_STATEMENT   — transaction-based analysis
+      WEIGHT_FINANCIAL_PROFILE — chatbot profile responses
+      WEIGHT_RISK_PROFILE      — ML risk classification
     """
 
     def __init__(
@@ -455,12 +474,14 @@ class HybridHealthScoreService:
         snapshot_repo: HealthScoreSnapshotRepository,
         metrics_service: FinancialMetricsService,
         health_score_service: HealthScoreService,
+        analytics_repo: AnalyticsRepository | None = None,
     ) -> None:
         self._txn_repo = transaction_repo
         self._profile_repo = profile_repo
         self._snapshot_repo = snapshot_repo
         self._metrics_svc = metrics_service
         self._health_score_service = health_score_service
+        self._analytics_repo = analytics_repo
 
     async def calculate_and_save(self, user_id: UUID) -> HealthScoreSnapshotResponse:
         """
@@ -476,10 +497,18 @@ class HybridHealthScoreService:
 
         # Load profile
         profile = await self._profile_repo.get_by_user_id(user_id)
-        if not profile or profile.profile_completion_percentage < 100.0:
+        if not profile or profile.profile_completion_percentage < MIN_PROFILE_COMPLETION:
             raise ValidationException(
-                "Complete Financial Profile to generate your Final Hybrid Health Score."
+                "Complete your Financial Profile to generate your Health Score."
             )
+
+        # Load risk profile (optional — score still works without it)
+        risk_profile_record = None
+        risk_profile_score_component = 50.0  # neutral default (out of 100)
+        if self._analytics_repo:
+            risk_profile_record = await self._analytics_repo.get_latest_risk_profile(user_id)
+            if risk_profile_record:
+                risk_profile_score_component = float(risk_profile_record.risk_score)
 
         # 1. Compute bank_statement_score from existing transaction analysis.
         legacy_score = self._health_score_service.calculate_health_score(metrics)
@@ -576,10 +605,26 @@ class HybridHealthScoreService:
         profile_score = profile_savings + profile_spending + profile_debt + profile_emergency + profile_stability + profile_investment
         profile_score = max(0.0, min(100.0, profile_score))
 
-        # 3. Final combined score: 60% Bank Statement Score + 40% Financial Profile Score
-        final_score = round((bank_statement_score * 0.60) + (profile_score * 0.40), 1)
+        # 3. Compute weights (normalise to fractions)
+        w_bank = WEIGHT_BANK_STATEMENT / 100.0
+        w_profile = WEIGHT_FINANCIAL_PROFILE / 100.0
+        w_risk = WEIGHT_RISK_PROFILE / 100.0
 
-        # Compute component scores
+        # If risk profile is not available, redistribute its weight
+        if risk_profile_record is None:
+            w_bank = WEIGHT_BANK_STATEMENT / (WEIGHT_BANK_STATEMENT + WEIGHT_FINANCIAL_PROFILE)
+            w_profile = WEIGHT_FINANCIAL_PROFILE / (WEIGHT_BANK_STATEMENT + WEIGHT_FINANCIAL_PROFILE)
+            w_risk = 0.0
+
+        # Final combined score
+        final_score = round(
+            (bank_statement_score * w_bank)
+            + (profile_score * w_profile)
+            + (risk_profile_score_component * w_risk),
+            1,
+        )
+
+        # Compute component scores (blended bank + profile)
         bank_savings = float(legacy_score.breakdown.savings_rate)
         bank_spending = float(legacy_score.breakdown.expense_ratio)
         bank_debt = float(_score_debt_burden(metrics, None))
@@ -587,12 +632,16 @@ class HybridHealthScoreService:
         bank_stability = float(legacy_score.breakdown.income_stability)
         bank_investment = float(_score_investment_readiness(metrics, None))
 
-        cash_flow = round(bank_savings * 0.60 + profile_savings * 0.40, 1)
-        spending = round(bank_spending * 0.60 + profile_spending * 0.40, 1)
-        debt = round(bank_debt * 0.60 + profile_debt * 0.40, 1)
-        emergency = round(bank_emergency * 0.60 + profile_emergency * 0.40, 1)
-        stability = round(bank_stability * 0.60 + profile_stability * 0.40, 1)
-        investment = round(bank_investment * 0.60 + profile_investment * 0.40, 1)
+        # Component blend uses bank/profile weights only (risk is top-level)
+        bp_bank = w_bank / (w_bank + w_profile) if (w_bank + w_profile) > 0 else 0.5
+        bp_prof = 1.0 - bp_bank
+
+        cash_flow = round(bank_savings * bp_bank + profile_savings * bp_prof, 1)
+        spending = round(bank_spending * bp_bank + profile_spending * bp_prof, 1)
+        debt = round(bank_debt * bp_bank + profile_debt * bp_prof, 1)
+        emergency = round(bank_emergency * bp_bank + profile_emergency * bp_prof, 1)
+        stability = round(bank_stability * bp_bank + profile_stability * bp_prof, 1)
+        investment = round(bank_investment * bp_bank + profile_investment * bp_prof, 1)
 
         band = _score_to_band(final_score)
         risk_profile = _determine_risk_profile(profile, debt, emergency)
@@ -611,7 +660,7 @@ class HybridHealthScoreService:
         negative = _build_negative_factors(metrics, profile, component_scores)
         suggestions = _build_suggestions(metrics, profile, component_scores, risk_profile)
 
-        # 5. Store both component scores in calculation_metadata
+        # Store all component scores and weights in calculation_metadata
         metadata = {
             "transaction_count": metrics.transaction_count,
             "total_income": str(metrics.total_income),
@@ -621,8 +670,11 @@ class HybridHealthScoreService:
             "profile_completion": float(profile.profile_completion_percentage),
             "bank_statement_score": bank_statement_score,
             "financial_profile_score": profile_score,
-            "bank_statement_weight": 60,
-            "profile_weight": 40,
+            "risk_profile_score": risk_profile_score_component,
+            "bank_statement_weight": round(w_bank * 100),
+            "profile_weight": round(w_profile * 100),
+            "risk_weight": round(w_risk * 100),
+            "risk_profile_available": risk_profile_record is not None,
             "component_raw": {
                 "cash_flow": cash_flow,
                 "spending": spending,

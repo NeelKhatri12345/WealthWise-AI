@@ -300,7 +300,8 @@ export default function FinancialProfileChatPage() {
         description="Answer a few questions so we can personalise your Health Score"
       />
 
-      <ProgressBar step={currentStep} pct={completionPct} />
+      {/* Progress bar — derives percentage from step position, not DB completion */}
+      <ProgressBar step={currentStep} pct={isComplete ? 100 : (currentStep / TOTAL_STEPS) * 100} />
 
       {/* Chat window */}
       <div className="bg-white border border-wealth-border rounded-2xl shadow-sm overflow-hidden flex flex-col">

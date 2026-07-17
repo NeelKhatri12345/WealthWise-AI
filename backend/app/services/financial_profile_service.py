@@ -19,24 +19,23 @@ from app.schemas.financial_profile_schema import (
 
 # Ordered list of fields used to compute profile_completion_percentage.
 # Each present (non-None) field contributes equally.
+#
+# NOTE: This list only includes the core fields that the 10-step chat
+# guarantees filling. Optional/conditional fields like family_income,
+# monthly_emi, income_stability, etc. are still stored and used by the
+# hybrid scoring engine but do NOT penalise completion % when null —
+# because many are legitimately null (e.g. monthly_emi when no loans).
 _COMPLETION_FIELDS: list[str] = [
     "age_range",
     "employment_type",
     "monthly_income",
-    "family_income",
     "earning_members",
     "dependents_count",
     "has_loans",
-    "monthly_emi",
     "has_emergency_fund",
-    "emergency_fund_months",
     "has_health_insurance",
     "has_life_insurance",
-    "monthly_investment",
-    "investment_types",
     "risk_comfort",
-    "financial_goals",
-    "income_stability",
 ]
 
 

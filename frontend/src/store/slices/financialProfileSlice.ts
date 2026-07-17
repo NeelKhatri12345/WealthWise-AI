@@ -345,7 +345,19 @@ const financialProfileSlice = createSlice({
       })
       .addCase(fetchLatestSnapshot.rejected, (state, action) => {
         state.snapshotLoading = false;
-        state.snapshotError = action.payload as string;
+        const msg = (action.payload as string) ?? "";
+        // 404 / "not found" from snapshot endpoint is a normal state
+        // (user simply hasn't generated a score yet), not an error.
+        const isNotFound =
+          msg.includes("404") ||
+          msg.toLowerCase().includes("not found") ||
+          msg.toLowerCase().includes("no health score");
+        if (isNotFound) {
+          state.snapshot = null;
+          state.snapshotError = null;
+        } else {
+          state.snapshotError = msg;
+        }
       });
 
     // calculateHealthScore

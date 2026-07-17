@@ -1,6 +1,7 @@
 export { default as axiosInstance } from "./axiosInstance";
 export type { ApiResponse, PaginatedResponse } from "./axiosInstance";
 
+export { authApi } from "./auth.api";
 export { dashboardApi } from "./dashboard.api";
 export { uploadService } from "./upload.api";
 export { transactionApi } from "./transaction.api";
@@ -12,3 +13,6 @@ export { coachApi } from "./coach.api";
 export { notificationApi } from "./notification.api";
 export { reportApi } from "./report.api";
 export { adminApi } from "./admin.api";
+export { financialProfileApi } from "./financialProfile.api";
+export { financialChatApi } from "./financialChat.api";
+

@@ -162,8 +162,8 @@ export default function ProfilePage() {
       if (currentPasswordInputRef.current) currentPasswordInputRef.current.value = "";
       if (newPasswordInputRef.current) newPasswordInputRef.current.value = "";
       if (confirmNewPasswordInputRef.current) confirmNewPasswordInputRef.current.value = "";
-    } catch (err: any) {
-      const errorMsg = err.response?.data?.message ?? "Failed to update password";
+    } catch (err: unknown) {
+      const errorMsg = (err as { response?: { data?: { message?: string } } }).response?.data?.message ?? "Failed to update password";
       toast.error(errorMsg);
     } finally {
       setChangingPassword(false);

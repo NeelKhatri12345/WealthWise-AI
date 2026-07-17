@@ -1,59 +1,33 @@
 import axiosInstance, { type ApiResponse } from "./axiosInstance";
 
+// ── Types — aligned with backend RiskProfileResponse ──────────────────────────
+
 export interface RiskProfileResponse {
-  score: number;
-  level: "low" | "moderate" | "high" | "very_high";
-  summary: string;
-  lastUpdated: string;
+  id: string;
+  statement_id: string;
+  risk_level: "low" | "moderate" | "high" | "very_high";
+  risk_score: number;
+  confidence: number | null;
+  feature_inputs: Record<string, unknown> | null;
+  calculated_at: string;
 }
 
-export interface RiskFactorResponse {
-  name: string;
-  score: number;
-  weight: number;
-  description: string;
-}
-
-export interface RiskHistoryItem {
-  date: string;
-  score: number;
-}
-
-export interface AssessmentAnswer {
-  questionId: string;
-  answer: string;
-}
+// ── API methods ───────────────────────────────────────────────────────────────
 
 export const riskApi = {
+  /** Fetch the latest ML-derived risk profile. */
   async getRiskProfile(): Promise<RiskProfileResponse> {
-    const { data } =
-      await axiosInstance.get<ApiResponse<RiskProfileResponse>>(
-        "/risk/profile",
-      );
-    return data.data;
-  },
-
-  async submitAssessment(
-    answers: AssessmentAnswer[],
-  ): Promise<RiskProfileResponse> {
-    const { data } = await axiosInstance.post<ApiResponse<RiskProfileResponse>>(
-      "/risk/assessment",
-      { answers },
+    const { data } = await axiosInstance.get<ApiResponse<RiskProfileResponse>>(
+      "/risk-profile/latest",
     );
     return data.data;
   },
 
-  async getRiskHistory(): Promise<RiskHistoryItem[]> {
-    const { data } =
-      await axiosInstance.get<ApiResponse<RiskHistoryItem[]>>("/risk/history");
-    return data.data;
-  },
-
-  async getRiskFactors(): Promise<RiskFactorResponse[]> {
-    const { data } =
-      await axiosInstance.get<ApiResponse<RiskFactorResponse[]>>(
-        "/risk/factors",
-      );
+  /** Fetch risk profile history (most recent first). */
+  async getRiskHistory(limit: number = 10): Promise<RiskProfileResponse[]> {
+    const { data } = await axiosInstance.get<
+      ApiResponse<RiskProfileResponse[]>
+    >("/risk-profile/history", { params: { limit } });
     return data.data;
   },
 };

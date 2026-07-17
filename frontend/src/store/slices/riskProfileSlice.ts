@@ -1,54 +1,41 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import type { RootState } from "@/store";
 
-export interface RiskFactor {
-  name: string;
-  score: number;
-  weight: number;
-  description: string;
-}
+// ── Types — aligned with backend RiskProfileResponse ──────────────────────────
 
 export interface RiskProfile {
-  score: number;
-  level: "low" | "moderate" | "high" | "very_high";
-  summary: string;
-  lastUpdated: string;
-}
-
-export interface RiskAssessment {
-  questionId: string;
-  question: string;
-  answer: string;
+  id: string;
+  statement_id: string;
+  risk_level: "low" | "moderate" | "high" | "very_high";
+  risk_score: number;
+  confidence: number | null;
+  feature_inputs: Record<string, unknown> | null;
+  calculated_at: string;
 }
 
 export interface RiskProfileState {
   profile: RiskProfile | null;
-  factors: RiskFactor[];
-  assessment: RiskAssessment[];
-  history: { date: string; score: number }[];
+  history: RiskProfile[];
   loading: boolean;
   error: string | null;
 }
 
 const initialState: RiskProfileState = {
   profile: null,
-  factors: [],
-  assessment: [],
   history: [],
   loading: false,
   error: null,
 };
+
+// ── Thunks ────────────────────────────────────────────────────────────────────
 
 export const fetchRiskProfile = createAsyncThunk(
   "riskProfile/fetchProfile",
   async (_, { rejectWithValue }) => {
     try {
       const { riskApi } = await import("../../services/api/risk.api");
-      const [profile, factors, history] = await Promise.all([
-        riskApi.getRiskProfile(),
-        riskApi.getRiskFactors(),
-        riskApi.getRiskHistory(),
-      ]);
-      return { profile, factors, history };
+      const profile = await riskApi.getRiskProfile();
+      return { profile };
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       return rejectWithValue(
@@ -58,23 +45,22 @@ export const fetchRiskProfile = createAsyncThunk(
   },
 );
 
-export const submitAssessment = createAsyncThunk(
-  "riskProfile/submitAssessment",
-  async (
-    answers: { questionId: string; answer: string }[],
-    { rejectWithValue },
-  ) => {
+export const fetchRiskHistory = createAsyncThunk(
+  "riskProfile/fetchHistory",
+  async (_, { rejectWithValue }) => {
     try {
       const { riskApi } = await import("../../services/api/risk.api");
-      return await riskApi.submitAssessment(answers);
+      return await riskApi.getRiskHistory();
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       return rejectWithValue(
-        error.response?.data?.message ?? "Failed to submit assessment",
+        error.response?.data?.message ?? "Failed to fetch risk history",
       );
     }
   },
 );
+
+// ── Slice ─────────────────────────────────────────────────────────────────────
 
 const riskProfileSlice = createSlice({
   name: "riskProfile",
@@ -93,27 +79,28 @@ const riskProfileSlice = createSlice({
       .addCase(fetchRiskProfile.fulfilled, (state, action) => {
         state.loading = false;
         state.profile = action.payload.profile;
-        state.factors = action.payload.factors;
-        state.history = action.payload.history;
       })
       .addCase(fetchRiskProfile.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
-      .addCase(submitAssessment.pending, (state) => {
+      .addCase(fetchRiskHistory.pending, (state) => {
         state.loading = true;
-        state.error = null;
       })
-      .addCase(submitAssessment.fulfilled, (state, action) => {
+      .addCase(fetchRiskHistory.fulfilled, (state, action) => {
         state.loading = false;
-        state.profile = action.payload;
+        state.history = action.payload;
       })
-      .addCase(submitAssessment.rejected, (state, action) => {
+      .addCase(fetchRiskHistory.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });
   },
 });
+
+// ── Selectors ─────────────────────────────────────────────────────────────────
+
+export const selectRiskProfile = (state: RootState) => state.riskProfile;
 
 export const { clearRiskError } = riskProfileSlice.actions;
 export default riskProfileSlice.reducer;

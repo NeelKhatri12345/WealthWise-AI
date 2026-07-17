@@ -1,28 +1,70 @@
-"""WealthWise AI - AI Coach Service"""
+"""
+WealthWise AI - AI Coach Service (Phase 2)
 
+Orchestrates the full AI coaching pipeline:
+
+  1. Classify intent (guardrail pre-check)
+  2. Short-circuit out-of-scope questions
+  3. Build user financial context (ContextBuilder)
+  4. Build enriched, safety-aware prompt (PromptBuilder)
+  5. Call AI provider (Gemini or rule-based fallback)
+  6. Post-process response through guardrails
+  7. Persist conversation to DB (AICoachRepository)
+  8. Return structured AIChatResponse
+
+Conversation management:
+  - New session: create_conversation → UUID
+  - Existing session: load messages for history context
+  - Each turn persists user + assistant messages
+"""
+
+from __future__ import annotations
+
+from typing import Optional
 from uuid import UUID, uuid4
 
-from app.clients.gemini_client import GeminiClient
-from app.core.constants import AI_COACH_MAX_HISTORY_MESSAGES, AI_COACH_SYSTEM_PROMPT
 from app.core.logger import logger
-from app.repositories.analytics_repository import AnalyticsRepository
-from app.schemas.ai_schema import (
+from app.repositories.ai_coach_repository import AICoachRepository
+from app.schemas.ai_coach_schema import (
     AIChatRequest,
     AIChatResponse,
     ConversationHistoryResponse,
     ConversationMessageSchema,
+    ConversationListItem,
+    ConversationListResponse,
 )
+from app.services.ai_prompt_builder import AIPromptBuilder
+from app.services.ai_provider_service import AIProviderService
+from app.services.ai_response_guardrail_service import (
+    AIResponseGuardrailService,
+    OUT_OF_SCOPE_REPLY,
+)
+from app.services.financial_context_builder import FinancialContextBuilder
 
 
 class AICoachService:
+    """
+    High-level orchestrator for the AI Coach chat flow.
+
+    Constructor receives all collaborators via dependency injection
+    to keep the service fully testable without a live DB or AI API.
+    """
 
     def __init__(
         self,
-        analytics_repo: AnalyticsRepository,
-        gemini_client: GeminiClient,
+        ai_coach_repo: AICoachRepository,
+        context_builder: FinancialContextBuilder,
+        prompt_builder: AIPromptBuilder,
+        provider_service: AIProviderService,
+        guardrail_service: type[AIResponseGuardrailService] = AIResponseGuardrailService,
     ) -> None:
-        self._repo = analytics_repo
-        self._gemini = gemini_client
+        self._repo = ai_coach_repo
+        self._ctx_builder = context_builder
+        self._prompt_builder = prompt_builder
+        self._provider = provider_service
+        self._guardrail = guardrail_service
+
+    # ── Chat ──────────────────────────────────────────────────────────────────
 
     async def chat(
         self,
@@ -30,117 +72,198 @@ class AICoachService:
         request: AIChatRequest,
     ) -> AIChatResponse:
         """
-        Process a user message and return AI coach reply.
-        1. Determine or create session
-        2. Load conversation history for context
-        3. Build enriched system prompt with user's financial context
-        4. Call Gemini API
-        5. Persist both user message and assistant reply
+        Process one user message and return the AI coach reply.
+
+        Pipeline:
+          classify intent → context → prompt → AI call → guardrail → persist
         """
-        session_id = request.session_id or uuid4()
+        user_message = request.message.strip()
 
-        # Retrieve conversation history for context window
-        history = await self._repo.get_conversation_history(
-            user_id, session_id, limit=AI_COACH_MAX_HISTORY_MESSAGES
+        # ── Step 1: Pre-classify intent ──────────────────────────────────────
+        intent = self._guardrail.classify_intent(user_message)
+        logger.info(
+            "AI Coach: intent classified",
+            extra={"user_id": str(user_id), "intent": intent},
         )
 
-        # Build Gemini history format
-        gemini_history = [
-            {"role": msg.role, "parts": [{"text": msg.message}]} for msg in history
+        # ── Step 2: Out-of-scope short-circuit ───────────────────────────────
+        if intent == "out_of_scope":
+            conversation_id = await self._resolve_conversation(
+                user_id, request.conversation_id
+            )
+            await self._persist_turn(
+                user_id, conversation_id, user_message, OUT_OF_SCOPE_REPLY, intent
+            )
+            return AIChatResponse(
+                reply=OUT_OF_SCOPE_REPLY,
+                conversation_id=conversation_id,
+                intent=intent,
+                tokens_used=None,
+                model_version="rule-based",
+                provider=self._provider.provider_name,
+            )
+
+        # ── Step 3: Build financial context ──────────────────────────────────
+        ctx = await self._ctx_builder.build(user_id)
+
+        # ── Step 4: Resolve / create conversation & load history ─────────────
+        conversation_id = await self._resolve_conversation(
+            user_id, request.conversation_id
+        )
+        history_messages = await self._repo.get_recent_messages(
+            conversation_id, limit=12
+        )
+        history_dicts = [
+            {"role": m.role, "content": m.content} for m in history_messages
         ]
+        history_summary = self._prompt_builder.condense_history(history_dicts)
 
-        # Enrich system prompt with financial context
-        system_prompt = await self._build_system_prompt(user_id)
+        # ── Step 5: Build prompt ─────────────────────────────────────────────
+        system_prompt = self._prompt_builder.build_system_prompt(ctx)
 
-        # Call Gemini
-        reply, tokens_used = await self._gemini.generate(
+        # ── Step 6: Call AI provider ─────────────────────────────────────────
+        raw_reply, tokens_used = await self._provider.generate(
             system_prompt=system_prompt,
-            history=gemini_history,
-            user_message=request.message,
+            history=history_dicts,
+            user_message=user_message,
+            intent=intent,
+            ctx=ctx,
         )
 
-        # Persist user message
-        await self._repo.save_ai_message(
-            {
-                "user_id": user_id,
-                "session_id": session_id,
-                "role": "user",
-                "message": request.message,
-            }
+        # ── Step 7: Post-process through guardrails ──────────────────────────
+        final_reply = self._guardrail.sanitise_response(raw_reply, intent)
+
+        # ── Step 8: Persist conversation turn ───────────────────────────────
+        await self._persist_turn(
+            user_id, conversation_id, user_message, final_reply, intent
         )
 
-        # Persist assistant reply
-        await self._repo.save_ai_message(
-            {
-                "user_id": user_id,
-                "session_id": session_id,
-                "role": "assistant",
-                "message": reply,
-                "tokens_used": tokens_used,
-                "model_version": "gemini-2.5-flash",
-            }
-        )
+        model_version = self._provider.model_name if tokens_used else "rule-based"
 
         logger.info(
-            "AI coach interaction",
+            "AI Coach: response generated",
             extra={
                 "user_id": str(user_id),
-                "session_id": str(session_id),
+                "conversation_id": str(conversation_id),
+                "intent": intent,
                 "tokens": tokens_used,
+                "provider": self._provider.provider_name,
             },
         )
 
         return AIChatResponse(
-            reply=reply,
-            session_id=session_id,
+            reply=final_reply,
+            conversation_id=conversation_id,
+            intent=intent,
             tokens_used=tokens_used,
-            model_version="gemini-2.5-flash",
+            model_version=model_version,
+            provider=self._provider.provider_name,
         )
 
-    async def get_history(
-        self,
-        user_id: UUID,
-        session_id: UUID,
-    ) -> ConversationHistoryResponse:
-        messages = await self._repo.get_conversation_history(user_id, session_id)
-        return ConversationHistoryResponse(
-            session_id=session_id,
-            messages=[
-                ConversationMessageSchema(
-                    id=msg.id,
-                    role=msg.role,
-                    message=msg.message,
-                    created_at=msg.created_at,
+    # ── Conversation management ───────────────────────────────────────────────
+
+    async def list_conversations(
+        self, user_id: UUID, skip: int = 0, limit: int = 20
+    ) -> ConversationListResponse:
+        """Return a paginated list of the user's conversations."""
+        convs = await self._repo.list_conversations(user_id, skip=skip, limit=limit)
+        return ConversationListResponse(
+            conversations=[
+                ConversationListItem(
+                    id=c.id,
+                    title=c.title,
+                    created_at=c.created_at,
+                    updated_at=c.updated_at,
+                    message_count=0,  # avoid extra query on list view
                 )
-                for msg in messages
+                for c in convs
             ],
+            total=len(convs),
+        )
+
+    async def get_conversation_history(
+        self, user_id: UUID, conversation_id: UUID
+    ) -> ConversationHistoryResponse:
+        """Return all messages in a conversation (ownership verified)."""
+        conv = await self._repo.get_conversation(conversation_id, user_id)
+        if not conv:
+            return ConversationHistoryResponse(
+                conversation_id=conversation_id,
+                messages=[],
+                total_messages=0,
+            )
+        messages = [
+            ConversationMessageSchema(
+                id=m.id,
+                role=m.role,
+                content=m.content,
+                intent=m.intent,
+                created_at=m.created_at,
+            )
+            for m in (conv.messages or [])
+        ]
+        return ConversationHistoryResponse(
+            conversation_id=conversation_id,
+            messages=messages,
             total_messages=len(messages),
         )
 
-    async def delete_session(self, user_id: UUID, session_id: UUID) -> int:
-        return await self._repo.delete_session(user_id, session_id)
+    async def delete_conversation(self, user_id: UUID, conversation_id: UUID) -> bool:
+        """Hard-delete a conversation and its messages. Returns True if deleted."""
+        return await self._repo.delete_conversation(conversation_id, user_id)
 
-    async def _build_system_prompt(self, user_id: UUID) -> str:
-        """Enrich base system prompt with user's financial snapshot."""
-        context_lines = [AI_COACH_SYSTEM_PROMPT]
+    async def create_conversation(
+        self, user_id: UUID, title: str = "New Conversation"
+    ) -> UUID:
+        """Explicitly create a new conversation and return its ID."""
+        conv = await self._repo.create_conversation(user_id, title)
+        return conv.id
 
+    # ── Private helpers ───────────────────────────────────────────────────────
+
+    async def _resolve_conversation(
+        self,
+        user_id: UUID,
+        conversation_id: Optional[UUID],
+    ) -> UUID:
+        """
+        If conversation_id is provided and belongs to the user, use it.
+        Otherwise create a new conversation.
+        """
+        if conversation_id:
+            conv = await self._repo.get_conversation(conversation_id, user_id)
+            if conv:
+                return conv.id
+        # Create new
+        conv = await self._repo.create_conversation(user_id)
+        return conv.id
+
+    async def _persist_turn(
+        self,
+        user_id: UUID,
+        conversation_id: UUID,
+        user_message: str,
+        assistant_reply: str,
+        intent: str,
+    ) -> None:
+        """Persist user message then assistant reply to the DB."""
         try:
-            health = await self._repo.get_latest_health_score(user_id)
-            if health:
-                context_lines.append(
-                    f"\nUser's current financial health score: {health.overall_score}/100. "
-                    f"Savings rate: {health.savings_rate}%."
-                )
-
-            risk = await self._repo.get_latest_risk_profile(user_id)
-            if risk:
-                context_lines.append(
-                    f"User's risk profile: {risk.risk_level.value} "
-                    f"(confidence: {risk.confidence})."
-                )
-        except Exception as exc:
-            logger.warning(
-                "Failed to load financial context for AI prompt", exc_info=exc
+            await self._repo.add_message(
+                conversation_id=conversation_id,
+                user_id=user_id,
+                role="user",
+                content=user_message,
+                intent=intent,
             )
-
-        return "\n".join(context_lines)
+            await self._repo.add_message(
+                conversation_id=conversation_id,
+                user_id=user_id,
+                role="assistant",
+                content=assistant_reply,
+                intent=intent,
+            )
+        except Exception as exc:
+            logger.error(
+                "AI Coach: failed to persist conversation turn",
+                exc_info=exc,
+            )

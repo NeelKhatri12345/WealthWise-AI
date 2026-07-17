@@ -32,6 +32,7 @@ export const store = configureStore({
     portfolio: portfolioReducer,
     portfolioHoldings: portfolioHoldingReducer,
     coach: coachReducer,
+
     notifications: notificationReducer,
     admin: adminReducer,
     ui: uiReducer,

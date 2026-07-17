@@ -13,9 +13,7 @@ interface TransactionsPageProps {
 }
 
 export default function TransactionsPage({ hideHeader = false }: TransactionsPageProps) {
-  if (!hideHeader) {
-    useDocumentTitle("Transactions");
-  }
+  useDocumentTitle("Transactions");
   const dispatch = useAppDispatch();
   const { filters, pagination: { page }, error } = useAppSelector((state) => state.transactions);
   const [showDeleteAllDialog, setShowDeleteAllDialog] = useState(false);
