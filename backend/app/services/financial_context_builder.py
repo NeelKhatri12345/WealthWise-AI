@@ -98,11 +98,15 @@ class UserFinancialContext:
     investment_types: list[str] = field(default_factory=list)
     investment_readiness_score: Optional[float] = None
 
-    # ── Goals ────────────────────────────────────────────────────────
+    # ── Goals ────────────────────────────────────────────────────────────────
     financial_goals: list[str] = field(default_factory=list)
 
-    # ── Profile Completion ───────────────────────────────────────────
+    # ── Profile Completion ───────────────────────────────────────────────────
     profile_completion_pct: float = 0.0
+
+    # ── Investment Recommendation Snapshot ───────────────────────────────────
+    # Latest stored recommendation (read-only). None if not yet generated.
+    investment_recommendation: Optional[dict] = None
 
 
 # ── Service ───────────────────────────────────────────────────────────────────
@@ -123,12 +127,14 @@ class FinancialContextBuilder:
         profile_repo: FinancialProfileRepository,
         snapshot_repo: HealthScoreSnapshotRepository,
         metrics_service: FinancialMetricsService,
+        investment_rec_repo=None,  # Optional: InvestmentRecommendationRepository
     ) -> None:
         self._txn_repo = transaction_repo
         self._analytics_repo = analytics_repo
         self._profile_repo = profile_repo
         self._snapshot_repo = snapshot_repo
         self._metrics = metrics_service
+        self._investment_rec_repo = investment_rec_repo
 
     # ── Public API ────────────────────────────────────────────────────────────
 
@@ -144,6 +150,7 @@ class FinancialContextBuilder:
         await self._load_health_score(ctx)
         await self._load_risk_profile(ctx)
         await self._load_financial_profile(ctx)
+        await self._load_investment_recommendation(ctx)
 
         logger.debug(
             "Financial context built",
@@ -282,5 +289,29 @@ class FinancialContextBuilder:
         except Exception as exc:
             logger.warning(
                 "ContextBuilder: failed to load financial profile",
+                exc_info=exc,
+            )
+
+    async def _load_investment_recommendation(self, ctx: UserFinancialContext) -> None:
+        """Load the latest investment recommendation snapshot (read-only)."""
+        if self._investment_rec_repo is None:
+            return
+        try:
+            snap = await self._investment_rec_repo.get_latest_by_user(ctx.user_id)
+            if snap:
+                ctx.investment_recommendation = {
+                    "investment_readiness": snap.investment_readiness,
+                    "investment_readiness_score": float(snap.investment_readiness_score) if snap.investment_readiness_score else None,
+                    "recommended_strategy": snap.recommended_strategy,
+                    "monthly_investable_amount": float(snap.monthly_investable_amount) if snap.monthly_investable_amount else None,
+                    "allocation": snap.allocation_json or [],
+                    "reasoning": snap.reasoning_json or {},
+                    "warnings": snap.warnings_json or [],
+                    "action_plan": snap.action_plan_json or {},
+                    "created_at": snap.created_at.isoformat(),
+                }
+        except Exception as exc:
+            logger.warning(
+                "ContextBuilder: failed to load investment recommendation",
                 exc_info=exc,
             )

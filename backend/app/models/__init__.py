@@ -13,6 +13,8 @@ from app.models.financial_chat_session import FinancialChatSession
 from app.models.financial_profile import FinancialProfile
 from app.models.health_score import HealthScore
 from app.models.health_score_snapshot import HealthScoreSnapshot
+from app.models.investment_product import InvestmentProduct
+from app.models.investment_recommendation_snapshot import InvestmentRecommendationSnapshot
 from app.models.portfolio import Portfolio
 from app.models.risk_profile import RiskProfile
 from app.models.role import Role
@@ -35,4 +37,6 @@ __all__ = [
     "FinancialProfile",
     "FinancialChatSession",
     "FinancialChatMessage",
+    "InvestmentRecommendationSnapshot",
+    "InvestmentProduct",
 ]

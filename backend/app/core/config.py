@@ -148,6 +148,13 @@ class Settings(BaseSettings):
     AI_MODEL_NAME: str = ""        # Override model name; provider uses its own default if empty
     AI_REQUEST_TIMEOUT_SECONDS: int = 60  # Max seconds to wait for AI provider response
 
+    # ── Market Intelligence Cache ──────────────────────────────────
+    MARKET_CACHE_TTL_SHORT: int = 3600        # seconds — stocks/ETFs (1 hour)
+    MARKET_CACHE_TTL_LONG: int = 86400        # seconds — MF/FD/Gold (24 hours)
+    MARKET_LIVE_CACHE_TTL: int = 1800         # seconds — live responses (30 minutes)
+    MARKET_SYNC_ON_STARTUP: bool = False      # trigger sync on app startup
+
+
 
     @property
     def max_file_size_bytes(self) -> int:

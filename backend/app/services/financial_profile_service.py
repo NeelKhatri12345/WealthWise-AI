@@ -17,29 +17,46 @@ from app.schemas.financial_profile_schema import (
     FinancialProfileUpdate,
 )
 
-# Ordered list of fields used to compute profile_completion_percentage.
-# Each present (non-None) field contributes equally.
+# Ordered list of ONE representative field per chat step (steps 0-9).
+# This must ALWAYS contain exactly TOTAL_STEPS entries so that:
+#   profile_completion_percentage = (filled / TOTAL_STEPS) * 100
+# ─────────────────────────────────────────────────────────────────────
+# Step 0  → age_range
+# Step 1  → employment_type
+# Step 2  → monthly_income        (representative for income step)
+# Step 3  → earning_members       (representative for household step)
+# Step 4  → has_loans             (representative for loans step)
+# Step 5  → has_emergency_fund    (representative for emergency fund step)
+# Step 6  → has_health_insurance  (representative for insurance step)
+# Step 7  → monthly_investment    (representative for investments step)
+# Step 8  → risk_comfort
+# Step 9  → financial_goals
 _COMPLETION_FIELDS: list[str] = [
-    "age_range",
-    "employment_type",
-    "monthly_income",
-    "earning_members",
-    "dependents_count",
-    "has_loans",
-    "monthly_emi",
-    "has_emergency_fund",
-    "emergency_fund_months",
-    "has_health_insurance",
-    "has_life_insurance",
-    "monthly_investment",
-    "investment_types",
-    "risk_comfort",
-    "financial_goals",
+    "age_range",             # step 0
+    "employment_type",       # step 1
+    "monthly_income",        # step 2
+    "earning_members",       # step 3
+    "has_loans",             # step 4
+    "has_emergency_fund",    # step 5
+    "has_health_insurance",  # step 6
+    "monthly_investment",    # step 7
+    "risk_comfort",          # step 8
+    "financial_goals",       # step 9
 ]
+
+# Sanity-check: must equal TOTAL_STEPS (10)
+_TOTAL_CHAT_STEPS = 10
+assert len(_COMPLETION_FIELDS) == _TOTAL_CHAT_STEPS, (
+    f"_COMPLETION_FIELDS must have exactly {_TOTAL_CHAT_STEPS} entries, got {len(_COMPLETION_FIELDS)}"
+)
 
 
 def _compute_completion(profile) -> float:
-    """Return profile completion as a 0–100 float (rounded to 1 decimal)."""
+    """Return profile completion as a 0–100 float (rounded to 1 decimal).
+    
+    Formula: (number of answered steps / TOTAL_CHAT_STEPS) * 100
+    Each entry in _COMPLETION_FIELDS represents exactly one chat step.
+    """
     if profile is None:
         return 0.0
     filled = sum(
@@ -47,7 +64,7 @@ def _compute_completion(profile) -> float:
         for f in _COMPLETION_FIELDS
         if getattr(profile, f, None) is not None
     )
-    pct = (filled / len(_COMPLETION_FIELDS)) * 100.0
+    pct = (filled / _TOTAL_CHAT_STEPS) * 100.0
     return round(pct, 1)
 
 

@@ -28,11 +28,14 @@ from uuid import UUID
 
 from app.core.config import get_settings
 from app.core.logger import logger
+from app.enums.chat_session_status_enum import ChatSessionStatus
 from app.exceptions.custom_exceptions import ForbiddenException, NotFoundException
 from app.repositories.financial_chat_repository import FinancialChatRepository
 from app.repositories.transaction_repository import TransactionRepository
 from app.schemas.financial_chat_schema import (
+    ChatMessageResponse,
     ChatSessionResponse,
+    RetakeChatResponse,
     SendMessageResponse,
     StartChatResponse,
 )
@@ -185,9 +188,10 @@ _STEPS: list[StepDef] = [
             "1–2 months",
             "3–6 months",
             "6+ months",
+            "Other (Enter Exact Months)",
         ],
         input_type="chips",
-        allow_free_text=False,
+        allow_free_text=True,
         fields=["has_emergency_fund", "emergency_fund_months"],
     ),
     # Step 6 – insurance
@@ -350,7 +354,7 @@ _LOAN_REPLIES = {
 
 _EMERGENCY_REPLIES = {
     "no emergency fund", "none", "less than 1 month", "1-2 months", "1–2 months",
-    "3-6 months", "3–6 months", "6+ months",
+    "3-6 months", "3–6 months", "6+ months", "other (enter exact months)", "other",
 }
 
 _INSURANCE_REPLIES = {
@@ -504,7 +508,8 @@ def _validate_step(step: int, text: str, employment: str | None) -> bool:
     if step == 5:
         if any(r in t for r in _EMERGENCY_REPLIES):
             return True
-        if re.search(r"\b\d+\s*(month|mo)\b", text, re.IGNORECASE):
+        m = re.search(r"(\d+(?:\.\d+)?)", text)
+        if m and float(m.group(1)) > 0:
             return True
         if any(kw in t for kw in ["no", "yes", "have", "don't", "dont"]):
             return True
@@ -756,9 +761,14 @@ def _extract_step5(text: str, _emp: str | None = None) -> dict:
     elif re.search(r"1[-–]2|one.*(to|-).*two", text, re.IGNORECASE):
         out["emergency_fund_months"] = 1.5
     else:
-        m = re.search(r"(\d+(?:\.\d+)?)\s*(?:month|mo)", text, re.IGNORECASE)
+        m = re.search(r"(\d+(?:\.\d+)?)", text, re.IGNORECASE)
         if m:
-            out["emergency_fund_months"] = float(m.group(1))
+            val = float(m.group(1))
+            out["emergency_fund_months"] = val
+            if val <= 0:
+                out["has_emergency_fund"] = False
+        else:
+            out["emergency_fund_months"] = 3.0
     return out
 
 
@@ -944,7 +954,32 @@ class FinancialChatService:
         messages = await self._chat_repo.get_messages(session.id)
         profile = await self._profile_svc.get_profile(user_id)
         employment = profile.employment_type if profile else None
+        completion_pct = profile.profile_completion_percentage if profile else 0.0
 
+        # ── Completed session: return immediately with completion state ──────────
+        # The frontend will show the CompletionCard; no chat input is needed.
+        if session.status == ChatSessionStatus.COMPLETED:
+            # Pin current_step to the last step index (9) so displayStep = TOTAL_STEPS.
+            # This is the authoritative state regardless of what the DB stored.
+            last_step = TOTAL_STEPS - 1
+            completion_message = (
+                assistant_messages[-1].message
+                if (assistant_messages := [m for m in messages if m.sender == "assistant"])
+                else _COMPLETION_MESSAGE
+            )
+            return StartChatResponse(
+                session_id=session.id,
+                status=ChatSessionStatus.COMPLETED,
+                current_step=last_step,
+                first_message=completion_message,
+                is_complete=True,
+                profile_completion_percentage=completion_pct,
+                quick_replies=None,
+                input_type="chips",
+                allow_free_text=False,
+            )
+
+        # ── Active / new session ─────────────────────────────────────────────────
         if is_new or not messages:
             step0 = _STEPS[0]
             first_msg = step0.question
@@ -969,6 +1004,8 @@ class FinancialChatService:
             status=session.status,
             current_step=session.current_step,
             first_message=first_msg,
+            is_complete=False,
+            profile_completion_percentage=completion_pct,
             quick_replies=hints.get("quick_replies"),
             input_type=hints.get("input_type", "chips"),
             allow_free_text=hints.get("allow_free_text", False),
@@ -987,11 +1024,11 @@ class FinancialChatService:
         if session.user_id != user_id:
             raise ForbiddenException("Access denied")
 
-        if session.status == "completed":
+        if session.status == ChatSessionStatus.COMPLETED:
             hints = {}  # no next step
             return SendMessageResponse(
                 session_id=session_id,
-                status="completed",
+                status=ChatSessionStatus.COMPLETED,
                 current_step=session.current_step,
                 assistant_message=_COMPLETION_MESSAGE,
                 profile_completion_percentage=100.0,
@@ -1105,7 +1142,7 @@ class FinancialChatService:
 
         return SendMessageResponse(
             session_id=session_id,
-            status="completed" if is_complete else "active",
+            status=ChatSessionStatus.COMPLETED if is_complete else ChatSessionStatus.ACTIVE,
             current_step=next_step,
             assistant_message=assistant_msg,
             extracted_fields=extracted,
@@ -1131,8 +1168,6 @@ class FinancialChatService:
         profile = await self._profile_svc.get_profile(user_id)
         completion = profile.profile_completion_percentage if profile else 0.0
 
-        from app.schemas.financial_chat_schema import ChatMessageResponse
-
         return ChatSessionResponse(
             id=session.id,
             user_id=session.user_id,
@@ -1142,6 +1177,69 @@ class FinancialChatService:
             completed_at=session.completed_at,
             messages=[ChatMessageResponse.model_validate(m) for m in messages],
             profile_completion_percentage=completion,
+        )
+
+    async def retake_assessment(self, user_id: UUID) -> RetakeChatResponse:
+        """Archive the current session, reset the profile, start a fresh one.
+
+        Only the single most-recent active-or-completed session is archived
+        (not a bulk operation) so audit history for any earlier retakes is
+        preserved exactly as-is.
+
+        Returns RetakeChatResponse, which bundles the new StartChatResponse
+        fields together with the initial Step-0 assistant message so the
+        frontend needs only one API call.
+        """
+        from app.repositories.financial_profile_repository import FinancialProfileRepository
+
+        # ── 1. Find the session to archive (latest active or completed) ────────
+        current_session = await self._chat_repo.get_active_session(user_id)
+        if current_session is None:
+            current_session = await self._chat_repo.get_latest_completed_session(user_id)
+
+        if current_session is not None:
+            await self._chat_repo.archive_session(current_session)
+
+        # ── 2. Reset the profile fields (keeps the row, clears the data) ───────
+        profile_repo = FinancialProfileRepository(self._chat_repo.db)
+        await profile_repo.reset(user_id)
+
+        # ── 3. Create a fresh session at step 0 ──────────────────────────────
+        new_session = await self._chat_repo.create_session(user_id)
+
+        # ── 4. Seed the Step-0 assistant message ─────────────────────────────
+        step0 = _STEPS[0]
+        await self._chat_repo.add_message(
+            session_id=new_session.id,
+            user_id=user_id,
+            sender="assistant",
+            message=step0.question,
+        )
+
+        # ── 5. Fetch the seeded message to include in the response ────────────
+        messages = await self._chat_repo.get_messages(new_session.id)
+        hints = _hints_for_step(0, None)
+
+        logger.info(
+            "Assessment retaken",
+            extra={
+                "user_id": str(user_id),
+                "archived_session_id": str(current_session.id) if current_session else None,
+                "new_session_id": str(new_session.id),
+            },
+        )
+
+        return RetakeChatResponse(
+            session_id=new_session.id,
+            status=ChatSessionStatus.ACTIVE,
+            current_step=0,
+            first_message=step0.question,
+            is_complete=False,
+            profile_completion_percentage=0.0,
+            quick_replies=hints["quick_replies"],
+            input_type=hints["input_type"],
+            allow_free_text=hints["allow_free_text"],
+            messages=[ChatMessageResponse.model_validate(m) for m in messages],
         )
 
     async def go_to_previous_step(self, session_id: UUID, user_id: UUID) -> SendMessageResponse:
@@ -1179,7 +1277,7 @@ class FinancialChatService:
 
         # Update session step & status
         session.current_step = target_step
-        session.status = "active"
+        session.status = ChatSessionStatus.ACTIVE
         session.completed_at = None
         await self._chat_repo.db.flush()
 
@@ -1192,7 +1290,7 @@ class FinancialChatService:
 
         return SendMessageResponse(
             session_id=session_id,
-            status="active",
+            status=ChatSessionStatus.ACTIVE,
             current_step=target_step,
             assistant_message=hints["question"],
             extracted_fields=None,

@@ -1,20 +1,19 @@
-"""WealthWise AI - V1 API Router Aggregator"""
-
-from fastapi import APIRouter
-
 from app.api.v1.admin_routes import router as admin_router
 from app.api.v1.ai_coach_routes import router as ai_coach_router
+from app.api.v1.ai_advisor_routes import router as ai_advisor_router
 from app.api.v1.auth_routes import router as auth_router
 from app.api.v1.dashboard_routes import router as dashboard_router
 from app.api.v1.financial_chat_routes import router as financial_chat_router
 from app.api.v1.financial_profile_routes import router as financial_profile_router
 from app.api.v1.health_score_routes import router as health_score_router
+from app.api.v1.investment_recommendation_routes import router as investment_router
 from app.api.v1.portfolio_holding_routes import router as portfolio_holding_router
 from app.api.v1.portfolio_routes import router as portfolio_router
 from app.api.v1.risk_profile_routes import router as risk_profile_router
 from app.api.v1.statement_routes import router as statement_router
 from app.api.v1.transaction_routes import router as transaction_router
 from app.api.v1.user_routes import router as user_router
+from fastapi import APIRouter
 
 api_v1_router = APIRouter()
 
@@ -38,6 +37,7 @@ api_v1_router.include_router(
     portfolio_holding_router, prefix="/portfolio", tags=["Portfolio Holdings"]
 )
 api_v1_router.include_router(ai_coach_router, prefix="/ai-coach", tags=["AI Coach"])
+api_v1_router.include_router(ai_advisor_router, prefix="/ai-advisor", tags=["AI Advisor"])
 api_v1_router.include_router(admin_router, prefix="/admin", tags=["Admin"])
 # ── New: Financial Profile & Chat ────────────────────────────────────────────
 api_v1_router.include_router(
@@ -49,4 +49,10 @@ api_v1_router.include_router(
     financial_profile_router,
     prefix="/financial-profile",
     tags=["Financial Profile"],
+)
+# ── New: Investment Plan ──────────────────────────────────────────────────────
+api_v1_router.include_router(
+    investment_router,
+    prefix="/investments",
+    tags=["Investment Plan"],
 )

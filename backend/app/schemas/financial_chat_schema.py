@@ -5,6 +5,7 @@ Used by:
   POST /api/v1/financial-chat/start
   POST /api/v1/financial-chat/{session_id}/message
   GET  /api/v1/financial-chat/{session_id}
+  POST /api/v1/financial-chat/retake
 """
 
 from datetime import datetime
@@ -39,12 +40,16 @@ class ChatMessageResponse(BaseModel):
 
 
 class StartChatResponse(BaseModel):
-    """Returned when a new session is successfully created."""
+    """Returned when a new session is successfully created or resumed."""
 
     session_id: UUID
     status: str
     current_step: int
     first_message: str
+    # Whether the session is already complete (used on refresh to skip re-asking questions)
+    is_complete: bool = False
+    # Authoritative completion % from the profile — single source of truth on page load
+    profile_completion_percentage: float = 0.0
     # UI hints for first question
     quick_replies: Optional[list[str]] = None
     input_type: Literal["chips", "amount", "text"] = "chips"
@@ -88,3 +93,24 @@ class ChatSessionResponse(BaseModel):
     completed_at: Optional[datetime] = None
     messages: list[ChatMessageResponse] = []
     profile_completion_percentage: float = 0.0
+
+
+class RetakeChatResponse(BaseModel):
+    """Returned when a user retakes the financial assessment.
+
+    Combines StartChatResponse fields with the initial assistant messages so
+    the frontend needs only one API call — no follow-up GET required.
+    """
+
+    session_id: UUID
+    status: str
+    current_step: int
+    first_message: str
+    is_complete: bool = False
+    profile_completion_percentage: float = 0.0
+    quick_replies: Optional[list[str]] = None
+    input_type: Literal["chips", "amount", "text"] = "chips"
+    allow_free_text: bool = False
+    # The seeded Step-0 assistant message, ready for the chat window
+    messages: list[ChatMessageResponse] = []
+

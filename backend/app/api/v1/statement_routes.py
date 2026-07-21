@@ -106,6 +106,36 @@ async def _process_statement_background_task(statement_id: UUID) -> None:
             await transaction_parser_service.parse_statement(statement_id)
             await session.commit()
 
+            # 3. Auto-refresh Health Score Snapshot if user profile is complete
+            try:
+                stmt_obj = await statement_repo.get_by_id(statement_id)
+                if stmt_obj:
+                    from app.repositories.financial_profile_repository import FinancialProfileRepository
+                    from app.repositories.health_score_snapshot_repository import HealthScoreSnapshotRepository
+                    from app.services.financial_metrics_service import FinancialMetricsService
+                    from app.services.health_score_service import HealthScoreService
+                    from app.services.hybrid_health_score_service import HybridHealthScoreService
+
+                    profile_repo = FinancialProfileRepository(session)
+                    snapshot_repo = HealthScoreSnapshotRepository(session)
+                    metrics_service = FinancialMetricsService(transaction_repo)
+                    health_score_service = HealthScoreService()
+                    hybrid_service = HybridHealthScoreService(
+                        transaction_repo=transaction_repo,
+                        profile_repo=profile_repo,
+                        snapshot_repo=snapshot_repo,
+                        metrics_service=metrics_service,
+                        health_score_service=health_score_service,
+                    )
+                    await hybrid_service.calculate_and_save(stmt_obj.user_id)
+                    await session.commit()
+            except Exception as score_exc:
+                logger.info(
+                    "Background recalculation of health score snapshot skipped/failed",
+                    extra={"statement_id": str(statement_id)},
+                    exc_info=score_exc,
+                )
+
         except Exception as exc:
             logger.error("Background processing failed", extra={"statement_id": str(statement_id)}, exc_info=exc)
             await session.rollback()

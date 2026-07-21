@@ -48,6 +48,10 @@ class DashboardService:
         today = date.today()
         year, month = today.year, today.month
 
+        # Fetch overall metrics from canonical FinancialMetricsService
+        metrics = await self._metrics_service.get_metrics(user_id)
+        savings_rate = metrics.savings_rate
+
         # Current month aggregates
         raw = await self._txn_repo.get_monthly_aggregates(user_id, year, month)
         total_credits = Decimal("0")
@@ -62,12 +66,6 @@ class DashboardService:
             else:
                 total_debits += amt
 
-        savings_rate = (
-            ((total_credits - total_debits) / total_credits * 100)
-            if total_credits > 0
-            else Decimal("0")
-        )
-
         # Latest health score
         health_score_val = None
         health_score_label = "N/A"
@@ -81,7 +79,6 @@ class DashboardService:
                 profile = await self._profile_repo.get_by_user_id(user_id)
                 is_profile_complete = profile is not None and profile.profile_completion_percentage >= 100.0
 
-                metrics = await self._metrics_service.get_metrics(user_id)
                 if metrics.transaction_count > 0:
                     if is_profile_complete:
                         score_detail = self._health_score_service.calculate_health_score(metrics)

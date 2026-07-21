@@ -11,6 +11,7 @@ from uuid import UUID
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.enums.chat_session_status_enum import ChatSessionStatus
 from app.models.financial_chat_message import FinancialChatMessage
 from app.models.financial_chat_session import FinancialChatSession
 from app.repositories.base_repository import BaseRepository
@@ -26,7 +27,7 @@ class FinancialChatRepository(BaseRepository[FinancialChatSession]):
     async def create_session(self, user_id: UUID) -> FinancialChatSession:
         """Create a new active chat session for a user."""
         return await self.create(
-            {"user_id": user_id, "status": "active", "current_step": 0}
+            {"user_id": user_id, "status": ChatSessionStatus.ACTIVE, "current_step": 0}
         )
 
     async def get_session(self, session_id: UUID) -> Optional[FinancialChatSession]:
@@ -39,7 +40,7 @@ class FinancialChatRepository(BaseRepository[FinancialChatSession]):
             select(FinancialChatSession)
             .where(
                 FinancialChatSession.user_id == user_id,
-                FinancialChatSession.status == "active",
+                FinancialChatSession.status == ChatSessionStatus.ACTIVE,
             )
             .order_by(FinancialChatSession.created_at.desc())
             .limit(1)
@@ -53,12 +54,15 @@ class FinancialChatRepository(BaseRepository[FinancialChatSession]):
         Used by start_session to resume after a page refresh instead of
         creating a brand-new step-0 session that would show 'Step 1' while
         the profile already has 100% completion stored in the database.
+
+        Archived sessions are intentionally excluded — they belong to a
+        superseded assessment and must not be resumed.
         """
         stmt = (
             select(FinancialChatSession)
             .where(
                 FinancialChatSession.user_id == user_id,
-                FinancialChatSession.status == "completed",
+                FinancialChatSession.status == ChatSessionStatus.COMPLETED,
             )
             .order_by(FinancialChatSession.created_at.desc())
             .limit(1)
@@ -75,9 +79,21 @@ class FinancialChatRepository(BaseRepository[FinancialChatSession]):
         return await self.update(
             session,
             {
-                "status": "completed",
+                "status": ChatSessionStatus.COMPLETED,
                 "completed_at": datetime.now(timezone.utc),
             },
+        )
+
+    async def archive_session(self, session: FinancialChatSession) -> FinancialChatSession:
+        """Archive a single specific session.
+
+        Used when a user starts a new assessment (retake).  The archived
+        session is kept in the DB for audit/history — it will never be
+        resumed by start_session or get_latest_completed_session.
+        """
+        return await self.update(
+            session,
+            {"status": ChatSessionStatus.ARCHIVED},
         )
 
     # ── Message helpers ───────────────────────────────────────────────────────

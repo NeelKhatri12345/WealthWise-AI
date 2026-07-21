@@ -14,7 +14,7 @@ Providers:
 """
 
 from functools import lru_cache
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Optional
 from uuid import UUID
 
 from fastapi import Depends
@@ -221,6 +221,7 @@ def get_ai_coach_service(db: AsyncSession = Depends(get_db)):
     from app.repositories.analytics_repository import AnalyticsRepository
     from app.repositories.financial_profile_repository import FinancialProfileRepository
     from app.repositories.health_score_snapshot_repository import HealthScoreSnapshotRepository
+    from app.repositories.investment_recommendation_repository import InvestmentRecommendationRepository
     from app.services.financial_metrics_service import FinancialMetricsService
 
     txn_repo = TransactionRepository(db)
@@ -231,6 +232,7 @@ def get_ai_coach_service(db: AsyncSession = Depends(get_db)):
         profile_repo=FinancialProfileRepository(db),
         snapshot_repo=HealthScoreSnapshotRepository(db),
         metrics_service=metrics_service,
+        investment_rec_repo=InvestmentRecommendationRepository(db),
     )
     return AICoachService(
         ai_coach_repo=AICoachRepository(db),
@@ -238,6 +240,38 @@ def get_ai_coach_service(db: AsyncSession = Depends(get_db)):
         prompt_builder=AIPromptBuilder(),
         provider_service=AIProviderService(),
     )
+
+
+def get_ai_advisor_service(db: AsyncSession = Depends(get_db)):
+    from app.clients.gemini_client import GeminiClient
+    from app.repositories.transaction_repository import TransactionRepository
+    from app.repositories.analytics_repository import AnalyticsRepository
+    from app.repositories.financial_profile_repository import FinancialProfileRepository
+    from app.repositories.health_score_snapshot_repository import HealthScoreSnapshotRepository
+    from app.repositories.investment_recommendation_repository import InvestmentRecommendationRepository
+    from app.services.financial_metrics_service import FinancialMetricsService
+    from app.services.financial_context_builder import FinancialContextBuilder
+    from app.services.ai_advisor_service import AIAdvisorService
+
+    product_service = get_product_recommendation_service(db)
+
+    txn_repo = TransactionRepository(db)
+    metrics_service = FinancialMetricsService(transaction_repo=txn_repo)
+    context_builder = FinancialContextBuilder(
+        transaction_repo=txn_repo,
+        analytics_repo=AnalyticsRepository(db),
+        profile_repo=FinancialProfileRepository(db),
+        snapshot_repo=HealthScoreSnapshotRepository(db),
+        metrics_service=metrics_service,
+        investment_rec_repo=InvestmentRecommendationRepository(db),
+    )
+
+    return AIAdvisorService(
+        context_builder=context_builder,
+        product_service=product_service,
+        gemini_client=GeminiClient(settings),
+    )
+
 
 
 
@@ -524,6 +558,150 @@ def get_transaction_parser_service(db: AsyncSession = Depends(get_db)):
         processing_service=processing_service,
         parser=get_transaction_parser(),
     )
+
+
+def get_investment_recommendation_repository(db: AsyncSession = Depends(get_db)):
+    from app.repositories.investment_recommendation_repository import (
+        InvestmentRecommendationRepository,
+    )
+
+    return InvestmentRecommendationRepository(db)
+
+
+def get_investment_recommendation_service(db: AsyncSession = Depends(get_db)):
+    from app.repositories.analytics_repository import AnalyticsRepository
+    from app.repositories.financial_profile_repository import FinancialProfileRepository
+    from app.repositories.health_score_snapshot_repository import HealthScoreSnapshotRepository
+    from app.repositories.investment_recommendation_repository import (
+        InvestmentRecommendationRepository,
+    )
+    from app.repositories.transaction_repository import TransactionRepository
+    from app.services.financial_metrics_service import FinancialMetricsService
+    from app.services.investment_recommendation_service import (
+        InvestmentRecommendationService,
+    )
+
+    txn_repo = TransactionRepository(db)
+    return InvestmentRecommendationService(
+        snapshot_repo=HealthScoreSnapshotRepository(db),
+        analytics_repo=AnalyticsRepository(db),
+        profile_repo=FinancialProfileRepository(db),
+        metrics_service=FinancialMetricsService(transaction_repo=txn_repo),
+        recommendation_repo=InvestmentRecommendationRepository(db),
+    )
+
+
+def get_product_recommendation_service(db: AsyncSession = Depends(get_db)):
+    """
+    Provides a ProductRecommendationService with PostgresProductProvider
+    and MarketScoringService.
+    """
+    from app.repositories.financial_profile_repository import FinancialProfileRepository
+    from app.repositories.investment_recommendation_repository import (
+        InvestmentRecommendationRepository,
+    )
+    from app.services.product_recommendation_service import ProductRecommendationService
+
+    provider = _get_product_provider(db)
+
+    return ProductRecommendationService(
+        provider=provider,
+        rec_repo=InvestmentRecommendationRepository(db),
+        profile_repo=FinancialProfileRepository(db),
+        scoring_service=get_market_scoring_service(),
+    )
+
+
+def _get_product_provider(db: Optional[AsyncSession] = None):
+    """
+    Module-level singleton for PostgresProductProvider.
+    Primary catalog loaded from PostgreSQL with fallback to product_catalog.json.
+    Wires HybridMarketDataProvider for live market data hydration.
+    """
+    global _postgres_provider_singleton
+    if _postgres_provider_singleton is None:
+        from app.providers.postgres_product_provider import PostgresProductProvider
+        _postgres_provider_singleton = PostgresProductProvider(
+            db_session=db,
+            cache=get_market_metadata_cache(),
+        )
+        _postgres_provider_singleton.set_market_provider(get_market_provider())
+    elif db is not None:
+        _postgres_provider_singleton.set_db_session(db)
+
+    return _postgres_provider_singleton
+
+
+
+def _get_json_provider():
+    return _get_product_provider()
+
+
+def get_market_metadata_cache():
+    """
+    Returns the singleton instance of MarketMetadataCache.
+    """
+    global _market_cache_singleton
+    if _market_cache_singleton is None:
+        from app.market.market_metadata_cache import MarketMetadataCache
+        _market_cache_singleton = MarketMetadataCache()
+
+        # Safe async loading of cached keys into memory
+        import asyncio
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(_market_cache_singleton.initialize())
+        except RuntimeError:
+            # Fallback if no running event loop in thread context
+            asyncio.run(_market_cache_singleton.initialize())
+
+    return _market_cache_singleton
+
+
+def get_market_provider():
+    """
+    Returns the singleton instance of HybridMarketDataProvider.
+    Combines MFAPIProvider (Mutual Funds) and YahooFinanceProvider (Stocks/ETFs).
+    """
+    global _market_provider_singleton
+    if _market_provider_singleton is None:
+        from app.market.hybrid_market_provider import HybridMarketDataProvider
+        _market_provider_singleton = HybridMarketDataProvider(
+            cache=get_market_metadata_cache(),
+            catalog_provider=_get_product_provider(),
+        )
+    return _market_provider_singleton
+
+
+def get_market_sync_service(db: AsyncSession = Depends(get_db)):
+    """
+    Provides a MarketSyncService wrapper.
+    """
+    from app.market.market_sync_service import MarketSyncService
+    return MarketSyncService(
+        provider=get_market_provider(),
+        cache=get_market_metadata_cache(),
+        catalog_provider=_get_product_provider(db),
+    )
+
+
+def get_market_scoring_service():
+    """
+    Returns the singleton instance of MarketScoringService.
+    """
+    global _market_scoring_singleton
+    if _market_scoring_singleton is None:
+        from app.services.market_scoring_service import MarketScoringService
+        _market_scoring_singleton = MarketScoringService()
+    return _market_scoring_singleton
+
+
+# Module-level singleton storage (private)
+_postgres_provider_singleton = None
+_json_provider_singleton = None
+_market_cache_singleton = None
+_market_provider_singleton = None
+_market_scoring_singleton = None
 
 
 # ── Portfolio Holding Dependencies ───────────────────────────────────────────

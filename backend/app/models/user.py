@@ -65,6 +65,9 @@ class User(UUIDMixin, TimestampMixin, Base):
     health_score_snapshots: Mapped[list["HealthScoreSnapshot"]] = relationship(
         "HealthScoreSnapshot", back_populates="user", cascade="all, delete-orphan"
     )
+    investment_recommendation_snapshots: Mapped[list["InvestmentRecommendationSnapshot"]] = relationship(
+        "InvestmentRecommendationSnapshot", back_populates="user", cascade="all, delete-orphan"
+    )
 
     def __repr__(self) -> str:
         return f"<User id={self.id} email={self.email}>"

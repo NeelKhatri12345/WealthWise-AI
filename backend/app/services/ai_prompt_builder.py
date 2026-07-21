@@ -88,11 +88,12 @@ class AIPromptBuilder:
     def build_system_prompt(self, ctx: UserFinancialContext) -> str:
         """
         Assemble the system-level prompt: instruction + financial context +
-        safety rules.
+        investment plan context (if available) + safety rules.
         """
         parts = [
             _SYSTEM_INSTRUCTION,
             self._format_financial_context(ctx),
+            self._format_investment_plan(ctx),
             _SAFETY_RULES,
         ]
         return "\n\n".join(p.strip() for p in parts if p.strip())
@@ -251,6 +252,82 @@ class AIPromptBuilder:
         # — Suggestions from health score —
         if ctx.health_suggestions:
             lines.append("• Key AI Suggestions: " + "; ".join(ctx.health_suggestions[:3]))
+
+        return "\n".join(lines)
+
+    # ── Investment Plan formatter ──────────────────────────────────────────────
+
+    def _format_investment_plan(self, ctx: UserFinancialContext) -> str:
+        """
+        Format the stored investment recommendation snapshot into the prompt.
+
+        CRITICAL GUARDRAIL: The AI Coach must ONLY explain the stored plan.
+        It must NEVER regenerate, recalculate, or invent new allocations.
+        """
+        rec = getattr(ctx, "investment_recommendation", None)
+
+        lines: list[str] = ["=== INVESTMENT PLAN (STORED RECOMMENDATION ONLY) ==="]
+
+        if not rec:
+            lines.append(
+                "NO INVESTMENT PLAN FOUND. If the user asks about their investment plan, "
+                "allocations, or strategy, respond EXACTLY with:\n"
+                "\"Generate your Investment Plan first to receive personalized investment guidance. "
+                "You can do this from the Investment Plan page.\"\n"
+                "DO NOT invent any allocations or strategies."
+            )
+            lines.append(
+                "STRICT RULE: You may only reference the data above. "
+                "Never fabricate investment allocations, percentages, or product recommendations."
+            )
+            return "\n".join(lines)
+
+        lines.append(
+            f"• Investment Readiness: {rec.get('investment_readiness', 'N/A')} "
+            f"(Score: {rec.get('investment_readiness_score', 'N/A')}/100)"
+        )
+        lines.append(f"• Recommended Strategy: {rec.get('recommended_strategy', 'N/A').capitalize()}")
+
+        investable = rec.get("monthly_investable_amount")
+        if investable:
+            lines.append(f"• Monthly Investable Amount: ₹{investable:,.0f}")
+
+        allocation = rec.get("allocation") or []
+        if allocation:
+            lines.append("• Recommended Allocation:")
+            for item in allocation:
+                cat = item.get("category", "")
+                pct = item.get("percentage", 0)
+                amt = item.get("monthly_amount", 0)
+                priority = item.get("priority", "")
+                rationale = item.get("rationale", "")
+                lines.append(
+                    f"  – {cat}: {pct:.1f}% (₹{amt:,.0f}/month) [{priority}] — {rationale}"
+                )
+
+        reasoning = rec.get("reasoning") or {}
+        if reasoning.get("strategy_rationale"):
+            lines.append(f"• Strategy Rationale: {reasoning['strategy_rationale']}")
+        if reasoning.get("positive_signals"):
+            lines.append("• Positive Signals: " + "; ".join(reasoning["positive_signals"][:3]))
+        if reasoning.get("negative_signals"):
+            lines.append("• Concerns: " + "; ".join(reasoning["negative_signals"][:3]))
+        if reasoning.get("how_to_unlock"):
+            lines.append("• How to Unlock Better Strategy: " + "; ".join(reasoning["how_to_unlock"][:2]))
+
+        warnings = rec.get("warnings") or []
+        if warnings:
+            lines.append("• Warnings: " + " | ".join(warnings[:3]))
+
+        lines.append(
+            "\nSTRICT AI COACH RULES FOR INVESTMENT PLAN:\n"
+            "1. ONLY explain the stored plan above. NEVER regenerate or recalculate allocations.\n"
+            "2. NEVER recommend specific stocks, mutual fund schemes, or ETFs by name.\n"
+            "3. NEVER promise or imply guaranteed returns on any instrument.\n"
+            "4. If asked to change the plan, explain how the user can recalculate it from the Investment Plan page.\n"
+            "5. You MAY answer: 'Why this strategy?', 'Why FD?', 'Why low equity?', "
+            "'How can I unlock a more aggressive portfolio?' — using ONLY the stored data."
+        )
 
         return "\n".join(lines)
 

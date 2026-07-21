@@ -49,3 +49,40 @@ class FinancialProfileRepository(BaseRepository[FinancialProfile]):
         if profile is None:
             return None
         return await self.update(profile, fields)
+
+    async def reset(self, user_id: UUID) -> Optional[FinancialProfile]:
+        """Wipe all chat-derived fields and reset completion to 0%.
+
+        The profile row itself is kept — deleting it would break FK references
+        held by health-score snapshots and investment recommendations.
+        Called exclusively by the retake-assessment flow.
+        """
+        profile = await self.get_by_user_id(user_id)
+        if profile is None:
+            return None
+        return await self.update(
+            profile,
+            {
+                "age_range": None,
+                "employment_type": None,
+                "monthly_income": None,
+                "family_income": None,
+                "earning_members": None,
+                "dependents_count": None,
+                "has_loans": None,
+                "loan_types": None,
+                "monthly_emi": None,
+                "total_debt": None,
+                "has_emergency_fund": None,
+                "emergency_fund_months": None,
+                "has_health_insurance": None,
+                "has_life_insurance": None,
+                "monthly_investment": None,
+                "investment_types": None,
+                "risk_comfort": None,
+                "financial_goals": None,
+                "income_stability": None,
+                "profile_completion_percentage": 0.0,
+            },
+        )
+

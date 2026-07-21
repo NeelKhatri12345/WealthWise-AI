@@ -3,6 +3,7 @@ WealthWise AI - Financial Chat Routes
 
 Endpoints:
   POST /api/v1/financial-chat/start               — Start a new chat session
+  POST /api/v1/financial-chat/retake              — Retake the assessment (archive + reset + new session)
   POST /api/v1/financial-chat/{session_id}/message — Send a user message
   GET  /api/v1/financial-chat/{session_id}         — Get session + all messages
 """
@@ -18,6 +19,7 @@ from app.core.dependencies import (
 from app.schemas.base_schema import APIResponse
 from app.schemas.financial_chat_schema import (
     ChatSessionResponse,
+    RetakeChatResponse,
     SendMessageRequest,
     SendMessageResponse,
     StartChatResponse,
@@ -45,6 +47,29 @@ async def start_financial_chat(
     return APIResponse(
         success=True,
         message="Financial profile chat session started",
+        data=result,
+    )
+
+
+@router.post(
+    "/retake",
+    response_model=APIResponse[RetakeChatResponse],
+    summary="Retake the financial profile assessment",
+    description=(
+        "Archives the user's current active or completed chat session, "
+        "resets all financial profile fields to null, and starts a brand-new "
+        "session at Step 0. Returns the fresh session state together with the "
+        "initial assistant message — no follow-up GET call required."
+    ),
+)
+async def retake_assessment(
+    current_user=Depends(get_current_active_user),
+    service: FinancialChatService = Depends(get_financial_chat_service),
+):
+    result = await service.retake_assessment(user_id=current_user.id)
+    return APIResponse(
+        success=True,
+        message="Assessment reset. Starting fresh financial profile.",
         data=result,
     )
 
