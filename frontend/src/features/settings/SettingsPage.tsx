@@ -1,7 +1,6 @@
 import {
   GeneralSettings,
   NotificationSettings,
-  ThemeSettings,
   DataExport,
 } from "./components";
 import { useSettings } from "./hooks";
@@ -42,10 +41,6 @@ export const SettingsPage = () => {
         onUpdate={(general) => updateSettings(general)}
       />
 
-      <ThemeSettings
-        currentTheme={settings.theme}
-        onThemeChange={(theme) => updateSettings({ theme })}
-      />
 
       <NotificationSettings
         emailNotifications={settings.emailNotifications}

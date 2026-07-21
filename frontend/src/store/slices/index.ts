@@ -47,3 +47,5 @@ export * from "./financialProfileSlice";
 export { default as financialAnalysisReducer } from "./financialAnalysisSlice";
 export * from "./financialAnalysisSlice";
 
+export { default as investmentRecommendationReducer } from "./investmentRecommendationSlice";
+export * from "./investmentRecommendationSlice";

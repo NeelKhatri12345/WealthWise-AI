@@ -16,14 +16,3 @@
   --header-height: 4rem;
 }
 
-.dark {
-  --color-bg: #0f172a;
-  --color-card: #1e293b;
-  --color-text: #f1f5f9;
-  --color-text-muted: #94a3b8;
-  --color-border: #334155;
-  --color-primary: #3b82f6;
-  --color-primary-light: #1e3a5f;
-  --color-secondary: #22c55e;
-  --color-secondary-light: #052e16;
-}

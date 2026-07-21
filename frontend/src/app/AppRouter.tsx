@@ -1,5 +1,11 @@
 import React, { Suspense } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+
 import { ROUTES } from "@/routes/routes";
 import { PrivateRoute } from "@/routes/PrivateRoute";
 import { AdminRoute } from "@/routes/AdminRoute";
@@ -18,39 +24,77 @@ const DashboardPage = React.lazy(
   () => import("@/pages/dashboard/DashboardPage"),
 );
 const UploadPage = React.lazy(() => import("@/pages/upload/UploadPage"));
-const StatementReviewPage = React.lazy(() => import("@/pages/upload/StatementReviewPage"));
-// const TransactionsPage = React.lazy(
-//   () => import("@/pages/transactions/TransactionsPage"),
-// );
+const StatementReviewPage = React.lazy(
+  () => import("@/pages/upload/StatementReviewPage"),
+);
+
+const TransactionsPage = React.lazy(
+  () => import("@/pages/transactions/TransactionsPage"),
+);
+
 const HealthScorePage = React.lazy(
   () => import("@/pages/health/HealthScorePage"),
 );
+
 const FinancialProfileChatPage = React.lazy(
   () => import("@/pages/financial-profile/FinancialProfileChatPage"),
 );
-const RiskProfilePage = React.lazy(
-  () => import("@/pages/risk/RiskProfilePage"),
-);
+
+// const RiskProfilePage = React.lazy(
+//   () => import("@/pages/risk/RiskProfilePage"),
+// );
+
 // const PortfolioPage = React.lazy(
 //   () => import("@/pages/portfolio/PortfolioPage"),
 // );
+
 // const PortfolioHoldingsPage = React.lazy(
 //   () => import("@/pages/portfolio-holdings/PortfolioHoldingsPage"),
 // );
-const AICoachPage = React.lazy(() => import("@/pages/ai-coach/AICoachPage"));
-// const ReportsPage = React.lazy(() => import("@/pages/reports/ReportsPage"));
+
+const AICoachPage = React.lazy(
+  () => import("@/pages/ai-coach/AICoachPage"),
+);
+
+const InvestmentPlanPage = React.lazy(
+  () => import("@/pages/investment-plan/InvestmentPlanPage"),
+);
+
+// const ReportsPage = React.lazy(
+//   () => import("@/pages/reports/ReportsPage"),
+// );
+
 // const NotificationsPage = React.lazy(
 //   () => import("@/pages/notifications/NotificationsPage"),
 // );
-const LandingPage = React.lazy(() => import("@/pages/landing/LandingPage"));
-const ProfilePage = React.lazy(() => import("@/pages/profile/ProfilePage"));
-const SettingsPage = React.lazy(() => import("@/pages/settings/SettingsPage"));
+
+const LandingPage = React.lazy(
+  () => import("@/pages/landing/LandingPage"),
+);
+
+const ProfilePage = React.lazy(
+  () => import("@/pages/profile/ProfilePage"),
+);
+
+const SettingsPage = React.lazy(
+  () => import("@/pages/settings/SettingsPage"),
+);
+
 const AdminDashboardPage = React.lazy(
   () => import("@/pages/admin/AdminDashboardPage"),
 );
-const AdminUsersPage = React.lazy(() => import("@/pages/admin/AdminUsersPage"));
-const NotFoundPage = React.lazy(() => import("@/pages/NotFound"));
-const UnauthorizedPage = React.lazy(() => import("@/pages/Unauthorized"));
+
+const AdminUsersPage = React.lazy(
+  () => import("@/pages/admin/AdminUsersPage"),
+);
+
+const NotFoundPage = React.lazy(
+  () => import("@/pages/NotFound"),
+);
+
+const UnauthorizedPage = React.lazy(
+  () => import("@/pages/Unauthorized"),
+);
 
 export function AppRouter() {
   return (
@@ -77,34 +121,59 @@ export function AppRouter() {
             <Route element={<MainLayout />}>
               <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
               <Route path={ROUTES.UPLOAD} element={<UploadPage />} />
-              <Route path={ROUTES.STATEMENT_REVIEW} element={<StatementReviewPage />} />
-              {/*
+              <Route
+                path={ROUTES.STATEMENT_REVIEW}
+                element={<StatementReviewPage />}
+              />
+
               <Route
                 path={ROUTES.TRANSACTIONS}
                 element={<TransactionsPage />}
               />
-              */}
+
               <Route
                 path={ROUTES.FINANCIAL_PROFILE}
                 element={<FinancialProfileChatPage />}
               />
-              <Route path={ROUTES.HEALTH_SCORE} element={<HealthScorePage />} />
-              <Route path={ROUTES.RISK_PROFILE} element={<RiskProfilePage />} />
-              {/*
-              <Route path={ROUTES.PORTFOLIO} element={<PortfolioPage />} />
+
+              <Route
+                path={ROUTES.HEALTH_SCORE}
+                element={<HealthScorePage />}
+              />
+
+              {/* Redirect deprecated Risk Profile page */}
+              <Route
+                path={ROUTES.RISK_PROFILE}
+                element={<Navigate to={ROUTES.HEALTH_SCORE} replace />}
+              />
+
+              {/* <Route
+                path={ROUTES.PORTFOLIO}
+                element={<PortfolioPage />}
+              />
+
               <Route
                 path={ROUTES.PORTFOLIO_HOLDINGS}
                 element={<PortfolioHoldingsPage />}
-              />
-              */}
+              /> */}
+
               <Route path={ROUTES.AI_COACH} element={<AICoachPage />} />
-              {/*
-              <Route path={ROUTES.REPORTS} element={<ReportsPage />} />
+
+              <Route
+                path={ROUTES.INVESTMENT_PLAN}
+                element={<InvestmentPlanPage />}
+              />
+
+              {/* <Route
+                path={ROUTES.REPORTS}
+                element={<ReportsPage />}
+              />
+
               <Route
                 path={ROUTES.NOTIFICATIONS}
                 element={<NotificationsPage />}
-              />
-              */}
+              /> */}
+
               <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
               <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
             </Route>
@@ -117,12 +186,18 @@ export function AppRouter() {
                 path={ROUTES.ADMIN_DASHBOARD}
                 element={<AdminDashboardPage />}
               />
-              <Route path={ROUTES.ADMIN_USERS} element={<AdminUsersPage />} />
+              <Route
+                path={ROUTES.ADMIN_USERS}
+                element={<AdminUsersPage />}
+              />
             </Route>
           </Route>
 
           {/* Error routes */}
-          <Route path={ROUTES.UNAUTHORIZED} element={<UnauthorizedPage />} />
+          <Route
+            path={ROUTES.UNAUTHORIZED}
+            element={<UnauthorizedPage />}
+          />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>

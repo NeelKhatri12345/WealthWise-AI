@@ -21,6 +21,7 @@ function mapReduxUser(user: ReduxAuthUser): User {
     role: user.role as UserRole,
     phone: user.phone,
     isVerified: user.isVerified,
+    avatar: user.avatar,
     createdAt: "",
     updatedAt: "",
   };

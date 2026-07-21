@@ -19,6 +19,7 @@ import {
   statementReviewReducer,
   financialProfileReducer,
   financialAnalysisReducer,
+  investmentRecommendationReducer,
 } from "./slices";
 import { apiMiddleware } from "./middleware/api.middleware";
 import { loggerMiddleware } from "./middleware/logger.middleware";
@@ -35,15 +36,17 @@ const appReducer = combineReducers({
   coach: coachReducer,
   aiCoach: aiCoachReducer,
   financialAnalysis: financialAnalysisReducer,
-
   notifications: notificationReducer,
   admin: adminReducer,
   ui: uiReducer,
   statementReview: statementReviewReducer,
   financialProfile: financialProfileReducer,
+  investmentRecommendation: investmentRecommendationReducer,
 });
 
-const rootReducer = (state: any, action: any) => {
+import type { UnknownAction } from "@reduxjs/toolkit";
+
+const rootReducer = (state: ReturnType<typeof appReducer> | undefined, action: UnknownAction) => {
   if (
     action.type === "auth/logout/fulfilled" ||
     action.type === "auth/logout/rejected" ||

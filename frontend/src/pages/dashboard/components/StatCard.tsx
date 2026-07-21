@@ -142,7 +142,7 @@ export const StatCard = memo(function StatCard({
       <Link
         to={to}
         className={cn(
-          "block rounded-xl border border-wealth-border bg-wealth-card p-6 shadow-sm group transition-all duration-200 hover:shadow-md hover:border-gray-300 cursor-pointer",
+          "block rounded-2xl border border-slate-200 bg-white p-6 shadow-sm group transition-all duration-200 hover:shadow-md hover:border-gray-300 cursor-pointer",
           className,
         )}
       >

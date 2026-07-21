@@ -7,6 +7,7 @@ import {
   goToPreviousStep,
   fetchFinancialProfile,
   calculateHealthScore,
+  retakeAssessment,
   selectFinancialProfile,
   clearChatError,
   clearValidationMessage,
@@ -14,6 +15,7 @@ import {
 import { PageHeader } from "@/components/layout/PageHeader";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { ROUTES } from "@/routes/routes";
+import { Avatar } from "@/components/ui/Avatar";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -44,34 +46,34 @@ function ProgressBar({ step, pct }: { step: number; pct: number }) {
 function AssistantBubble({ text }: { text: string }) {
   return (
     <div className="flex items-start gap-3">
-      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-sm">
-        <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center shadow-sm">
+        <svg className="w-5 h-5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
         </svg>
       </div>
       <div className="flex-1 max-w-lg">
         <div className="bg-white border border-wealth-border rounded-2xl rounded-tl-sm px-5 py-4 shadow-sm">
           <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">{text}</p>
         </div>
-        <span className="text-[10px] text-wealth-muted ml-2 mt-1 block">WealthWise AI</span>
+        <span className="text-[10px] text-wealth-muted ml-2 mt-1 block">Ask AI</span>
       </div>
     </div>
   );
 }
 
 function UserBubble({ text }: { text: string }) {
+  const user = useAppSelector((state) => state.auth.user);
+  const userName = user?.fullName || user?.email || "User";
+
   return (
     <div className="flex items-start gap-3 justify-end">
       <div className="flex-1 max-w-sm flex flex-col items-end">
-        <div className="bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-2xl rounded-tr-sm px-5 py-3.5 shadow-sm">
-          <p className="text-sm leading-relaxed">{text}</p>
+        <div className="bg-primary-600 text-white rounded-2xl rounded-tr-sm px-5 py-3.5 shadow-sm">
+          <p className="text-sm text-white leading-relaxed whitespace-pre-wrap">{text}</p>
         </div>
-        <span className="text-[10px] text-wealth-muted mr-2 mt-1 block">You</span>
       </div>
-      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-        <svg className="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-        </svg>
+      <div className="flex-shrink-0">
+        <Avatar name={userName} size="sm" className="shadow-sm border border-primary-200" />
       </div>
     </div>
   );
@@ -132,10 +134,12 @@ function CompletionCard({
   pct,
   onGenerate,
   generating,
+  onRetake,
 }: {
   pct: number;
   onGenerate: () => void;
   generating: boolean;
+  onRetake: () => void;
 }) {
   return (
     <div className="bg-gradient-to-r from-emerald-50 to-primary-50 border border-emerald-200 rounded-2xl p-6">
@@ -173,6 +177,97 @@ function CompletionCard({
             </>
           )}
         </button>
+        <div>
+          <button
+            id="retake-assessment-btn"
+            type="button"
+            onClick={onRetake}
+            className="text-xs font-medium text-gray-400 hover:text-rose-600 transition-colors underline underline-offset-2 mt-1"
+          >
+            Retake Assessment
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Retake Confirm Modal ──────────────────────────────────────────────────────
+
+function RetakeConfirmModal({
+  open,
+  loading,
+  onCancel,
+  onConfirm,
+}: {
+  open: boolean;
+  loading: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  if (!open) return null;
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      aria-modal="true"
+      role="dialog"
+      aria-labelledby="retake-modal-title"
+    >
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        onClick={loading ? undefined : onCancel}
+      />
+      {/* Card */}
+      <div className="relative z-10 w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 space-y-5 animate-fade-in">
+        {/* Icon */}
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
+            <svg className="w-5 h-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h2 id="retake-modal-title" className="text-base font-bold text-gray-900">
+            Retake Financial Assessment?
+          </h2>
+        </div>
+        {/* Body */}
+        <p className="text-sm text-wealth-muted leading-relaxed">
+          This will start a new assessment and replace your current financial
+          profile used for <strong>Health Score</strong>,{" "}
+          <strong>Investment Plan</strong>, and <strong>Ask AI</strong>.
+        </p>
+        <p className="text-xs text-gray-400">
+          Your previous session will be preserved in history.
+        </p>
+        {/* Buttons */}
+        <div className="flex gap-3 justify-end pt-1">
+          <button
+            id="retake-modal-cancel-btn"
+            type="button"
+            onClick={onCancel}
+            disabled={loading}
+            className="px-5 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 disabled:opacity-50 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            id="retake-modal-confirm-btn"
+            type="button"
+            onClick={onConfirm}
+            disabled={loading}
+            className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl disabled:opacity-60 disabled:cursor-not-allowed transition-colors shadow-sm"
+          >
+            {loading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Resetting…
+              </>
+            ) : (
+              "Retake Assessment"
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -204,8 +299,14 @@ export default function FinancialProfileChatPage() {
   const [input, setInput] = useState("");
   const [showTextInput, setShowTextInput] = useState(false);
   const [noTransaction, setNoTransaction] = useState(false);
+  const [selectedChip, setSelectedChip] = useState<string | null>(null);
+  const [otherMonths, setOtherMonths] = useState<string>("");
+  const [otherMonthsError, setOtherMonthsError] = useState<string | null>(null);
+  const [showRetakeModal, setShowRetakeModal] = useState(false);
+  const [retakeLoading, setRetakeLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const otherInputRef = useRef<HTMLInputElement>(null);
 
   // Auto-start session on mount
   useEffect(() => {
@@ -230,6 +331,8 @@ export default function FinancialProfileChatPage() {
   useEffect(() => {
     setShowTextInput(allowFreeText);
     setInput("");
+    setSelectedChip(null);
+    setOtherMonthsError(null);
   }, [allowFreeText, currentStep]);
 
   // Scroll to bottom on new messages
@@ -253,7 +356,28 @@ export default function FinancialProfileChatPage() {
   };
 
   const handleChipClick = (choice: string) => {
-    void handleSend(choice);
+    setSelectedChip(choice);
+    setOtherMonthsError(null);
+    if (choice === "Other (Enter Exact Months)") {
+      setTimeout(() => otherInputRef.current?.focus(), 50);
+    } else {
+      void handleSend(choice);
+    }
+  };
+
+  const handleOtherMonthsSubmit = () => {
+    const valStr = otherMonths.trim();
+    if (!valStr) {
+      setOtherMonthsError("Emergency fund amount is required when 'Other' is selected.");
+      return;
+    }
+    const num = parseFloat(valStr);
+    if (isNaN(num) || num <= 0) {
+      setOtherMonthsError("Please enter a positive number of months (e.g. 9 or 8.5).");
+      return;
+    }
+    setOtherMonthsError(null);
+    void handleSend(valStr);
   };
 
   const handleOtherClick = () => {
@@ -272,6 +396,16 @@ export default function FinancialProfileChatPage() {
     const result = await dispatch(calculateHealthScore());
     if (calculateHealthScore.fulfilled.match(result)) {
       navigate(ROUTES.HEALTH_SCORE);
+    }
+  };
+
+  const handleRetake = async () => {
+    setRetakeLoading(true);
+    try {
+      await dispatch(retakeAssessment()).unwrap();
+      setShowRetakeModal(false);
+    } finally {
+      setRetakeLoading(false);
     }
   };
 
@@ -356,25 +490,78 @@ export default function FinancialProfileChatPage() {
           <div className="border-t border-wealth-border bg-gray-50/50 p-4 space-y-3">
             {/* Quick-reply chips */}
             {hasChips && (
-              <div className="flex flex-wrap gap-2">
-                {quickReplies.map((choice) => (
-                  <button
-                    key={choice}
-                    onClick={() => handleChipClick(choice)}
-                    disabled={chatLoading}
-                    className="px-3.5 py-2 text-xs font-semibold text-primary-700 bg-primary-50 hover:bg-primary-100 active:bg-primary-200 border border-primary-200 rounded-full transition-colors disabled:opacity-50"
-                  >
-                    {choice}
-                  </button>
-                ))}
-                {/* "Other" button only when backend allows free text */}
-                {allowFreeText && !showTextInput && (
-                  <button
-                    onClick={handleOtherClick}
-                    className="px-3.5 py-2 text-xs font-semibold text-gray-500 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-full transition-colors"
-                  >
-                    Other…
-                  </button>
+              <div className="space-y-3">
+                <div className="flex flex-wrap gap-2">
+                  {quickReplies.map((choice) => {
+                    const isSelected = selectedChip === choice;
+                    return (
+                      <button
+                        key={choice}
+                        onClick={() => handleChipClick(choice)}
+                        disabled={chatLoading}
+                        className={`px-3.5 py-2 text-xs font-semibold rounded-full transition-colors disabled:opacity-50 ${
+                          isSelected
+                            ? "bg-primary-600 text-white border border-primary-600 shadow-sm"
+                            : "text-primary-700 bg-primary-50 hover:bg-primary-100 active:bg-primary-200 border border-primary-200"
+                        }`}
+                      >
+                        {choice}
+                      </button>
+                    );
+                  })}
+                  {/* "Other" button only when backend allows free text */}
+                  {allowFreeText && !showTextInput && currentStep !== 5 && (
+                    <button
+                      onClick={handleOtherClick}
+                      className="px-3.5 py-2 text-xs font-semibold text-gray-500 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-full transition-colors"
+                    >
+                      Other…
+                    </button>
+                  )}
+                </div>
+
+                {/* Conditional numeric input for Step 5 'Other (Enter Exact Months)' */}
+                {selectedChip === "Other (Enter Exact Months)" && (
+                  <div className="bg-white border border-primary-200 rounded-xl p-3.5 space-y-2 shadow-sm animate-fade-in">
+                    <label htmlFor="other-emergency-fund-input" className="block text-xs font-semibold text-gray-700">
+                      Emergency Fund Months
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        ref={otherInputRef}
+                        id="other-emergency-fund-input"
+                        type="number"
+                        step="any"
+                        min="0.1"
+                        value={otherMonths}
+                        onChange={(e) => {
+                          setOtherMonths(e.target.value);
+                          setOtherMonthsError(null);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleOtherMonthsSubmit();
+                          }
+                        }}
+                        disabled={chatLoading || !sessionId}
+                        placeholder="Enter emergency fund (in months)"
+                        className="flex-1 text-sm bg-white border border-wealth-border rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary-300 disabled:opacity-50"
+                      />
+                      <button
+                        type="button"
+                        id="other-emergency-fund-submit-btn"
+                        onClick={handleOtherMonthsSubmit}
+                        disabled={chatLoading || !otherMonths.trim() || !sessionId}
+                        className="flex-shrink-0 px-5 py-2.5 bg-primary-600 hover:bg-primary-700 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
+                      >
+                        Submit
+                      </button>
+                    </div>
+                    {otherMonthsError && (
+                      <p className="text-xs text-red-600 font-medium ml-1">{otherMonthsError}</p>
+                    )}
+                  </div>
                 )}
               </div>
             )}
@@ -434,8 +621,17 @@ export default function FinancialProfileChatPage() {
           pct={completionPct}
           onGenerate={handleGenerateScore}
           generating={snapshotLoading}
+          onRetake={() => setShowRetakeModal(true)}
         />
       )}
+
+      {/* Retake confirmation modal — rendered outside the card so z-index is clean */}
+      <RetakeConfirmModal
+        open={showRetakeModal}
+        loading={retakeLoading}
+        onCancel={() => setShowRetakeModal(false)}
+        onConfirm={handleRetake}
+      />
     </div>
   );
 }

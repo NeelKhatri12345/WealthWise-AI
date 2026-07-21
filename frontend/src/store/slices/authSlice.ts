@@ -15,6 +15,7 @@ export interface User {
   role: string;
   phone?: string;
   isVerified: boolean;
+  avatar?: string;
 }
 
 export interface AuthState {
@@ -80,6 +81,7 @@ function mapCurrentUserResponse(res: CurrentUserResponse): User {
     role: res.role_name,
     phone: res.phone ?? undefined,
     isVerified: res.is_verified,
+    avatar: (res as Record<string, unknown>).avatar as string | undefined,
   };
 }
 

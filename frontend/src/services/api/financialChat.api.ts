@@ -17,9 +17,19 @@ export interface StartChatResponse {
   status: string;
   current_step: number;
   first_message: string;
+  /** True when the session was already completed — frontend shows CompletionCard, no input needed. */
+  is_complete: boolean;
+  /** Authoritative completion % from profile — use this as the single source of truth on load. */
+  profile_completion_percentage: number;
   quick_replies: string[] | null;
   input_type: InputType;
   allow_free_text: boolean;
+}
+
+/** Returned by POST /retake — same as StartChatResponse but also includes the
+ *  seeded Step-0 assistant messages, eliminating a second GET round-trip. */
+export interface RetakeChatResponse extends StartChatResponse {
+  messages: ChatMessage[];
 }
 
 export interface SendMessageResponse {
@@ -62,6 +72,13 @@ export const financialChatApi = {
     return data.data;
   },
 
+  async retakeAssessment(): Promise<RetakeChatResponse> {
+    const { data } = await axiosInstance.post<ApiResponse<RetakeChatResponse>>(
+      "/financial-chat/retake",
+    );
+    return data.data;
+  },
+
   async sendMessage(
     sessionId: string,
     message: string,
@@ -87,3 +104,4 @@ export const financialChatApi = {
     return data.data;
   },
 };
+

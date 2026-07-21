@@ -15,12 +15,10 @@ const sizeClasses = {
 };
 
 function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "U";
+  if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+  return (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
 }
 
 export function Avatar({
@@ -47,7 +45,7 @@ export function Avatar({
   return (
     <div
       className={cn(
-        "flex items-center justify-center rounded-full bg-primary-100 font-medium text-primary-700",
+        "flex items-center justify-center rounded-full bg-primary-600 font-bold text-white",
         sizeClasses[size],
         className,
       )}

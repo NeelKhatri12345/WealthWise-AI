@@ -1,14 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { useTheme } from "@/hooks/useTheme";
+
 import { Avatar } from "@/components/ui/Avatar";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { ROUTES } from "@/routes/routes";
 
 export function Header() {
   const { user, logout } = useAuth();
-  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -38,18 +37,10 @@ export function Header() {
 
   return (
     <header className="flex h-16 items-center justify-between border-b border-wealth-border bg-wealth-card px-6">
-      <div className="flex items-center gap-4">
-        <h2 className="text-lg font-semibold text-gray-900">WealthWise AI</h2>
+      <div className="flex items-center gap-4 flex-1">
+        {/* Empty spacing for cleaner top navigation */}
       </div>
       <div className="flex items-center gap-4">
-        <button
-          onClick={toggleTheme}
-          className="rounded-lg p-2 text-wealth-muted hover:bg-gray-100"
-          aria-label="Toggle theme"
-        >
-          {theme === "dark" ? "\u2600\uFE0F" : "\uD83C\uDF19"}
-        </button>
-
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setIsOpen((prev) => !prev)}
@@ -59,6 +50,7 @@ export function Header() {
             aria-label="User menu"
           >
             <Avatar
+              src={user?.avatar}
               name={user ? `${user.firstName} ${user.lastName}` : undefined}
               size="sm"
             />
@@ -69,6 +61,7 @@ export function Header() {
               {/* User Details */}
               <div className="px-4 py-3 flex items-center gap-3">
                 <Avatar
+                  src={user?.avatar}
                   name={user ? `${user.firstName} ${user.lastName}` : undefined}
                   size="sm"
                 />

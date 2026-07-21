@@ -5,10 +5,10 @@ import {
 import type { RootState } from "../index";
 import type {
   ChatMessage,
+  RetakeChatResponse,
   SendMessageResponse,
   StartChatResponse,
   InputType,
-  ChatSession,
 } from "../../services/api/financialChat.api";
 import type { FinancialProfile } from "../../services/api/financialProfile.api";
 import type { HealthScoreSnapshot } from "../../services/api/health.api";
@@ -84,6 +84,9 @@ export const fetchFinancialProfile = createAsyncThunk(
   },
 );
 
+// TOTAL_STEPS must match the backend constant (10 questions, steps 0–9).
+const TOTAL_STEPS = 10;
+
 export const startChatSession = createAsyncThunk(
   "financialProfile/startSession",
   async (_, { rejectWithValue }) => {
@@ -91,9 +94,14 @@ export const startChatSession = createAsyncThunk(
       const { financialChatApi } = await import(
         "../../services/api/financialChat.api"
       );
+      // StartChatResponse now carries is_complete, profile_completion_percentage,
+      // and current_step as the authoritative session state — no race condition.
       const startRes = await financialChatApi.startSession();
+
+      // Always fetch message history so the chat window can replay the previous
+      // Q&A conversation for both active and completed sessions.
       const sessionRes = await financialChatApi.getSession(startRes.session_id);
-      return { start: startRes, session: sessionRes };
+      return { start: startRes, messages: sessionRes.messages };
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } } };
       return rejectWithValue(e.response?.data?.message ?? "Failed to start chat session");
@@ -162,6 +170,26 @@ export const calculateHealthScore = createAsyncThunk(
   },
 );
 
+export const retakeAssessment = createAsyncThunk(
+  "financialProfile/retake",
+  async (_, { rejectWithValue }) => {
+    try {
+      const { financialChatApi } = await import(
+        "../../services/api/financialChat.api"
+      );
+      // POST /retake returns the fresh session + initial Step-0 messages inline.
+      // No second GET call is required.
+      const res: RetakeChatResponse = await financialChatApi.retakeAssessment();
+      return { start: res, messages: res.messages };
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } };
+      return rejectWithValue(
+        e.response?.data?.message ?? "Failed to retake assessment",
+      );
+    }
+  },
+);
+
 // ── Slice ──────────────────────────────────────────────────────────────────────
 
 const financialProfileSlice = createSlice({
@@ -202,9 +230,10 @@ const financialProfileSlice = createSlice({
       .addCase(fetchFinancialProfile.fulfilled, (state, action) => {
         state.profileLoading = false;
         state.profile = action.payload;
-        if (action.payload) {
-          state.completionPct = action.payload.profile_completion_percentage;
-        }
+        // NOTE: completionPct is NOT set here intentionally.
+        // It is owned exclusively by the chat session state (startChatSession / sendChatMessage).
+        // Setting it here caused a race condition: fetchFinancialProfile could resolve before
+        // startChatSession and set completionPct=100 while currentStep was still 0.
       })
       .addCase(fetchFinancialProfile.rejected, (state, action) => {
         state.profileLoading = false;
@@ -219,18 +248,36 @@ const financialProfileSlice = createSlice({
       })
       .addCase(startChatSession.fulfilled, (state, action) => {
         state.chatLoading = false;
-        const { start, session } = action.payload as {
+        // Payload shape: { start: StartChatResponse, messages: ChatMessage[] }
+        // StartChatResponse is the single authoritative source for all session state on load.
+        const { start, messages } = action.payload as {
           start: StartChatResponse;
-          session: ChatSession;
+          messages: ChatMessage[];
         };
+
         state.sessionId = start.session_id;
-        state.sessionStatus = session.status as "active" | "completed";
-        state.currentStep = session.current_step;
+        state.sessionStatus = start.status as "active" | "completed";
+
+        // For completed sessions the backend pins current_step to TOTAL_STEPS - 1 (= 9).
+        // This guarantees displayStep = min(9 + 1, 10) = 10, consistent with Progress 100%.
+        // For active sessions, use the step returned by the backend directly.
+        state.currentStep = start.is_complete
+          ? TOTAL_STEPS - 1
+          : start.current_step;
+
+        // completionPct is set ONLY from StartChatResponse.profile_completion_percentage.
+        // This removes the race with fetchFinancialProfile.fulfilled which used to set it
+        // from the profile API and could arrive with currentStep still at 0.
+        state.completionPct = start.profile_completion_percentage;
+
         state.quickReplies = start.quick_replies ?? null;
         state.allowFreeText = start.allow_free_text ?? false;
         state.inputType = start.input_type ?? "chips";
-        state.completionPct = session.profile_completion_percentage;
-        state.messages = session.messages;
+
+        // For active sessions, hydrate message history so the chat window replays the
+        // previous Q&A. For completed sessions messages is [] and the CompletionCard
+        // is shown instead of the chat input area.
+        state.messages = messages;
       })
       .addCase(startChatSession.rejected, (state, action) => {
         state.chatLoading = false;
@@ -361,6 +408,34 @@ const financialProfileSlice = createSlice({
       .addCase(calculateHealthScore.rejected, (state, action) => {
         state.snapshotLoading = false;
         state.snapshotError = action.payload as string;
+      });
+
+    // retakeAssessment — reuses the same payload shape as startChatSession
+    builder
+      .addCase(retakeAssessment.pending, (state) => {
+        state.chatLoading = true;
+        state.chatError = null;
+      })
+      .addCase(retakeAssessment.fulfilled, (state, action) => {
+        state.chatLoading = false;
+        const { start, messages } = action.payload as {
+          start: StartChatResponse;
+          messages: ChatMessage[];
+        };
+        state.sessionId = start.session_id;
+        state.sessionStatus = "active";
+        state.currentStep = 0;
+        state.completionPct = 0;
+        state.messages = messages;
+        state.quickReplies = start.quick_replies ?? null;
+        state.allowFreeText = start.allow_free_text ?? false;
+        state.inputType = start.input_type ?? "chips";
+        state.isValidAnswer = true;
+        state.validationMessage = null;
+      })
+      .addCase(retakeAssessment.rejected, (state, action) => {
+        state.chatLoading = false;
+        state.chatError = action.payload as string;
       });
   },
 });

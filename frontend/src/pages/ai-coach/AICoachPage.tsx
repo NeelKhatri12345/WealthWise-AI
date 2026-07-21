@@ -11,6 +11,7 @@ import {
   setMessageFeedback,
   clearChatHistory,
   clearAnalysis,
+  clearSendError,
 } from "@/store/slices/financialAnalysisSlice";
 import { fetchFinancialProfile, fetchLatestSnapshot } from "@/store/slices/financialProfileSlice";
 import { fetchDashboardSummary } from "@/store/slices/dashboardSlice";
@@ -21,6 +22,7 @@ import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import { Badge } from "@/components/ui/Badge";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { Avatar } from "@/components/ui/Avatar";
 import { ContextSummaryCard } from "@/components/ai-coach/ContextSummaryCard";
 import { SuggestedQuestions } from "@/components/ai-coach/SuggestedQuestions";
 import { TypingIndicator } from "@/components/ai-coach/TypingIndicator";
@@ -28,7 +30,6 @@ import { ROUTES } from "@/routes/routes";
 import { cn } from "@/utils/cn";
 import { toast } from "react-hot-toast";
 import type { StatementDetail } from "@/services/api/upload.api";
-import type { StructuredRecommendation } from "@/services/api/financialAnalysis.api";
 
 function parseRecommendation(rec: string) {
   // Extract the emoji at the start
@@ -88,13 +89,16 @@ export default function AICoachPage() {
   const navigate = useNavigate();
 
   // Redux state
-  const { summary, analyzing, analyzeError, chatHistory, sending } =
+  const { summary, analyzing, analyzeError, chatHistory, sending, sendError } =
     useAppSelector((state) => state.financialAnalysis);
   const { profile, snapshot, profileLoading, snapshotLoading } =
     useAppSelector((state) => state.financialProfile);
   const { statements, isFetchingStatements } = useAppSelector((state) => state.upload);
+  const user = useAppSelector((state) => state.auth.user);
+  const userName = user?.fullName || user?.email || "User";
+
   useEffect(() => {
-    console.log("===== AI Coach Debug =====");
+    console.log("===== Ask AI Debug =====");
     console.log("Statements:", statements);
 
     if (statements.length > 0) {
@@ -174,6 +178,14 @@ export default function AICoachPage() {
       toast.error(analyzeError);
     }
   }, [analyzeError]);
+
+  // 6. Toast error if chat sending fails
+  useEffect(() => {
+    if (sendError) {
+      toast.error(sendError);
+      dispatch(clearSendError());
+    }
+  }, [sendError, dispatch]);
 
   const handleScroll = () => {
     if (!chatContainerRef.current) return;
@@ -270,7 +282,7 @@ export default function AICoachPage() {
           </div>
           <h2 className="text-lg font-bold text-gray-900">Upload and accept a bank statement first</h2>
           <p className="text-sm text-wealth-muted max-w-md mx-auto">
-            WealthWise AI Coach relies on transaction data to analyze your spending and savings. Please upload your statement first.
+            WealthWise Ask AI relies on transaction data to analyze your spending and savings. Please upload your statement first.
           </p>
           <Button variant="primary" onClick={() => navigate(ROUTES.UPLOAD)}>
             Go to Upload Statement
@@ -337,12 +349,12 @@ export default function AICoachPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
           </div>
-          <h2 className="text-lg font-bold text-gray-900">Generate your Risk Profile first</h2>
+          <h2 className="text-lg font-bold text-gray-900">Generate your Health Score & Risk Profile</h2>
           <p className="text-sm text-wealth-muted max-w-md mx-auto">
-            Unlock your investment style by generating your Risk Profile based on your current readiness scores.
+            Unlock your investment style by generating your Health Score & Risk Profile based on your current readiness scores.
           </p>
-          <Button variant="primary" onClick={() => navigate(ROUTES.RISK_PROFILE)}>
-            Generate Risk Profile
+          <Button variant="primary" onClick={() => navigate(ROUTES.HEALTH_SCORE)}>
+            Generate Health Score
           </Button>
         </Card>
       </div>
@@ -383,7 +395,7 @@ export default function AICoachPage() {
   const welcomeSummaryText = (
     <div className="space-y-4">
       <p className="text-gray-700 leading-relaxed text-sm">
-        Welcome to your **WealthWise AI Coach**! Based on the analyzed statement, your Financial Health Score is **{summary?.health_score ?? snapshot?.score ?? 0}/100**. You possess a **{snapshot?.risk_profile ?? "Moderate"}** risk profile style, and your savings rate is **{summary?.savings_rate.toFixed(1) ?? "0.0"}%**.
+        Welcome to your **WealthWise Ask AI**! Based on the analyzed statement, your Financial Health Score is **{summary?.health_score ?? snapshot?.score ?? 0}/100**. You possess a **{snapshot?.risk_profile ?? "Moderate"}** risk profile style, and your savings rate is **{summary?.savings_rate.toFixed(1) ?? "0.0"}%**.
       </p>
       
       {/* Dynamic Recommendation Cards */}
@@ -651,16 +663,15 @@ export default function AICoachPage() {
                     )}
                   >
                     {/* Bot / User Avatar */}
-                    <div
-                      className={cn(
-                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold shadow-sm border",
-                        isUser
-                          ? "bg-secondary-100 text-secondary-600 border-secondary-200"
-                          : "bg-primary-100 text-primary-600 border-primary-200"
-                      )}
-                    >
-                      {isUser ? "U" : "C"}
-                    </div>
+                    {isUser ? (
+                      <Avatar name={userName} size="sm" className="flex-shrink-0 shadow-sm border border-secondary-200" />
+                    ) : (
+                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center shadow-sm border border-primary-200">
+                        <svg className="w-5 h-5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                        </svg>
+                      </div>
+                    )}
 
                     {/* Content Block */}
                     <div className="flex flex-col gap-1.5 max-w-[85%] sm:max-w-[70%]">

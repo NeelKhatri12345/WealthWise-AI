@@ -1,12 +1,10 @@
 import { useState, useEffect } from "react";
 
-type Theme = "light" | "dark" | "system";
 
 interface AppSettings {
   language: string;
   currency: string;
   dateFormat: string;
-  theme: Theme;
   emailNotifications: boolean;
   pushNotifications: boolean;
   weeklyDigest: boolean;
@@ -24,7 +22,6 @@ const defaultSettings: AppSettings = {
   language: "en",
   currency: "USD",
   dateFormat: "MM/DD/YYYY",
-  theme: "system",
   emailNotifications: true,
   pushNotifications: true,
   weeklyDigest: false,

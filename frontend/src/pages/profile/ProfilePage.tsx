@@ -223,6 +223,7 @@ export default function ProfilePage() {
             <CardContent className="flex flex-col sm:flex-row items-center justify-between gap-6 py-6">
               <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
                 <Avatar
+                  src={user?.avatar}
                   name={user ? `${user.firstName} ${user.lastName}` : undefined}
                   size="lg"
                 />
@@ -441,7 +442,7 @@ export default function ProfilePage() {
               <li>Uploaded statements</li>
               <li>Financial Profile</li>
               <li>Health Scores</li>
-              <li>AI Coach conversations</li>
+              <li>Ask AI conversations</li>
               <li>Dashboard data</li>
               <li>Any other user-owned records</li>
             </ul>

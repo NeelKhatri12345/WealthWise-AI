@@ -19,11 +19,13 @@ import {
   fetchDashboardAll,
   fetchDashboardSummary,
   fetchRecentTransactions,
-  fetchDashboardInsights,
   selectDashboardSummary,
   selectDashboardTransactions,
-  selectDashboardInsights,
 } from "@/store/slices/dashboardSlice";
+import {
+  fetchLatestRecommendation,
+  selectInvestmentRecommendation,
+} from "@/store/slices/investmentRecommendationSlice";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { ROUTES } from "@/routes/routes";
 
@@ -31,7 +33,6 @@ import {
   DashboardHeader,
   StatCard,
   QuickActionCard,
-  InsightCard,
   TransactionTable,
 } from "./components";
 
@@ -117,7 +118,7 @@ const quickActions: QuickAction[] = [
     ),
   },
   {
-    label: "AI Coach",
+    label: "Ask AI",
     description: "Personalized financial tips",
     to: ROUTES.AI_COACH,
     iconBg: "bg-amber-50 text-amber-600",
@@ -158,11 +159,12 @@ export default function DashboardPage() {
   // Section selectors
   const summary = useAppSelector(selectDashboardSummary);
   const transactions = useAppSelector(selectDashboardTransactions);
-  const insights = useAppSelector(selectDashboardInsights);
+  const investmentRec = useAppSelector(selectInvestmentRecommendation);
 
   // Dispatch all sections in parallel on first render
   useEffect(() => {
     dispatch(fetchDashboardAll());
+    dispatch(fetchLatestRecommendation());
   }, [dispatch]);
 
   // Per-section retry callbacks
@@ -170,14 +172,9 @@ export default function DashboardPage() {
     () => dispatch(fetchDashboardSummary()),
     [dispatch],
   );
-  const retryTransactions = useCallback(
-    () => dispatch(fetchRecentTransactions()),
-    [dispatch],
-  );
-  const retryInsights = useCallback(
-    () => dispatch(fetchDashboardInsights()),
-    [dispatch],
-  );
+  const retryTransactions = useCallback(() => {
+    void dispatch(fetchRecentTransactions());
+  }, [dispatch]);
 
   // -------------------------------------------------------------------------
   // KPI stat cards derived from summary
@@ -265,15 +262,48 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {/* 4 — AI Insights */}
-      <InsightCard
-        insights={insights.data}
-        loading={insights.loading}
-        error={insights.error}
-        onRetry={retryInsights}
-      />
+      {/* 3.5 — Investment Readiness Card */}
+      {(investmentRec.snapshot || !investmentRec.loading) && (
+        <section aria-label="Investment readiness">
+          <div className="rounded-2xl border border-indigo-100 bg-gradient-to-r from-indigo-50 to-purple-50 p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-600">
+                <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                    d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-900">Investment Plan</p>
+                {investmentRec.snapshot ? (
+                  <>
+                    <p className="text-xs text-gray-500">
+                      {investmentRec.snapshot.recommended_strategy.charAt(0).toUpperCase() +
+                        investmentRec.snapshot.recommended_strategy.slice(1)}{" "}
+                      Strategy ·{" "}
+                      {investmentRec.snapshot.investment_readiness === "READY"
+                        ? "✅ Ready"
+                        : investmentRec.snapshot.investment_readiness === "PARTIAL"
+                        ? "⚠️ Partially Ready"
+                        : "⛔ Not Ready"}
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-xs text-gray-500">Generate your personalised investment plan</p>
+                )}
+              </div>
+            </div>
+            <a
+              href={ROUTES.INVESTMENT_PLAN}
+              className="flex-shrink-0 px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition-colors text-center"
+            >
+              {investmentRec.snapshot ? "View Plan" : "Get Started"}
+            </a>
+          </div>
+        </section>
+      )}
 
-      {/* 5 — Transactions */}
+      {/* 4 — Transactions */}
       <section aria-label="Financial details">
         <TransactionTable
           transactions={transactions.data}

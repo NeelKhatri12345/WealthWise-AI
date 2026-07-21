@@ -68,7 +68,7 @@ export function ContextSummaryCard() {
 
         {/* Risk Profile Card */}
         <div
-          onClick={() => navigate(ROUTES.RISK_PROFILE)}
+          onClick={() => navigate(ROUTES.HEALTH_SCORE)}
           className="group cursor-pointer rounded-lg bg-gray-50 p-3 transition-all hover:bg-primary-50 border border-gray-100 hover:border-primary-200"
         >
           <p className="text-[10px] font-medium text-wealth-muted uppercase tracking-wider group-hover:text-primary-600">Risk Profile</p>

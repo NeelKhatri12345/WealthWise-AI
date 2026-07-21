@@ -68,7 +68,7 @@ export const quickActions: Omit<QuickActionCardProps, "icon">[] = [
     iconBg: "bg-violet-50 text-violet-600",
   },
   {
-    label: "AI Coach",
+    label: "Ask AI",
     description: "Personalized financial tips",
     to: ROUTES.AI_COACH,
     iconBg: "bg-amber-50 text-amber-600",

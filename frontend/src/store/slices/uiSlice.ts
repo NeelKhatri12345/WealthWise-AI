@@ -7,14 +7,12 @@ export interface Breadcrumb {
 
 export interface UIState {
   sidebarOpen: boolean;
-  theme: "light" | "dark" | "system";
   activeModal: string | null;
   breadcrumbs: Breadcrumb[];
 }
 
 const initialState: UIState = {
   sidebarOpen: true,
-  theme: (localStorage.getItem("theme") as UIState["theme"]) ?? "light",
   activeModal: null,
   breadcrumbs: [],
 };
@@ -29,10 +27,7 @@ const uiSlice = createSlice({
     setSidebarOpen(state, action: PayloadAction<boolean>) {
       state.sidebarOpen = action.payload;
     },
-    setTheme(state, action: PayloadAction<UIState["theme"]>) {
-      state.theme = action.payload;
-      localStorage.setItem("theme", action.payload);
-    },
+
     openModal(state, action: PayloadAction<string>) {
       state.activeModal = action.payload;
     },
@@ -48,7 +43,6 @@ const uiSlice = createSlice({
 export const {
   toggleSidebar,
   setSidebarOpen,
-  setTheme,
   openModal,
   closeModal,
   setBreadcrumbs,

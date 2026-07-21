@@ -13,6 +13,7 @@ export const ROUTES = {
   PORTFOLIO: "/portfolio",
   PORTFOLIO_HOLDINGS: "/portfolio-holdings",
   AI_COACH: "/ai-coach",
+  INVESTMENT_PLAN: "/investment-plan",
   REPORTS: "/reports",
   NOTIFICATIONS: "/notifications",
   PROFILE: "/profile",

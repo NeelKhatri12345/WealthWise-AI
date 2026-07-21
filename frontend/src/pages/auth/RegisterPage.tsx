@@ -14,7 +14,6 @@ import { useAppDispatch, useAppSelector } from "@/store";
 import {
   clearAuthError,
   register as registerUser,
-  fetchCurrentUser,
 } from "@/store/slices/authSlice";
 
 export default function RegisterPage() {
