@@ -83,6 +83,9 @@ async def get_current_user(
     if not user:
         raise UnauthorizedException("User not found")
 
+    if user.is_deleted:
+        raise UnauthorizedException("User not found")
+
     return user
 
 
@@ -141,9 +144,17 @@ def get_analytics_repository(db: AsyncSession = Depends(get_db)):
 
 def get_auth_service(db: AsyncSession = Depends(get_db)):
     from app.repositories.user_repository import UserRepository
+    from app.repositories.password_reset_token_repository import PasswordResetTokenRepository
+    from app.services.email_service import SMTPEmailService
     from app.services.auth_service import AuthService
 
-    return AuthService(user_repo=UserRepository(db))
+    return AuthService(
+        user_repo=UserRepository(db),
+        password_reset_token_repo=PasswordResetTokenRepository(db),
+        email_service=SMTPEmailService(settings),
+        activity_log=get_activity_log_service(db),
+        admin_audit_log=get_admin_audit_log_service(db),
+    )
 
 
 def get_user_service(db: AsyncSession = Depends(get_db)):
@@ -275,7 +286,30 @@ def get_ai_advisor_service(db: AsyncSession = Depends(get_db)):
 
 
 
+def get_activity_log_service(db: AsyncSession = Depends(get_db)):
+    from app.repositories.activity_log_repository import ActivityLogRepository
+    from app.services.activity_log_service import ActivityLogService
+
+    return ActivityLogService(repo=ActivityLogRepository(db))
+
+
+def get_admin_audit_log_service(db: AsyncSession = Depends(get_db)):
+    from app.repositories.admin_audit_log_repository import AdminAuditLogRepository
+    from app.services.admin_audit_log_service import AdminAuditLogService
+
+    return AdminAuditLogService(repo=AdminAuditLogRepository(db))
+
+
 def get_admin_service(db: AsyncSession = Depends(get_db)):
+    from app.repositories.admin_analytics_repository import AdminAnalyticsRepository
+    from app.repositories.ai_coach_repository import AICoachRepository
+    from app.repositories.financial_profile_repository import FinancialProfileRepository
+    from app.repositories.health_score_snapshot_repository import (
+        HealthScoreSnapshotRepository,
+    )
+    from app.repositories.investment_recommendation_repository import (
+        InvestmentRecommendationRepository,
+    )
     from app.repositories.statement_repository import StatementRepository
     from app.repositories.user_repository import UserRepository
     from app.services.admin_service import AdminService
@@ -283,6 +317,25 @@ def get_admin_service(db: AsyncSession = Depends(get_db)):
     return AdminService(
         user_repo=UserRepository(db),
         statement_repo=StatementRepository(db),
+        ai_coach_repo=AICoachRepository(db),
+        investment_repo=InvestmentRecommendationRepository(db),
+        health_snapshot_repo=HealthScoreSnapshotRepository(db),
+        profile_repo=FinancialProfileRepository(db),
+        activity_log_service=get_activity_log_service(db),
+        admin_analytics_repo=AdminAnalyticsRepository(db),
+        admin_audit_log_service=get_admin_audit_log_service(db),
+    )
+
+
+def get_system_monitoring_service(db: AsyncSession = Depends(get_db)):
+    from app.clients.gemini_client import GeminiClient
+    from app.clients.s3_client import S3Client
+    from app.services.system_monitoring_service import SystemMonitoringService
+
+    return SystemMonitoringService(
+        db=db,
+        s3_client=S3Client(settings),
+        gemini_client=GeminiClient(settings),
     )
 
 

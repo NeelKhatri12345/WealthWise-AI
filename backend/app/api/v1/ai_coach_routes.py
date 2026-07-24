@@ -20,6 +20,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from app.core.dependencies import (
     get_ai_coach_repository,
     get_ai_coach_service,
+    get_activity_log_service,
     get_current_active_user,
     get_financial_analysis_service,
     get_health_score_snapshot_repository,
@@ -40,6 +41,8 @@ from app.schemas.financial_analysis_schema import (
     ChatRequest,
 )
 from app.services.financial_analysis_service import FinancialAnalysisService
+from app.services.activity_log_service import ActivityLogService
+from app.enums.activity_type_enum import ActivityTypeEnum
 
 router = APIRouter()
 
@@ -159,6 +162,7 @@ async def send_message(
     current_user=Depends(get_current_active_user),
     service=Depends(get_ai_coach_service),
     repo: AICoachRepository = Depends(get_ai_coach_repository),
+    activity_log: ActivityLogService = Depends(get_activity_log_service),
 ):
     from app.services.ai_coach_service import AICoachService
     from app.schemas.ai_coach_schema import AIChatRequest
@@ -193,6 +197,13 @@ async def send_message(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve persisted chat messages",
         )
+
+    await activity_log.log(
+        user_id=current_user.id,
+        activity_type=ActivityTypeEnum.AI_CHAT,
+        description="AI Coach conversation message",
+        metadata={"conversation_id": str(conversation_id)},
+    )
 
     return APIResponse(
         success=True,
@@ -304,6 +315,7 @@ async def analyze_statement(
 async def chat(
     body: ChatRequest,
     current_user=Depends(get_current_active_user),
+    activity_log: ActivityLogService = Depends(get_activity_log_service),
 ):
     from app.schemas.financial_analysis_schema import ChatResponse
     from app.clients.gemini_client import GeminiClient
@@ -363,6 +375,13 @@ async def chat(
         system_prompt=system_prompt,
         history=[],          # Stateless — no conversation history
         user_message=user_message,
+    )
+
+    await activity_log.log(
+        user_id=current_user.id,
+        activity_type=ActivityTypeEnum.AI_CHAT,
+        description="Ask AI stateless chat",
+        metadata={"tokens_used": tokens_used},
     )
 
     return APIResponse(

@@ -2,16 +2,20 @@
 
 from fastapi import APIRouter, Depends
 
-from app.core.dependencies import get_auth_service, get_current_active_user
+from app.core.dependencies import get_auth_service, get_current_active_user, get_activity_log_service
+from app.enums.activity_type_enum import ActivityTypeEnum
 from app.schemas.auth_schema import (
     LoginRequest,
     RefreshTokenRequest,
     RegisterRequest,
     TokenResponse,
+    ForgotPasswordRequest,
+    ResetPasswordRequest,
 )
 from app.schemas.user_schema import UserResponse
 from app.schemas.base_schema import APIResponse
 from app.services.auth_service import AuthService
+from app.services.activity_log_service import ActivityLogService
 
 router = APIRouter()
 
@@ -69,7 +73,43 @@ async def refresh_token(
 async def logout(
     current_user=Depends(get_current_active_user),
     service: AuthService = Depends(get_auth_service),
+    activity_log: ActivityLogService = Depends(get_activity_log_service),
 ):
-    # Extract JTI from the token stored in request state
-    # The JTI is used to blacklist the token in Redis
+    await activity_log.log(
+        user_id=current_user.id,
+        activity_type=ActivityTypeEnum.LOGOUT,
+        description="User signed out",
+    )
     return APIResponse(success=True, message="Logged out successfully")
+
+
+@router.post(
+    "/forgot-password",
+    response_model=APIResponse[None],
+    summary="Initiate password reset",
+)
+async def forgot_password(
+    data: ForgotPasswordRequest,
+    service: AuthService = Depends(get_auth_service),
+):
+    await service.forgot_password(data.email)
+    return APIResponse(
+        success=True,
+        message="If the email exists, a password reset link has been sent.",
+    )
+
+
+@router.post(
+    "/reset-password",
+    response_model=APIResponse[None],
+    summary="Reset password using token",
+)
+async def reset_password(
+    data: ResetPasswordRequest,
+    service: AuthService = Depends(get_auth_service),
+):
+    await service.reset_password(data.token, data.password)
+    return APIResponse(
+        success=True,
+        message="Password has been reset successfully.",
+    )

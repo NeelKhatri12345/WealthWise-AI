@@ -142,3 +142,20 @@ class YahooFinanceProvider(MarketDataProvider):
             week_52_low=l52,
             last_updated=now,
         )
+
+    @staticmethod
+    async def health_check(timeout_seconds: float = 5.0) -> bool:
+        """Probe Yahoo Finance with a liquid NSE ticker."""
+
+        def _probe() -> bool:
+            ticker = yf.Ticker("RELIANCE.NS")
+            fast = getattr(ticker, "fast_info", None)
+            if fast and getattr(fast, "last_price", None):
+                return True
+            info = ticker.info or {}
+            return any(
+                info.get(key) is not None
+                for key in ("regularMarketPrice", "currentPrice", "previousClose")
+            )
+
+        return await asyncio.wait_for(asyncio.to_thread(_probe), timeout=timeout_seconds)

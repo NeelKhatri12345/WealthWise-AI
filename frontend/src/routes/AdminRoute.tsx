@@ -12,7 +12,7 @@ export function AdminRoute() {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to={ROUTES.LOGIN} replace />;
+    return <Navigate to={ROUTES.ADMIN_LOGIN} replace />;
   }
 
   if (user?.role !== UserRole.ADMIN) {

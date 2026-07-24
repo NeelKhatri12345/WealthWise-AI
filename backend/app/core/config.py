@@ -154,6 +154,17 @@ class Settings(BaseSettings):
     MARKET_LIVE_CACHE_TTL: int = 1800         # seconds — live responses (30 minutes)
     MARKET_SYNC_ON_STARTUP: bool = False      # trigger sync on app startup
 
+    # ── SMTP Email Service ─────────────────────────────────────────
+    SMTP_HOST: str = "localhost"
+    SMTP_PORT: int = 1025
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM_EMAIL: str = "noreply@wealthwise.ai"
+    SMTP_FROM_NAME: str = "WealthWise AI"
+    SMTP_TLS: bool = False
+    SMTP_SSL: bool = False
+    FRONTEND_URL: str = "http://localhost:5173"
+
 
 
     @property

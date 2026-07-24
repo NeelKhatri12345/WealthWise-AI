@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Any, Optional, Sequence
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.enums.statement_status_enum import StatementStatusEnum
@@ -32,6 +32,15 @@ class StatementRepository(BaseRepository[Statement]):
         )
         result = await self.db.execute(stmt)
         return result.scalars().all()
+
+    async def count_by_user(self, user_id: UUID) -> int:
+        stmt = (
+            select(func.count())
+            .select_from(Statement)
+            .where(Statement.user_id == user_id)
+        )
+        result = await self.db.execute(stmt)
+        return result.scalar_one()
 
     async def get_by_id_and_user(
         self,

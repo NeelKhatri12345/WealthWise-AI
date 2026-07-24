@@ -2,11 +2,13 @@
 
 from fastapi import APIRouter, Depends
 
-from app.core.dependencies import get_current_active_user, get_user_service
+from app.core.dependencies import get_current_active_user, get_user_service, get_activity_log_service
+from app.enums.activity_type_enum import ActivityTypeEnum
 from app.schemas.auth_schema import ChangePasswordRequest
 from app.schemas.base_schema import APIResponse
 from app.schemas.user_schema import UserResponse, UserUpdate
 from app.services.user_service import UserService
+from app.services.activity_log_service import ActivityLogService
 
 router = APIRouter()
 
@@ -31,8 +33,14 @@ async def update_profile(
     data: UserUpdate,
     current_user=Depends(get_current_active_user),
     service: UserService = Depends(get_user_service),
+    activity_log: ActivityLogService = Depends(get_activity_log_service),
 ):
     updated = await service.update_profile(current_user.id, data)
+    await activity_log.log(
+        user_id=current_user.id,
+        activity_type=ActivityTypeEnum.PROFILE_UPDATE,
+        description="Updated user profile",
+    )
     return APIResponse(success=True, message="Profile updated", data=updated)
 
 

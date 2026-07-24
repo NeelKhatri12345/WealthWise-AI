@@ -113,3 +113,13 @@ class MFAPIProvider(MarketDataProvider):
             expected_return_1y=ret_1y,
             last_updated=last_updated,
         )
+
+    @classmethod
+    async def health_check(cls, timeout_seconds: float = 5.0) -> bool:
+        """Probe MFAPI with a known AMFI code (HDFC Top 100)."""
+        url = f"{_MFAPI_BASE_URL}/120503"
+        async with httpx.AsyncClient(timeout=timeout_seconds) as client:
+            response = await client.get(url)
+            response.raise_for_status()
+            payload = response.json()
+            return payload.get("status") == "SUCCESS"

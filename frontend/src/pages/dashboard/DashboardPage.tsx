@@ -182,40 +182,27 @@ export default function DashboardPage() {
 
   const kpiStats = [
     {
-      title: "Total Balance",
-      // TODO: This currently displays the balance field from a single latest transaction returned by the database.
-      // Once account identification is implemented, this should be replaced with the sum of the latest available
-      // balance from every unique bank account/statement to avoid incorrect aggregates/arbitrary selections.
-      value: summary.data ? formatCurrency(summary.data.totalBalance) : "—",
-      iconBg: "bg-primary-50 text-primary-600",
-    },
-    {
       title: "Total Income",
       // Calculate Total Income = Sum of all CREDIT transaction amounts regardless of date
       value: summary.data ? formatCurrency(summary.data.totalIncome) : "—",
       iconBg: "bg-green-50 text-wealth-success",
+      icon: kpiIcons[1],
+      to: undefined,
     },
     {
       title: "Total Expenses",
       // Calculate Total Expenses = Sum of all DEBIT transaction amounts regardless of date
       value: summary.data ? formatCurrency(summary.data.totalExpenses) : "—",
       iconBg: "bg-red-50 text-wealth-danger",
+      icon: kpiIcons[2],
+      to: undefined,
     },
     {
-      title: summary.data
-        ? summary.data.healthScoreLabel === "Preliminary"
-          ? "Preliminary Health Score"
-          : summary.data.healthScoreLabel === "Pending" || summary.data.healthScoreLabel === "Incomplete" || summary.data.healthScore === null
-            ? "Final Health Score"
-            : "Final Hybrid Health Score"
-        : "Health Score",
-      value: summary.data
-        ? summary.data.healthScore === null || summary.data.healthScore === undefined || summary.data.healthScoreLabel === "Pending" || summary.data.healthScoreLabel === "Incomplete"
-          ? "Pending"
-          : `${summary.data.healthScore.toFixed(0)} / 100`
-        : "—",
-      iconBg: "bg-amber-50 text-amber-600",
-      to: ROUTES.HEALTH_SCORE,
+      title: "Calculated Net Balance",
+      value: summary.data ? formatCurrency(summary.data.totalIncome - summary.data.totalExpenses) : "—",
+      iconBg: "bg-primary-50 text-primary-600",
+      icon: kpiIcons[0],
+      to: undefined,
     },
   ];
 
@@ -226,13 +213,13 @@ export default function DashboardPage() {
 
       {/* 2 — KPI Cards (each independent with its own loading/error) */}
       <section aria-label="Key metrics">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {kpiStats.map((stat, i) => (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {kpiStats.map((stat) => (
             <StatCard
               key={stat.title}
               title={stat.title}
               value={stat.value}
-              icon={kpiIcons[i]}
+              icon={stat.icon}
               iconBg={stat.iconBg}
               loading={summary.loading}
               error={summary.error}

@@ -12,12 +12,15 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.core.dependencies import (
     get_current_active_user,
+    get_activity_log_service,
     get_investment_recommendation_service,
     get_product_recommendation_service,
     get_admin_user,
     get_market_sync_service,
 )
 from app.schemas.base_schema import APIResponse
+from app.enums.activity_type_enum import ActivityTypeEnum
+from app.services.activity_log_service import ActivityLogService
 from typing import Optional
 
 router = APIRouter()
@@ -39,6 +42,7 @@ router = APIRouter()
 async def calculate_recommendation(
     current_user=Depends(get_current_active_user),
     service=Depends(get_investment_recommendation_service),
+    activity_log: ActivityLogService = Depends(get_activity_log_service),
 ):
     try:
         snapshot = await service.calculate(user_id=current_user.id)
@@ -47,6 +51,14 @@ async def calculate_recommendation(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=str(exc),
         )
+    await activity_log.log(
+        user_id=current_user.id,
+        activity_type=ActivityTypeEnum.INVESTMENT_PLAN_GENERATION,
+        description="Generated investment plan",
+        metadata={
+            "strategy": snapshot.get("recommended_strategy") if isinstance(snapshot, dict) else None,
+        },
+    )
     return APIResponse(
         success=True,
         message="Investment recommendation calculated successfully",

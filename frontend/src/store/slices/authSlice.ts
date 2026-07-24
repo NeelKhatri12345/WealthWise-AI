@@ -46,6 +46,37 @@ function getErrorMessage(err: unknown, fallback: string): string {
   return error.response?.data?.message ?? fallback;
 }
 
+function getLoginErrorMessage(err: unknown): string {
+  const error = err as {
+    response?: {
+      status?: number;
+      data?: { message?: string };
+    };
+    request?: unknown;
+    code?: string;
+  };
+
+  if (error.response) {
+    const status = error.response.status;
+    if (status === 401 || status === 400) {
+      return "Invalid email or password.";
+    }
+    if (status === 403) {
+      return "You do not have permission to access this panel.";
+    }
+    if (status && status >= 500) {
+      return "Something went wrong. Please try again.";
+    }
+    return error.response.data?.message ?? "Something went wrong. Please try again.";
+  }
+
+  if (error.request || error.code === "ERR_NETWORK" || error.code === "ECONNABORTED") {
+    return "Unable to connect to the server.";
+  }
+
+  return "Something went wrong. Please try again.";
+}
+
 function persistTokens(tokens: TokenResponse): void {
   localStorage.setItem(TOKEN_KEY, tokens.access_token);
   localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refresh_token);
@@ -91,7 +122,7 @@ export const login = createAsyncThunk(
     try {
       return await authService.login(credentials);
     } catch (err: unknown) {
-      return rejectWithValue(getErrorMessage(err, "Login failed"));
+      return rejectWithValue(getLoginErrorMessage(err));
     }
   },
 );

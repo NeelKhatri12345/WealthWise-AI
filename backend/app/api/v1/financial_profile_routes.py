@@ -11,14 +11,17 @@ from fastapi.responses import JSONResponse
 
 from app.core.dependencies import (
     get_current_active_user,
+    get_activity_log_service,
     get_financial_profile_service,
 )
+from app.enums.activity_type_enum import ActivityTypeEnum
 from app.schemas.base_schema import APIResponse
 from app.schemas.financial_profile_schema import (
     FinancialProfileResponse,
     FinancialProfileUpdate,
 )
 from app.services.financial_profile_service import FinancialProfileService
+from app.services.activity_log_service import ActivityLogService
 
 router = APIRouter()
 
@@ -58,9 +61,18 @@ async def patch_financial_profile(
     body: FinancialProfileUpdate,
     current_user=Depends(get_current_active_user),
     service: FinancialProfileService = Depends(get_financial_profile_service),
+    activity_log: ActivityLogService = Depends(get_activity_log_service),
 ):
     profile = await service.patch_profile(
         user_id=current_user.id, data=body
+    )
+    await activity_log.log(
+        user_id=current_user.id,
+        activity_type=ActivityTypeEnum.PROFILE_UPDATE,
+        description="Updated financial profile",
+        metadata={
+            "completion_pct": profile.profile_completion_percentage if profile else None,
+        },
     )
     return APIResponse(
         success=True,

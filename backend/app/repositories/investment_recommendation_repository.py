@@ -4,7 +4,7 @@ WealthWise AI - Investment Recommendation Repository
 from typing import Optional, Sequence
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.investment_recommendation_snapshot import InvestmentRecommendationSnapshot
@@ -32,6 +32,15 @@ class InvestmentRecommendationRepository(BaseRepository[InvestmentRecommendation
         )
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
+
+    async def count_by_user(self, user_id: UUID) -> int:
+        stmt = (
+            select(func.count())
+            .select_from(InvestmentRecommendationSnapshot)
+            .where(InvestmentRecommendationSnapshot.user_id == user_id)
+        )
+        result = await self.db.execute(stmt)
+        return result.scalar_one()
 
     async def get_history(
         self, user_id: UUID, limit: int = 10

@@ -20,6 +20,9 @@ const RegisterPage = React.lazy(() => import("@/pages/auth/RegisterPage"));
 const ForgotPasswordPage = React.lazy(
   () => import("@/pages/auth/ForgotPasswordPage"),
 );
+const ResetPasswordPage = React.lazy(
+  () => import("@/pages/auth/ResetPasswordPage"),
+);
 const DashboardPage = React.lazy(
   () => import("@/pages/dashboard/DashboardPage"),
 );
@@ -80,12 +83,24 @@ const SettingsPage = React.lazy(
   () => import("@/pages/settings/SettingsPage"),
 );
 
+const AdminLoginPage = React.lazy(
+  () => import("@/pages/admin/AdminLoginPage"),
+);
+
 const AdminDashboardPage = React.lazy(
   () => import("@/pages/admin/AdminDashboardPage"),
 );
 
 const AdminUsersPage = React.lazy(
   () => import("@/pages/admin/AdminUsersPage"),
+);
+
+const AdminActivityPage = React.lazy(
+  () => import("@/pages/admin/AdminActivityPage"),
+);
+
+const AdminAuditPage = React.lazy(
+  () => import("@/pages/admin/AdminAuditPage"),
 );
 
 const NotFoundPage = React.lazy(
@@ -112,6 +127,10 @@ export function AppRouter() {
               <Route
                 path={ROUTES.FORGOT_PASSWORD}
                 element={<ForgotPasswordPage />}
+              />
+              <Route
+                path={ROUTES.RESET_PASSWORD}
+                element={<ResetPasswordPage />}
               />
             </Route>
           </Route>
@@ -179,9 +198,18 @@ export function AppRouter() {
             </Route>
           </Route>
 
+          {/* Admin login (separate from public user auth redirect) */}
+          <Route element={<AuthLayout />}>
+            <Route path={ROUTES.ADMIN_LOGIN} element={<AdminLoginPage />} />
+          </Route>
+
           {/* Admin routes */}
           <Route element={<AdminRoute />}>
             <Route element={<AdminLayout />}>
+              <Route
+                path="/admin"
+                element={<Navigate to={ROUTES.ADMIN_DASHBOARD} replace />}
+              />
               <Route
                 path={ROUTES.ADMIN_DASHBOARD}
                 element={<AdminDashboardPage />}
@@ -189,6 +217,14 @@ export function AppRouter() {
               <Route
                 path={ROUTES.ADMIN_USERS}
                 element={<AdminUsersPage />}
+              />
+              <Route
+                path={ROUTES.ADMIN_ACTIVITY}
+                element={<AdminActivityPage />}
+              />
+              <Route
+                path={ROUTES.ADMIN_AUDIT}
+                element={<AdminAuditPage />}
               />
             </Route>
           </Route>

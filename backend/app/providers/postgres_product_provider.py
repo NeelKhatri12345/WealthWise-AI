@@ -95,10 +95,8 @@ class PostgresProductProvider(AbstractProductProvider):
                 json_data = self._read_raw_json(_CATALOG_PATH)
                 if json_data:
                     await repo.seed_from_list(json_data, static_seed)
+                    await session.commit()
                     db_products = await repo.get_all_catalog_products()
-            elif static_seed:
-                # Upsert static metadata if missing
-                await repo.seed_from_list([], static_seed)
 
             if db_products:
                 from app.market.models import StaticInvestmentMetadata

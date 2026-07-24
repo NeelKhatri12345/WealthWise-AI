@@ -16,9 +16,11 @@ class UserResponse(BaseModel):
     phone: Optional[str] = None
     is_active: bool
     is_verified: bool
+    is_deleted: bool = False
     role_name: str = ""
     created_at: datetime
     updated_at: datetime
+    last_login_at: Optional[datetime] = None
 
     @classmethod
     def from_orm_with_role(cls, user) -> "UserResponse":
@@ -29,9 +31,11 @@ class UserResponse(BaseModel):
             phone=user.phone,
             is_active=user.is_active,
             is_verified=user.is_verified,
+            is_deleted=getattr(user, "is_deleted", False),
             role_name=user.role.name if user.role else "",
             created_at=user.created_at,
             updated_at=user.updated_at,
+            last_login_at=getattr(user, "last_login_at", None),
         )
 
 

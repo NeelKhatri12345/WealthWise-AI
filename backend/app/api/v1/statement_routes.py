@@ -27,12 +27,14 @@ from fastapi import APIRouter, Depends, File, Query, UploadFile, BackgroundTasks
 from app.core.constants import SUPPORTED_MIME_TYPES
 from app.core.dependencies import (
     get_admin_user,
+    get_activity_log_service,
     get_current_active_user,
     get_ocr_orchestration_service,
     get_statement_processing_service,
     get_statement_service,
     get_transaction_parser_service,
 )
+from app.enums.activity_type_enum import ActivityTypeEnum
 from app.exceptions.custom_exceptions import UnsupportedFileTypeException
 from app.schemas.base_schema import APIResponse
 from app.schemas.statement_schema import (
@@ -45,6 +47,7 @@ from app.schemas.transaction_schema import ParseStatementResponse
 from app.services.ocr_orchestration_service import OCROrchestrationService
 from app.services.statement_processing_service import StatementProcessingService
 from app.services.statement_service import StatementService
+from app.services.activity_log_service import ActivityLogService
 from app.services.transaction_parser_service import TransactionParserService
 
 router = APIRouter()
@@ -167,6 +170,7 @@ async def upload_statement(
     ),
     current_user=Depends(get_current_active_user),
     service: StatementService = Depends(get_statement_service),
+    activity_log: ActivityLogService = Depends(get_activity_log_service),
 ):
     """
     Upload a bank statement to MinIO and create a PENDING metadata record.
@@ -193,6 +197,12 @@ async def upload_statement(
         )
 
     result = await service.upload_statement(file, current_user.id)
+    await activity_log.log(
+        user_id=current_user.id,
+        activity_type=ActivityTypeEnum.STATEMENT_UPLOAD,
+        description=f"Uploaded statement: {result.file_name}",
+        metadata={"statement_id": str(result.id), "file_name": result.file_name},
+    )
     background_tasks.add_task(_process_statement_background_task, result.id)
     return APIResponse(
         success=True,

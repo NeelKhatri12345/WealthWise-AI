@@ -41,8 +41,11 @@ export function AuthLayout() {
   const location = useLocation();
   const isRegister = location.pathname === ROUTES.REGISTER;
   const isForgot = location.pathname === ROUTES.FORGOT_PASSWORD;
+  const isAdminLogin = location.pathname === ROUTES.ADMIN_LOGIN;
 
-  const sentence = isRegister
+  const sentence = isAdminLogin
+    ? "Secure administrator access to the WealthWise platform."
+    : isRegister
     ? "Start your journey toward smarter financial management."
     : isForgot
       ? "Recover access to your account."
@@ -67,10 +70,16 @@ export function AuthLayout() {
 
           {/* Dynamic Content */}
           <div className="relative z-10 space-y-4">
-            <h2 className="text-2xl font-bold leading-tight">
-              {isRegister ? "Create Account" : isForgot ? "Forgot Password" : "Welcome Back"}
+            <h2 className="text-2xl font-bold leading-tight text-white">
+              {isAdminLogin
+                ? "Admin Access"
+                : isRegister
+                  ? "Create Account"
+                  : isForgot
+                    ? "Forgot Password"
+                    : "Welcome Back"}
             </h2>
-            <p className="text-sm text-primary-200 leading-relaxed">
+            <p className="text-sm text-blue-100 leading-relaxed">
               {sentence}
             </p>
           </div>

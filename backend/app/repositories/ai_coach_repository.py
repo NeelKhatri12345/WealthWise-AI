@@ -123,3 +123,19 @@ class AICoachRepository(BaseRepository[AICoachConversation]):
         )
         result = await self.db.execute(stmt)
         return result.scalar_one()
+
+    async def count_all_messages(self) -> int:
+        """Admin: total AI coach messages across all users."""
+        stmt = select(func.count()).select_from(AICoachMessage)
+        result = await self.db.execute(stmt)
+        return result.scalar_one()
+
+    async def count_messages_by_user(self, user_id: UUID) -> int:
+        """Admin: total AI coach messages for a user."""
+        stmt = (
+            select(func.count())
+            .select_from(AICoachMessage)
+            .where(AICoachMessage.user_id == user_id)
+        )
+        result = await self.db.execute(stmt)
+        return result.scalar_one()

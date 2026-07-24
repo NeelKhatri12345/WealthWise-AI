@@ -15,7 +15,7 @@ import sqlalchemy as sa
 from alembic import op
 
 revision: str = "20260721_static_market_metadata"
-down_revision: Union[str, None] = "20260720_investment_snapshots"
+down_revision: Union[str, None] = "20260720_create_products"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

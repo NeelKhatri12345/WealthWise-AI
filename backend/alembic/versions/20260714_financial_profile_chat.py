@@ -254,8 +254,8 @@ def downgrade() -> None:
     )
     op.drop_table("financial_chat_sessions")
 
-    op.drop_unique_constraint(
-        "uq_financial_profiles_user_id", "financial_profiles"
+    op.drop_constraint(
+        "uq_financial_profiles_user_id", "financial_profiles", type_="unique"
     )
     op.drop_index(
         "ix_financial_profiles_user_id", table_name="financial_profiles"

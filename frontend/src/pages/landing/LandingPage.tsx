@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ROUTES } from "@/routes/routes";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { Button } from "@/components/ui/Button";
+import { useHideOnScroll } from "@/hooks/useHideOnScroll";
 
 function BrandIcon({ className }: { className?: string }) {
   return (
@@ -35,6 +36,7 @@ function BrandIcon({ className }: { className?: string }) {
 export default function LandingPage() {
   useDocumentTitle("WealthWise AI — Your Financial Intelligence Platform");
 
+  const { headerVisible } = useHideOnScroll(true);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [activePreviewTab, setActivePreviewTab] = useState<"dashboard" | "transactions" | "upload">("dashboard");
 
@@ -68,7 +70,11 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-slate-50 text-gray-900 font-sans selection:bg-primary-500 selection:text-white">
       {/* ── Navbar ── */}
-      <header className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white/80 backdrop-blur-md">
+      <header
+        className={`sticky top-0 z-50 w-full border-b border-gray-200 bg-white/80 backdrop-blur-md transition-all duration-300 ease-in-out ${
+          headerVisible ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0 pointer-events-none"
+        }`}
+      >
         <div className="mx-auto flex max-w-7xl h-16 items-center justify-between px-6">
           {/* Logo */}
           <div className="flex items-center gap-2.5">
@@ -108,6 +114,11 @@ export default function LandingPage() {
 
           {/* Actions */}
           <div className="flex items-center gap-3">
+            <Link to={ROUTES.ADMIN_LOGIN}>
+              <Button variant="ghost" size="sm" className="hidden sm:inline-flex">
+                Admin Login
+              </Button>
+            </Link>
             <Link to={ROUTES.LOGIN}>
               <Button variant="ghost" size="sm">
                 Login

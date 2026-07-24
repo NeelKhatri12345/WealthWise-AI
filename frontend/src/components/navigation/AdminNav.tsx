@@ -5,6 +5,8 @@ import { ROUTES } from "@/routes/routes";
 const adminNavItems = [
   { label: "Dashboard", path: ROUTES.ADMIN_DASHBOARD },
   { label: "Users", path: ROUTES.ADMIN_USERS },
+  { label: "Activity Logs", path: ROUTES.ADMIN_ACTIVITY },
+  { label: "Audit Logs", path: ROUTES.ADMIN_AUDIT },
 ];
 
 export function AdminNav() {

@@ -65,3 +65,23 @@ class ChangePasswordRequest(BaseModel):
         if not any(c.isdigit() for c in v):
             raise ValueError("Must contain a digit")
         return v
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    password: str = Field(..., min_length=8, max_length=72)
+
+    @field_validator("password")
+    @classmethod
+    def validate_password_strength(cls, v: str) -> str:
+        if not any(c.isupper() for c in v):
+            raise ValueError("Password must contain at least one uppercase letter")
+        if not any(c.isdigit() for c in v):
+            raise ValueError("Password must contain at least one digit")
+        if not any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in v):
+            raise ValueError("Password must contain at least one special character")
+        return v

@@ -191,3 +191,106 @@ export function getErrorRateOptions(data: ErrorRateData): Highcharts.Options {
     ],
   };
 }
+
+export interface DailyTrendData {
+  categories: string[];
+  values: number[];
+}
+
+export function getDailyTrendOptions(
+  data: DailyTrendData,
+  seriesName: string,
+  color: string,
+  yAxisTitle: string,
+): Highcharts.Options {
+  return {
+    chart: { type: "column" },
+    title: { text: undefined },
+    xAxis: { categories: data.categories, crosshair: true },
+    yAxis: {
+      title: { text: yAxisTitle },
+      min: 0,
+      allowDecimals: false,
+    },
+    tooltip: { valueSuffix: "" },
+    plotOptions: {
+      column: { borderRadius: 3, color },
+    },
+    series: [
+      {
+        name: seriesName,
+        type: "column",
+        data: data.values,
+        color,
+      },
+    ],
+  };
+}
+
+export interface HealthScoreTrendData {
+  categories: string[];
+  scores: number[];
+}
+
+export function getHealthScoreTrendOptions(
+  data: HealthScoreTrendData,
+): Highcharts.Options {
+  return {
+    chart: { type: "line" },
+    title: { text: undefined },
+    xAxis: { categories: data.categories, crosshair: true },
+    yAxis: {
+      title: { text: "Avg Score" },
+      min: 0,
+      max: 100,
+    },
+    tooltip: { valueSuffix: "" },
+    series: [
+      {
+        name: "Avg Health Score",
+        type: "line",
+        data: data.scores,
+        color: CHART_COLORS.secondary,
+        marker: { enabled: true, radius: 3 },
+      },
+    ],
+  };
+}
+
+export interface RiskProfileDistributionData {
+  labels: string[];
+  values: number[];
+}
+
+export function getRiskProfileDistributionOptions(
+  data: RiskProfileDistributionData,
+): Highcharts.Options {
+  const pieData = data.labels.map((label, i) => ({
+    name: label,
+    y: data.values[i],
+    color: CHART_COLORS.categorical[i % CHART_COLORS.categorical.length],
+  }));
+
+  return {
+    chart: { type: "pie" },
+    title: { text: undefined },
+    tooltip: { pointFormat: "{series.name}: <b>{point.y}</b> ({point.percentage:.1f}%)" },
+    plotOptions: {
+      pie: {
+        allowPointSelect: true,
+        cursor: "pointer",
+        dataLabels: {
+          enabled: true,
+          format: "<b>{point.name}</b>: {point.y}",
+        },
+      },
+    },
+    series: [
+      {
+        name: "Users",
+        type: "pie",
+        data: pieData,
+      },
+    ],
+  };
+}

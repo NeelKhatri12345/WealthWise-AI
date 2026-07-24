@@ -64,8 +64,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             for model_key, model_file in model_files.items():
                 model_path = models_dir / model_file
                 if model_path.exists():
-                    with open(model_path, "rb") as f:
-                        app.state.ml_models[model_key] = pickle.load(f)
+                    import joblib
+
+                    app.state.ml_models[model_key] = joblib.load(model_path)
                     logger.info(f"Loaded ML model: {model_key}")
         else:
             app.state.ml_models = {}
@@ -75,6 +76,20 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     except Exception as exc:
         logger.error("Failed to load ML models", exc_info=exc)
         app.state.ml_models = {}
+
+    # Seed/initialize the investment products catalog from PostgreSQL
+    try:
+        from app.database.session import AsyncSessionLocal
+        from app.core.dependencies import _get_product_provider
+
+        async with AsyncSessionLocal() as session:
+            provider = _get_product_provider(session)
+            await provider.load_catalog_async(db=session)
+            # Clean up the session reference to avoid referencing a closed one
+            provider.set_db_session(None)
+        logger.info("Investment product catalog initialized/seeded from PostgreSQL successfully")
+    except Exception as exc:
+        logger.error("Failed to initialize/seed investment product catalog", exc_info=exc)
 
     logger.info(
         "WealthWise AI started successfully",

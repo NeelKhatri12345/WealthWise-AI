@@ -142,6 +142,10 @@ const financialAnalysisSlice = createSlice({
       state.chatHistory = [];
     },
 
+    restoreChatHistory(state, action: PayloadAction<ChatMessage[]>) {
+      state.chatHistory = action.payload;
+    },
+
     clearAnalysis(state) {
       state.summary = null;
       state.analyzeError = null;
@@ -199,6 +203,7 @@ export const {
   appendUserMessage,
   setMessageFeedback,
   clearChatHistory,
+  restoreChatHistory,
   clearAnalysis,
   clearSendError,
 } = financialAnalysisSlice.actions;

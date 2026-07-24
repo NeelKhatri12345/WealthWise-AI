@@ -9,13 +9,15 @@ Relationships:
 
 from uuid import UUID
 
-from sqlalchemy import Boolean, ForeignKey, String
+from datetime import datetime
+
+from sqlalchemy import Boolean, DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.database.base import Base, TimestampMixin, UUIDMixin
+from app.database.base import Base, SoftDeleteMixin, TimestampMixin, UUIDMixin
 
 
-class User(UUIDMixin, TimestampMixin, Base):
+class User(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
     __tablename__ = "users"
 
     email: Mapped[str] = mapped_column(
@@ -26,6 +28,9 @@ class User(UUIDMixin, TimestampMixin, Base):
     phone: Mapped[str | None] = mapped_column(String(20), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    last_login_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # FK → roles
     role_id: Mapped[UUID] = mapped_column(
@@ -54,6 +59,9 @@ class User(UUIDMixin, TimestampMixin, Base):
     )
     portfolio_holdings: Mapped[list["PortfolioHolding"]] = relationship(
         "PortfolioHolding", back_populates="user", cascade="all, delete-orphan"
+    )
+    password_reset_tokens: Mapped[list["PasswordResetToken"]] = relationship(
+        "PasswordResetToken", back_populates="user", cascade="all, delete-orphan"
     )
     # ── Financial Profile & Chat ──────────────────────────────────────
     financial_profile: Mapped["FinancialProfile | None"] = relationship(

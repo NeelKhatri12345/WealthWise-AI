@@ -5,13 +5,22 @@ import { useAuth } from "@/hooks/useAuth";
 import { Avatar } from "@/components/ui/Avatar";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { ROUTES } from "@/routes/routes";
+import { cn } from "@/utils/cn";
 
-export function Header() {
+interface HeaderProps {
+  visible?: boolean;
+}
+
+export function Header({ visible = true }: HeaderProps) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
 
   const dropdownRef = useClickOutside<HTMLDivElement>(() => setIsOpen(false));
+
+  useEffect(() => {
+    if (!visible) setIsOpen(false);
+  }, [visible]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -36,7 +45,13 @@ export function Header() {
   };
 
   return (
-    <header className="flex h-16 items-center justify-between border-b border-wealth-border bg-wealth-card px-6">
+    <header
+      className={cn(
+        "absolute top-0 left-0 right-0 z-30 flex h-16 items-center justify-between border-b border-wealth-border bg-wealth-card px-6",
+        "transition-all duration-300 ease-in-out",
+        visible ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0 pointer-events-none",
+      )}
+    >
       <div className="flex items-center gap-4 flex-1">
         {/* Empty spacing for cleaner top navigation */}
       </div>
@@ -74,7 +89,7 @@ export function Header() {
                   </p>
                 </div>
               </div>
-              
+
               <div className="border-t border-wealth-border" />
 
               {/* Menu Actions */}
@@ -88,7 +103,7 @@ export function Header() {
                   </svg>
                   View Profile
                 </button>
-                
+
                 <button
                   onClick={handleLogout}
                   className="w-full text-left px-4 py-2 text-sm text-wealth-danger hover:bg-red-50 flex items-center gap-2 cursor-pointer transition-colors"

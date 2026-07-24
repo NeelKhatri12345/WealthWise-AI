@@ -12,6 +12,7 @@ import {
   clearChatHistory,
   clearAnalysis,
   clearSendError,
+  restoreChatHistory,
 } from "@/store/slices/financialAnalysisSlice";
 import { fetchFinancialProfile, fetchLatestSnapshot } from "@/store/slices/financialProfileSlice";
 import { fetchDashboardSummary } from "@/store/slices/dashboardSlice";
@@ -30,6 +31,13 @@ import { ROUTES } from "@/routes/routes";
 import { cn } from "@/utils/cn";
 import { toast } from "react-hot-toast";
 import type { StatementDetail } from "@/services/api/upload.api";
+import {
+  clearPersistedChat,
+  loadPersistedChat,
+  loadPersistedScroll,
+  savePersistedChat,
+  savePersistedScroll,
+} from "./chatPersistence";
 
 function parseRecommendation(rec: string) {
   // Extract the emoji at the start
@@ -89,7 +97,7 @@ export default function AICoachPage() {
   const navigate = useNavigate();
 
   // Redux state
-  const { summary, analyzing, analyzeError, chatHistory, sending, sendError } =
+  const { summary, analyzing, analyzeError, chatHistory, sending, sendError, analyzedStatementId } =
     useAppSelector((state) => state.financialAnalysis);
   const { profile, snapshot, profileLoading, snapshotLoading } =
     useAppSelector((state) => state.financialProfile);
@@ -118,9 +126,15 @@ export default function AICoachPage() {
   const [input, setInput] = useState("");
   const [showScrollBottom, setShowScrollBottom] = useState(false);
   const [isDropdownExpanded, setIsDropdownExpanded] = useState(false);
+  const [contextVisible, setContextVisible] = useState(true);
   const prevCompletedIdsRef = useRef<Set<string>>(new Set());
+  const lastChatScrollY = useRef(0);
+  const isRestoringScrollRef = useRef(false);
+  const chatRestoredForStatementRef = useRef<string | null>(null);
+  const scrollRestoredForStatementRef = useRef<string | null>(null);
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const userId = user?.id ?? "anonymous";
 
   // 1. Initial Load: Fetch essential context & statements
   useEffect(() => {
@@ -167,19 +181,72 @@ export default function AICoachPage() {
     }
   }, [selectedStatementId, dispatch]);
 
-  // 4. Scroll to bottom of chat when history/sending updates
+  // 3b. Reset scroll/context tracking when switching statements
   useEffect(() => {
+    lastChatScrollY.current = 0;
+    setContextVisible(true);
+  }, [selectedStatementId]);
+
+  // 3c. Allow chat/scroll restore after each analysis run completes
+  useEffect(() => {
+    if (!analyzing) return;
+    chatRestoredForStatementRef.current = null;
+    scrollRestoredForStatementRef.current = null;
+  }, [analyzing]);
+
+  // 4. Restore persisted chat after analysis completes for the selected statement
+  useEffect(() => {
+    if (!selectedStatementId || analyzing) return;
+    if (analyzedStatementId !== selectedStatementId) return;
+    if (chatRestoredForStatementRef.current === selectedStatementId) return;
+
+    chatRestoredForStatementRef.current = selectedStatementId;
+    const saved = loadPersistedChat(userId, selectedStatementId);
+    if (saved.length > 0) {
+      dispatch(restoreChatHistory(saved));
+    }
+  }, [analyzedStatementId, selectedStatementId, analyzing, userId, dispatch]);
+
+  // 5. Persist chat history to localStorage (skip empty to avoid clearing during analysis)
+  useEffect(() => {
+    if (!selectedStatementId || chatHistory.length === 0) return;
+    savePersistedChat(userId, selectedStatementId, chatHistory);
+  }, [chatHistory, selectedStatementId, userId]);
+
+  // 6. Restore scroll position once after chat is loaded for a statement
+  useEffect(() => {
+    if (!selectedStatementId || chatHistory.length === 0) return;
+    if (scrollRestoredForStatementRef.current === selectedStatementId) return;
+
+    scrollRestoredForStatementRef.current = selectedStatementId;
+    const savedScroll = loadPersistedScroll(userId, selectedStatementId);
+    if (savedScroll == null) return;
+
+    isRestoringScrollRef.current = true;
+    requestAnimationFrame(() => {
+      if (chatContainerRef.current) {
+        chatContainerRef.current.scrollTop = savedScroll;
+      }
+      requestAnimationFrame(() => {
+        isRestoringScrollRef.current = false;
+      });
+    });
+  }, [chatHistory.length, selectedStatementId, userId]);
+
+  // 7. Scroll to bottom on new messages unless restoring saved scroll position
+  useEffect(() => {
+    if (isRestoringScrollRef.current) return;
     scrollToBottom();
   }, [chatHistory, sending]);
 
-  // 5. Toast error if analysis fails
+  // 8. Toast error if analysis fails
   useEffect(() => {
     if (analyzeError) {
       toast.error(analyzeError);
     }
   }, [analyzeError]);
 
-  // 6. Toast error if chat sending fails
+  // 9. Toast error if chat sending fails
   useEffect(() => {
     if (sendError) {
       toast.error(sendError);
@@ -190,7 +257,23 @@ export default function AICoachPage() {
   const handleScroll = () => {
     if (!chatContainerRef.current) return;
     const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current;
+    const maxScroll = scrollHeight - clientHeight;
+    const isNearBottom = maxScroll > 0 && scrollTop >= maxScroll - 5;
+
+    if (scrollTop <= 10) {
+      setContextVisible(true);
+    } else if (scrollTop > lastChatScrollY.current + 5) {
+      setContextVisible(false);
+    } else if (scrollTop < lastChatScrollY.current - 5 && !isNearBottom) {
+      setContextVisible(true);
+    }
+    lastChatScrollY.current = scrollTop;
+
     setShowScrollBottom(scrollHeight - scrollTop - clientHeight > 150);
+
+    if (selectedStatementId) {
+      savePersistedScroll(userId, selectedStatementId, scrollTop);
+    }
   };
 
   const scrollToBottom = () => {
@@ -560,6 +643,13 @@ export default function AICoachPage() {
               onClick={() => {
                 if (confirm("Reset chat history for this statement?")) {
                   dispatch(clearChatHistory());
+                  if (selectedStatementId) {
+                    clearPersistedChat(userId, selectedStatementId);
+                  }
+                  chatRestoredForStatementRef.current = selectedStatementId;
+                  scrollRestoredForStatementRef.current = selectedStatementId;
+                  lastChatScrollY.current = 0;
+                  setContextVisible(true);
                 }
               }}
             >
@@ -572,9 +662,23 @@ export default function AICoachPage() {
       {/* ── Main Chat Panel ────────────────────────────────────────────────── */}
       <div className="flex flex-1 flex-col overflow-hidden relative bg-white">
         
-        {/* Context Summary Card header */}
-        <div className="p-4 border-b border-wealth-border bg-gray-50/20 shrink-0">
-          <ContextSummaryCard />
+        {/* Context Summary Card header — hides on chat scroll */}
+        <div
+          className={cn(
+            "grid shrink-0 transition-[grid-template-rows] duration-300 ease-in-out",
+            contextVisible ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+          )}
+        >
+          <div className="overflow-hidden min-h-0">
+            <div
+              className={cn(
+                "border-b border-wealth-border bg-gray-50/20 p-4 transition-all duration-300 ease-in-out",
+                contextVisible ? "translate-y-0 opacity-100" : "-translate-y-4 opacity-0",
+              )}
+            >
+              <ContextSummaryCard />
+            </div>
+          </div>
         </div>
 
         {/* Scrollable chat body */}

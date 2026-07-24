@@ -25,8 +25,8 @@ services:
       # Persist logs outside container
       - api_logs:/app/app/logs
       # Mount ML model files from root project
-      - ./risk_profile_model.pkl:/app/app/ml_models/risk_profile_model.pkl:ro
-      - ./risk_label_encoder.pkl:/app/app/ml_models/risk_label_encoder.pkl:ro
+      - ./analytics/models/risk_profile/risk_profile_model.pkl:/app/app/ml_models/risk_profile_model.pkl:ro
+      - ./analytics/models/risk_profile/risk_label_encoder.pkl:/app/app/ml_models/risk_label_encoder.pkl:ro
       # Persist Docling/HuggingFace model downloads across container restarts
       - hf_model_cache:/app/.cache/huggingface
     depends_on:

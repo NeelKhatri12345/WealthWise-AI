@@ -42,6 +42,11 @@ export interface CurrentUserResponse {
   updated_at: string;
 }
 
+export interface ResetPasswordRequest {
+  token: string;
+  password: string;
+}
+
 export const authService = {
   async login(credentials: LoginRequest): Promise<TokenResponse> {
     const { data } = await axiosInstance.post<ApiResponse<TokenResponse>>(
@@ -92,6 +97,14 @@ export const authService = {
       "/users/me/change-password",
       payload,
     );
+  },
+
+  async forgotPassword(email: string): Promise<void> {
+    await axiosInstance.post<ApiResponse<null>>("/auth/forgot-password", { email });
+  },
+
+  async resetPassword(payload: ResetPasswordRequest): Promise<void> {
+    await axiosInstance.post<ApiResponse<null>>("/auth/reset-password", payload);
   },
 
   async deleteAccount(): Promise<void> {

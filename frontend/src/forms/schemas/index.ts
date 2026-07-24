@@ -6,3 +6,7 @@ export {
 } from "./forgotPassword.schema";
 export { profileSchema, type ProfileFormData } from "./profile.schema";
 export { uploadSchema, type UploadFormData } from "./upload.schema";
+export {
+  resetPasswordSchema,
+  type ResetPasswordFormData,
+} from "./resetPassword.schema";

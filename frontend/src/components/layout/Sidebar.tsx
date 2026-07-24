@@ -7,8 +7,8 @@ const navItems = [
   { label: "Upload", path: ROUTES.UPLOAD },
   { label: "Financial Profile", path: ROUTES.FINANCIAL_PROFILE },
   { label: "Health Score", path: ROUTES.HEALTH_SCORE },
-  { label: "Investment Plan", path: ROUTES.INVESTMENT_PLAN },
   { label: "Ask AI", path: ROUTES.AI_COACH },
+  { label: "Investment Plan", path: ROUTES.INVESTMENT_PLAN },
   { label: "Profile", path: ROUTES.PROFILE },
 ];
 

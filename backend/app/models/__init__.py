@@ -4,7 +4,9 @@ WealthWise AI - Models Package
 Import all models here so Alembic's env.py can discover them
 via Base.metadata when autogenerating migrations.
 """
-
+from app.models.portfolio_holding import PortfolioHolding
+from app.models.admin_audit_log import AdminAuditLog
+from app.models.activity_log import ActivityLog
 from app.models.ai_coach_conversation import AICoachConversation
 from app.models.ai_coach_message import AICoachMessage
 from app.models.ai_conversation import AIConversation
@@ -21,6 +23,7 @@ from app.models.role import Role
 from app.models.statement import Statement
 from app.models.transaction import Transaction
 from app.models.user import User
+from app.models.password_reset_token import PasswordResetToken
 
 __all__ = [
     "User",
@@ -39,4 +42,8 @@ __all__ = [
     "FinancialChatMessage",
     "InvestmentRecommendationSnapshot",
     "InvestmentProduct",
+    "ActivityLog",
+    "AdminAuditLog",
+    "PortfolioHolding",
+    "PasswordResetToken",
 ]

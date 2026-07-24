@@ -111,3 +111,9 @@ class S3Client:
             except Exception:
                 await s3.create_bucket(Bucket=self._bucket)
                 logger.info(f"Created S3 bucket: {self._bucket}")
+
+    async def health_check(self) -> bool:
+        """Returns True if the bucket is reachable (MinIO / S3)."""
+        async with self._get_client() as s3:
+            await s3.head_bucket(Bucket=self._bucket)
+        return True

@@ -49,6 +49,7 @@ export const API_ENDPOINTS = {
     DASHBOARD: "/admin/dashboard",
     USERS: "/admin/users",
     AUDIT_LOG: "/admin/audit-log",
-    SYSTEM_HEALTH: "/admin/system-health",
+    AUDIT_LOGS: "/admin/audit-logs",
+    SYSTEM_MONITORING: "/admin/system-monitoring",
   },
 } as const;

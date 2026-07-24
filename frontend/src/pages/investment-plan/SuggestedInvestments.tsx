@@ -45,12 +45,6 @@ function getRiskBadge(risk: string) {
   }
 }
 
-function getScoreColor(pct: number): string {
-  if (pct >= 80) return "text-emerald-600 bg-emerald-50 border-emerald-200";
-  if (pct >= 60) return "text-amber-600 bg-amber-50 border-amber-200";
-  return "text-rose-600 bg-rose-50 border-rose-200";
-}
-
 function getRatingStars(rating: number | null): string {
   if (rating === null) return "★★★★☆";
   const floor = Math.floor(rating);
@@ -466,7 +460,7 @@ interface CardProps {
 
 function ProductCard({ product, onViewDetails, onToggleCompare, isCompared }: CardProps) {
   const risk = getRiskBadge(product.risk_level);
-  const scoreClass = getScoreColor(product.confidence_pct);
+  const scoreClass = "text-primary-800 bg-primary-50 border-primary-200";
 
   return (
     <div className="rounded-2xl border border-slate-100 bg-white shadow-sm hover:shadow-md hover:border-indigo-100 transition-all duration-200 p-5 flex flex-col justify-between h-full gap-4 relative">
@@ -542,13 +536,13 @@ function ProductCard({ product, onViewDetails, onToggleCompare, isCompared }: Ca
       <div>
         <div className={`rounded-xl border p-2.5 flex items-center justify-between ${scoreClass}`}>
           <div>
-            <span className="text-[9px] uppercase tracking-wider block opacity-75 font-semibold">Match Confidence</span>
-            <span className="text-xs font-extrabold">{product.confidence_pct}% Match Rate</span>
+            <span className="text-[9px] uppercase tracking-wider block font-semibold text-primary-700">Match Confidence</span>
+            <span className="text-xs font-extrabold text-primary-900">{product.confidence_pct}% Match Rate</span>
           </div>
           {product.market_scores && (
             <div className="text-right">
-              <span className="text-[9px] uppercase tracking-wider block opacity-75 font-semibold">Strength Score</span>
-              <span className="text-xs font-extrabold">{(product.market_scores.overall_score * 100).toFixed(0)}%</span>
+              <span className="text-[9px] uppercase tracking-wider block font-semibold text-primary-700">Strength Score</span>
+              <span className="text-xs font-extrabold text-primary-900">{(product.market_scores.overall_score * 100).toFixed(0)}%</span>
             </div>
           )}
         </div>
@@ -924,7 +918,7 @@ export function SuggestedInvestments() {
                     <span>🎯</span>
                     {cat.category}
                   </h3>
-                  {cat.monthly_allocation && (
+                  {cat.monthly_allocation != null && cat.monthly_allocation > 0 && (
                     <span className="text-xs text-indigo-600 font-bold">
                       Allocation: {formatCurrency(cat.monthly_allocation)}/mo ({cat.allocation_pct?.toFixed(0)}%)
                     </span>

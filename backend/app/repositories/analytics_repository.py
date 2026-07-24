@@ -10,7 +10,7 @@ Handles persistence and retrieval for:
 from typing import Optional, Sequence
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.ai_conversation import AIConversation
@@ -148,8 +148,6 @@ class AnalyticsRepository:
 
     async def delete_session(self, user_id: UUID, session_id: UUID) -> int:
         """Returns number of messages deleted."""
-        from sqlalchemy import delete
-
         stmt = delete(AIConversation).where(
             AIConversation.user_id == user_id,
             AIConversation.session_id == session_id,

@@ -11,6 +11,7 @@ import { ROUTES } from "@/routes/routes";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
+import { authService } from "@/services/auth.service";
 
 export default function ForgotPasswordPage() {
   useDocumentTitle("Forgot Password");
@@ -29,10 +30,16 @@ export default function ForgotPasswordPage() {
     },
   });
 
-  const onSubmit = handleSubmit(async () => {
+  const onSubmit = handleSubmit(async (data) => {
     setServerError(null);
-    // No backend — show confirmation after valid submission
-    setIsSubmitted(true);
+    try {
+      await authService.forgotPassword(data.email);
+      setIsSubmitted(true);
+    } catch (err: any) {
+      setServerError(
+        err.response?.data?.message || "Something went wrong. Please try again."
+      );
+    }
   });
 
   return (

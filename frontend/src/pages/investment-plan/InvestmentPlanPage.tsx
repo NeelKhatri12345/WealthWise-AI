@@ -866,8 +866,8 @@ export default function InvestmentPlanPage() {
       )}
 
       {/* ── Disclaimer ────────────────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-gray-100 bg-gray-50 p-5 text-xs text-gray-400 leading-relaxed">
-        <strong className="text-gray-500">Disclaimer:</strong> This Investment Plan is generated for educational
+      <div className="rounded-2xl border border-amber-200/80 bg-amber-50/60 p-5 text-sm text-gray-700 leading-relaxed shadow-sm">
+        <strong className="text-gray-900">Disclaimer:</strong> This Investment Plan is generated for educational
         purposes only. It provides category-level allocations and does not recommend specific stocks, mutual fund
         schemes, ETFs, or any specific financial products. Past performance of any asset class does not guarantee
         future returns. Please consult a SEBI-registered financial advisor or certified financial planner before
